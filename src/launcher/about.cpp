@@ -1,63 +1,67 @@
-﻿#include "About.h"
+#include "About.h"
 
-void About::ReleaseNotesDialog(wxWindow* parent) {
-
-	//create the window here since above is not a constructor
-    this->Create(parent, wxID_ANY, "Release Notes", wxDefaultPosition, wxSize(1000, 800));
-
-    this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); //ban the user from resizing and maximizing
-
-	//hardcoded patch notes (for now), supports basic HTML formatting
-    wxString patchNotes =
-        "UZDoom version 4.14.2, released 2025-05-03<br><br>"
-
-        "This update delivers various bug fixes, performance optimizations, and significantly expands modding capabilities.<br><br>"
-
-        "- Ortho + OOB fixes and improvements<br>"
-        "- Revert clipper to older code path when not in Ortho / OOB(speed improvement)<br>"  
-        "- Fix to some crashes and memory leaks<br>"
-        "- Exposed DDoor to ZScript, Exposed DPlat to ZScript, Exposed more of the Ceiling thinker, Exposed more of the Floor thinker, Exposed DElevator to ZScript.<br>"
-        "- Exported: GetLumpContainer, GetContainerName, GetLumpFullPath for WADS struct, useful for debugging custom - made parsers and identifying where problems may arise.<br>"
-        "- Added autoSwitch parameter to A_ReFire<br>"
-        "- add a few commonly - used gzdoom - specific properties to the dehacked parser<br>"
-        "- many more fixes and improvements<br><br>"
-
-        "For more details see : https://forum.zdoom.org/viewtopic.php?t=80447";
-
-	//required to display rich text
-    wxHtmlWindow* htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
-    htmlWin->SetPage(patchNotes);
-
-	//The checkbox to show/hide patch notes on update
-    wxCheckBox* showOnUpdateReq = new wxCheckBox(this, wxID_ANY, "Show these notes upon new update");
-    showOnUpdateReq->SetValue(true); // Default to checked
-
-	//Button to close the dialog
-    wxButton* closeButton = new wxButton(this, wxID_OK, "Close");
-
-	// Layout using a vertical box sizer for proper arrangement
-    wxBoxSizer* vbox = new wxBoxSizer(wxVERTICAL);
-    vbox->Add(htmlWin, 1, wxEXPAND | wxALL, 10);
-    vbox->Add(showOnUpdateReq, 0, wxALIGN_LEFT | wxLEFT | wxBOTTOM, 10);
-	vbox->Add(closeButton, 0, wxALIGN_CENTER | wxALL, 10);
-
-    SetSizer(vbox);
-	Layout();
-
-	Center(); //force everything to center
-
-}
-
-void About::CreditsDialog(wxWindow* parent)
+void About::ReleaseNotesDialog(wxWindow *parent)
 {
 
-    //create the window here since above is not a constructor
-    this->Create(parent, wxID_ANY, "Credits", wxDefaultPosition, wxSize(1000, 800));
+	// create the window here since above is not a constructor
+	this->Create(parent, wxID_ANY, "Release Notes", wxDefaultPosition, wxSize(1000, 800));
 
-    this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); //ban the user from resizing and maximizing
+	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
+	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
 
-    //hardcoded credits (for now), supports basic HTML formatting
-    wxString credits = R"(<html>
+	// hardcoded patch notes (for now), supports basic HTML formatting
+	wxString patchNotes = "UZDoom version 4.14.2, released 2025-05-03<br><br>"
+
+						  "This update delivers various bug fixes, performance optimizations, and significantly "
+	                      "expands modding capabilities.<br><br>"
+
+						  "- Ortho + OOB fixes and improvements<br>"
+						  "- Revert clipper to older code path when not in Ortho / OOB(speed improvement)<br>"
+						  "- Fix to some crashes and memory leaks<br>"
+						  "- Exposed DDoor to ZScript, Exposed DPlat to ZScript, Exposed more of the Ceiling thinker, "
+	                      "Exposed more of the Floor thinker, Exposed DElevator to ZScript.<br>"
+						  "- Exported: GetLumpContainer, GetContainerName, GetLumpFullPath for WADS struct, useful for "
+	                      "debugging custom - made parsers and identifying where problems may arise.<br>"
+						  "- Added autoSwitch parameter to A_ReFire<br>"
+						  "- add a few commonly - used gzdoom - specific properties to the dehacked parser<br>"
+						  "- many more fixes and improvements<br><br>"
+
+						  "For more details see : https://forum.zdoom.org/viewtopic.php?t=80447";
+
+	// required to display rich text
+	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
+	htmlWin->SetPage(patchNotes);
+
+	// The checkbox to show/hide patch notes on update
+	wxCheckBox *showOnUpdateReq = new wxCheckBox(this, wxID_ANY, "Show these notes upon new update");
+	showOnUpdateReq->SetValue(true); // Default to checked
+
+	// Button to close the dialog
+	wxButton *closeButton = new wxButton(this, wxID_OK, "Close");
+
+	// Layout using a vertical box sizer for proper arrangement
+	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
+	vbox->Add(htmlWin, 1, wxEXPAND | wxALL, 10);
+	vbox->Add(showOnUpdateReq, 0, wxALIGN_LEFT | wxLEFT | wxBOTTOM, 10);
+	vbox->Add(closeButton, 0, wxALIGN_CENTER | wxALL, 10);
+
+	SetSizer(vbox);
+	Layout();
+
+	Center(); // force everything to center
+}
+
+void About::CreditsDialog(wxWindow *parent)
+{
+
+	// create the window here since above is not a constructor
+	this->Create(parent, wxID_ANY, "Credits", wxDefaultPosition, wxSize(1000, 800));
+
+	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
+	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
+
+	// hardcoded credits (for now), supports basic HTML formatting
+	wxString credits = R"(<html>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000FF" vlink="#0000FF">
 
 <center>
@@ -363,21 +367,20 @@ void About::CreditsDialog(wxWindow* parent)
 </body>
 </html>)";
 
-    //required to display rich text
-    wxHtmlWindow* htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
-    htmlWin->SetPage(credits);
+	// required to display rich text
+	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
+	htmlWin->SetPage(credits);
 
-    //Button to close the dialog
-    wxButton* closeButton = new wxButton(this, wxID_OK, "Close");
+	// Button to close the dialog
+	wxButton *closeButton = new wxButton(this, wxID_OK, "Close");
 
-    // Layout using a vertical box sizer for proper arrangement
-    wxBoxSizer* vbox = new wxBoxSizer(wxVERTICAL);
-    vbox->Add(htmlWin, 1, wxEXPAND | wxALL, 10);
-    vbox->Add(closeButton, 0, wxALIGN_CENTER | wxALL, 10);
+	// Layout using a vertical box sizer for proper arrangement
+	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
+	vbox->Add(htmlWin, 1, wxEXPAND | wxALL, 10);
+	vbox->Add(closeButton, 0, wxALIGN_CENTER | wxALL, 10);
 
-    SetSizer(vbox);
-    Layout();
+	SetSizer(vbox);
+	Layout();
 
-    Center(); //force everything to center
-
+	Center(); // force everything to center
 }

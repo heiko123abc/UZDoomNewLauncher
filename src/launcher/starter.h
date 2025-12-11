@@ -3,7 +3,7 @@
 
 class Starter : public wxApp
 {
-public:
+  public:
 	bool OnInit();
 	void OnFatalException();
 };

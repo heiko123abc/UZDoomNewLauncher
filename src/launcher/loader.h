@@ -1,17 +1,16 @@
 #pragma once
-#include <wx/wx.h>
-#include <wx/filename.h>
-#include <wx/zipstrm.h>
-#include <wx/wfstream.h>
-#include <wx/progdlg.h>
-#include <memory>
 #include "Const.h"
+#include <memory>
+#include <wx/filename.h>
+#include <wx/progdlg.h>
+#include <wx/wfstream.h>
+#include <wx/wx.h>
+#include <wx/zipstrm.h>
 
 class Loader : public wxFrame
 {
 
-public:
-
+  public:
 	/*
 	 * Method adapted from the wxWidgets Wiki
 	 * Page: WxZipInputStream
@@ -19,7 +18,7 @@ public:
 	 * Credit: wxWidgets Wiki Contributors
 	 */
 
-	bool wxExtractZipFiles(const wxString& strZipFile, const wxString& strTargetDir, wxWindow* parent)
+	bool wxExtractZipFiles(const wxString &strZipFile, const wxString &strTargetDir, wxWindow *parent)
 	{
 		wxFileInputStream fis(strZipFile);
 
@@ -29,33 +28,30 @@ public:
 			return false;
 		}
 
-		wxZipInputStream zis(fis);
+		wxZipInputStream            zis(fis);
 		std::unique_ptr<wxZipEntry> upZe;
 
-		//show the user actual progress instead of guesswork
-		wxProgressDialog progress("Unzipping",
-			"Preparing to extract...",
-			100,
-			parent,
-			wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_CAN_ABORT | wxPD_ELAPSED_TIME);
+		// show the user actual progress instead of guesswork
+		wxProgressDialog progress("Unzipping", "Preparing to extract...", 100, parent,
+		                          wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_CAN_ABORT | wxPD_ELAPSED_TIME);
 
-		//pulse the bar
+		// pulse the bar
 		progress.Pulse();
 
 		while (upZe.reset(zis.GetNextEntry()), upZe)
 		{
 
 			wxString statusMsg = wxString::Format("Extracting: %s", upZe->GetName());
-			bool keepGoing = progress.Pulse(statusMsg);
+			bool     keepGoing = progress.Pulse(statusMsg);
 
-			if (!keepGoing) {
+			if (!keepGoing)
+			{
 				// User cancelled the operation -> return false
 				return false;
 			}
 
-
-			wxString strFileName = strTargetDir + wxFileName::GetPathSeparator() + upZe->GetName();
-			int nPermBits = upZe->GetMode();
+			wxString   strFileName = strTargetDir + wxFileName::GetPathSeparator() + upZe->GetName();
+			int        nPermBits   = upZe->GetMode();
 			wxFileName fn;
 
 			if (upZe->IsDir())
@@ -63,7 +59,7 @@ public:
 			else
 				fn.Assign(strFileName);
 
-			//Check if the directory exists, and if not, create it recursively.
+			// Check if the directory exists, and if not, create it recursively.
 			if (!wxDirExists(fn.GetPath()))
 				wxFileName::Mkdir(fn.GetPath(), nPermBits, wxPATH_MKDIR_FULL);
 
@@ -88,6 +84,6 @@ public:
 		return true;
 	}
 
-	static void archiveOpener(wxWindow* window);
-	static void fileOpener(wxWindow* window);
+	static void archiveOpener(wxWindow *window);
+	static void fileOpener(wxWindow *window);
 };

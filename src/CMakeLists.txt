@@ -965,14 +965,13 @@ set (PCH_SOURCES
 	rendering/swrenderer/textures/warptexture.cpp
 	rendering/swrenderer/textures/swcanvastexture.cpp
 	events.cpp
-	launcher/launcherwindow.cpp
-	launcher/launcherbanner.cpp
-	launcher/launcherbuttonbar.cpp
-	launcher/playgamepage.cpp
-	launcher/settingspage.cpp
-	launcher/networkpage.cpp
-	launcher/releasepage.cpp
-	launcher/aboutpage.cpp
+	launcher/about.cpp
+	launcher/launcherMainWindow.cpp
+	launcher/loader.cpp
+	launcher/netmenu.cpp
+	launcher/profile.cpp
+	launcher/profileSettings.cpp
+	launcher/starter.cpp
 
 	common/audio/sound/i_sound.cpp
 	common/audio/sound/oalsound.cpp
@@ -1365,6 +1364,7 @@ include_directories(
 	launcher
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
+	../libraries/wxWidgets/include
 	../libraries/webp/include
 	../libraries/range_map/include
 	${SYSTEM_SOURCES_DIR}

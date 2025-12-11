@@ -331,7 +331,7 @@ if (HAVE_VULKAN)
 endif()
 
 list( APPEND PROJECT_LIBRARIES "zwidget" )
-list( APPEND PROJECT_LIBRARIES "wxWidget" )
+list( APPEND PROJECT_LIBRARIES "wxWidgets" )
 list( APPEND PROJECT_LIBRARIES "webp" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")

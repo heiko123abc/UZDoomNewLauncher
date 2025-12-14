@@ -23,6 +23,8 @@
 
 using json = nlohmann::json;
 
+bool isAlreadyLaunched = false;
+
 // reuturns a string that calculates XXhXXm
 using TimePoint = std::chrono::system_clock::time_point;
 std::string getTimeString(std::time_t totalSeconds)
@@ -302,6 +304,15 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 		// startup the game
 		if (event.GetId() == ID_START_GAME || event.GetId() == ID_JOIN_GAME || event.GetId() == ID_HOST_GAME)
 		{
+			// check if already launched
+			if (isAlreadyLaunched)
+			{
+				wxMessageBox("A UZdoom instance is already running. Please close it before starting another.", "UZdoom Error",
+							 wxOK | wxICON_WARNING);
+				return;
+			}
+
+			isAlreadyLaunched = true; // set flag
 
 			Profile     tp;
 			std::string dispatchedCmd;
@@ -348,6 +359,8 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 				// refresh at once for time update
 				refreshList(profileList, this);
+
+				isAlreadyLaunched = false; // reset flag
 			});
 
 			wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);

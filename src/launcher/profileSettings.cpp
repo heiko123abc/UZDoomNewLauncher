@@ -31,6 +31,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
                     int *definedVars, int varCount, bool showForceCheck = false)
 {
 	wxDialog dlg(parent, wxID_ANY, title, wxDefaultPosition, wxSize(500, 600));
+	dlg.SetExtraStyle(dlg.GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
 	dlg.SetWindowStyle(wxDEFAULT_DIALOG_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX));
 
 	wxBoxSizer       *mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -985,6 +986,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 {
+
 	wxBoxSizer *pageSizer = new wxBoxSizer(wxVERTICAL);
 
 	wxGridBagSizer *gbSizer = new wxGridBagSizer(10, 20);
@@ -1098,8 +1100,11 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 	// create the window here since above is not a constructor
 	this->Create(parent, wxID_ANY, "Profile Settings", wxDefaultPosition, wxSize(850, 650));
 
+	this->SetExtraStyle(GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
+
 	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
+
 
 	wxBoxSizer *mainSizer   = new wxBoxSizer(wxVERTICAL); // Main vertical sizer so fit everything
 	wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);

@@ -10,7 +10,7 @@ void About::ReleaseNotesDialog(wxWindow *parent)
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
 
 	// hardcoded patch notes (for now), supports basic HTML formatting
-	wxString patchNotes = "UZDoom version 4.14.2, released 2025-05-03<br><br>"
+	wxString patchNotes = wxString::FromUTF8("UZDoom version 4.14.2, released 2025-05-03<br><br>"
 
 						  "This update delivers various bug fixes, performance optimizations, and significantly "
 	                      "expands modding capabilities.<br><br>"
@@ -26,7 +26,7 @@ void About::ReleaseNotesDialog(wxWindow *parent)
 						  "- add a few commonly - used gzdoom - specific properties to the dehacked parser<br>"
 						  "- many more fixes and improvements<br><br>"
 
-						  "For more details see : https://forum.zdoom.org/viewtopic.php?t=80447";
+						  "For more details see : https://forum.zdoom.org/viewtopic.php?t=80447");
 
 	// required to display rich text
 	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
@@ -61,7 +61,7 @@ void About::CreditsDialog(wxWindow *parent)
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
 
 	// hardcoded credits (for now), supports basic HTML formatting
-	wxString credits = R"(<html>
+	wxString credits = wxString::FromUTF8(R"(<html>
 <body text="#000000" bgcolor="#FFFFFF" link="#0000FF" vlink="#0000FF">
 
 <center>
@@ -365,7 +365,7 @@ void About::CreditsDialog(wxWindow *parent)
 </font>
 
 </body>
-</html>)";
+</html>)");
 
 	// required to display rich text
 	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);

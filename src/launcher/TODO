@@ -1,1 +1,3 @@
 - Change IWAD selector into a dropdown, derived from the added total IWADS
+- [LINUX] Fix the issue with the profile settings dialog not trasfering data
+- [LINUX] Fix the issue with Credits not rendering at all

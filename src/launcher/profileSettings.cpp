@@ -576,6 +576,13 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 
 void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 {
+	// capture the radio button value manually and set values (beause wxValidator with radio buttons is not suitable)
+	auto setupRadio = [currEdit](wxRadioButton *rb, int index) {
+		if (currEdit->renderingBackend == index)
+			rb->SetValue(true);
+		rb->Bind(wxEVT_RADIOBUTTON, [currEdit, index](wxCommandEvent &) { currEdit->renderingBackend = index; });
+	};
+
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 
 	// General Settings
@@ -594,12 +601,25 @@ void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 	mainSizer->Add(generalGroup, 0, wxEXPAND | wxALL, 10);
 
 	// Rendering API Group
-	wxBoxSizer *renderRow       = new wxBoxSizer(wxHORIZONTAL);
-	wxString    renderChoices[] = {"Vulkan - Most Recent (Recommended) ", "OpenGL - Legacy", "OpenGL ES - Legacy"};
-	wxRadioBox *renderBox =
-		new wxRadioBox(panel, wxID_ANY, "Rendering Backend", wxDefaultPosition, wxDefaultSize, 3, renderChoices, 0,
-	                   wxRA_SPECIFY_ROWS, wxGenericValidator(&currEdit->renderingBackend));
-	mainSizer->Add(renderBox, 0, wxEXPAND | wxALL, 10);
+
+	wxStaticBoxSizer *renderGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Rendering API");
+	wxBoxSizer       *renderRow   = new wxBoxSizer(wxHORIZONTAL);
+
+	wxRadioButton *vk = new wxRadioButton(panel, wxID_ANY, "Vulkan", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+	wxRadioButton *gl = new wxRadioButton(panel, wxID_ANY, "OpenGL", wxDefaultPosition, wxDefaultSize);
+	wxRadioButton *gles = new wxRadioButton(panel, wxID_ANY, "OpenGL ES", wxDefaultPosition, wxDefaultSize);
+
+	renderRow->Add(vk,0, wxRIGHT, 15);
+	renderRow->Add(gl, 0, wxRIGHT, 15);
+	renderRow->Add(gles, 0);
+
+	// setup bindings
+	setupRadio(vk,0);
+	setupRadio(gl,1);
+	setupRadio(gles,2);
+
+	renderGroup->Add(renderRow, 0, wxALL, 5);
+	mainSizer->Add(renderGroup, 0, wxEXPAND | wxALL, 10);
 
 	// Extra Graphics
 	wxStaticBoxSizer *graphicsGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Extra Graphics");

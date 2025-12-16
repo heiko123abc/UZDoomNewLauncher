@@ -103,7 +103,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 		std::vector<int> vals;
 		for (auto *tc : textCtrls)
 		{
-			long v;
+			long v = 0;
 			tc->GetValue().ToLong(&v);
 			vals.push_back((int)v);
 		}
@@ -136,7 +136,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 		dlg.TransferDataFromWindow(); // Save the bool validator if it exists
 		for (int i = 0; i < varCount; i++)
 		{
-			long v;
+			long v = 0;
 			textCtrls[i]->GetValue().ToLong(&v);
 			definedVars[i] = (int)v;
 		}
@@ -269,191 +269,189 @@ void advCompat(Profile *currEdit, wxWindow *parent)
 
 		// compatflags
 		{		  "Find shortest textures like Doom",
-	                 "If enabled, Doom includes the first texture (normally treated as null) when determining move distance for "
-	                 "specials that act upon the shortest surrounding texture (e.g. Floor_RaiseByTexture).",0,          1 << 0,false																																		  },
+	     "If enabled, Doom includes the first texture (normally treated as null) when determining move distance for "
+	     "specials that act upon the shortest surrounding texture (e.g. Floor_RaiseByTexture).",0,          1 << 0,false																																	  },
 		{				"Use buggier stair building",
-	                 "If enabled, Doom's buggier stair-building code is used for the line specials that build stairs. See also the "
-	                 "stair specials articles.", 0,          1 << 1, false																	  },
+	     "If enabled, Doom's buggier stair-building code is used for the line specials that build stairs. See also the "
+	     "stair specials articles.", 0,          1 << 1, false																			  },
 		{		 "Limit Pain Elementals' Lost Souls",
-	                 "Enables Doom's default behavior where pain elementals are now allowed to spawn new lost souls if there are "
-	                 "already more than twenty on the map. Some older WADs took advantage of this limitation to create traps or "
-	                 "ambushes where several Pain Elementals threaten the player but at first are unable to attack until the "
-	                 "player grabs a powerup or otherwise triggers an action which kills enough Lost Souls to allow them to begin "
-	                 "spawning more.", 0,          1 << 2, false																				},
+	     "Enables Doom's default behavior where pain elementals are now allowed to spawn new lost souls if there are "
+	     "already more than twenty on the map. Some older WADs took advantage of this limitation to create traps or "
+	     "ambushes where several Pain Elementals threaten the player but at first are unable to attack until the "
+	     "player grabs a powerup or otherwise triggers an action which kills enough Lost Souls to allow them to begin "
+	     "spawning more.", 0,          1 << 2, false																						},
 		{        "Don't let others hear your pickups",
-	                 "In Doom, other players in a multiplayer match were not able to hear each other pick up items or weapons (the "
-	                 "pickup sounds only played for the local player). ZDoom changes this so that players can hear other players' "
-	                 "pickups. Enable this option to restore the original behavior.", 0,          1 << 3, false								 },
+	     "In Doom, other players in a multiplayer match were not able to hear each other pick up items or weapons (the "
+	     "pickup sounds only played for the local player). ZDoom changes this so that players can hear other players' "
+	     "pickups. Enable this option to restore the original behavior.", 0,          1 << 3, false										 },
 		{				"Actors are infinitely tall",
-	                 "Doom did not allow one actor to pass over the top of another; in fact, all actors were considered to be "
-	                 "infinitely tall for the purposes of collision-detection with each other. ZDoom and other advanced ports "
-	                 "change this so that objects can realistically move over or under each other. Enable this option to revert to "
-	                 "Doom's original behavior.", 0,          1 << 4, false																	 },
+	     "Doom did not allow one actor to pass over the top of another; in fact, all actors were considered to be "
+	     "infinitely tall for the purposes of collision-detection with each other. ZDoom and other advanced ports "
+	     "change this so that objects can realistically move over or under each other. Enable this option to revert to "
+	     "Doom's original behavior.", 0,          1 << 4, false																			 },
 		{        "Cripple sound for silent BFG trick",
-	                 "If enabled, players will only be allowed to emit one sound at a time. This Doom behavior can be exploited in "
-	                 "multiplayer matches to mask certain sound effects (most notably the BFG firing sound) from other players. "
-	                 "Note that this compatibility option heavily cripples ZDoom's sound system to achieve this effect and so "
-	                 "players need to be aware of potential side-effects if they opt to enable this behavior.", 0,          1 << 5, false       },
+	     "If enabled, players will only be allowed to emit one sound at a time. This Doom behavior can be exploited in "
+	     "multiplayer matches to mask certain sound effects (most notably the BFG firing sound) from other players. "
+	     "Note that this compatibility option heavily cripples ZDoom's sound system to achieve this effect and so "
+	     "players need to be aware of potential side-effects if they opt to enable this behavior.", 0,          1 << 5, false               },
 		{					   "Enable wall running",
-	                 "Doom's collision-detection and movement routines were very basic and contained several known bugs that could "
-	                 "be exploited to allow things that weren't originally intended. One of these was the ability to move "
-	                 "extremely fast along walls oriented at a certain angle on the map. ZDoom's movement code fixes most of these "
-	                 "issues, so it is no longer possible to use the \"wall - running\" cheat. A few maps however may have been "
-	                 "designed with it in mind and become impossible to play without it, so this option is available in those "
-	                 "cases. However, this heavily cripples ZDoom's movement code and re-introduces a number of bugs and "
-	                 "inaccuracies. It is recommended to only use this option if absolutely necessary to complete the map.",
-	                 0,          1 << 6, false																								  },
+	     "Doom's collision-detection and movement routines were very basic and contained several known bugs that could "
+	     "be exploited to allow things that weren't originally intended. One of these was the ability to move "
+	     "extremely fast along walls oriented at a certain angle on the map. ZDoom's movement code fixes most of these "
+	     "issues, so it is no longer possible to use the \"wall - running\" cheat. A few maps however may have been "
+	     "designed with it in mind and become impossible to play without it, so this option is available in those "
+	     "cases. However, this heavily cripples ZDoom's movement code and re-introduces a number of bugs and "
+	     "inaccuracies. It is recommended to only use this option if absolutely necessary to complete the map.", 0,          1 << 6, false  },
 		{			 "Spawn item drops on the floor",
-	                 "When monsters are killed in ZDoom, any items they drop are \"tossed\" into the air and then drop to the "
-	                 "ground before coming to rest. Enable this option to restore the original behavior and make dropped items "
-	                 "appear already on the floor.", 0,          1 << 7, false																  },
+	     "When monsters are killed in ZDoom, any items they drop are \"tossed\" into the air and then drop to the "
+	     "ground before coming to rest. Enable this option to restore the original behavior and make dropped items "
+	     "appear already on the floor.", 0,          1 << 7, false																		  },
 		{		 "All special lines can block <use>",
-	                 "Doom contained a limitation where any line with a special (even one that does not activate anything when "
-	                 "used) would intercept the player's use action and would not allow any lines behind it to trigger. By default "
-	                 "ZDoom allows all lines within the player's reach to be triggered at once. Enable this option to restore the "
-	                 "original behavior.", 0,          1 << 8, false																			},
+	     "Doom contained a limitation where any line with a special (even one that does not activate anything when "
+	     "used) would intercept the player's use action and would not allow any lines behind it to trigger. By default "
+	     "ZDoom allows all lines within the player's reach to be triggered at once. Enable this option to restore the "
+	     "original behavior.", 0,          1 << 8, false																					},
 		{			"Disable Boom door light effect",
-	                 "Boom (and ZDoom) add the ability to specify tagged sectors whose light level changes as a matching-tagged "
-	                 "door is opened and closed. However, some older maps with incorrectly-tagged doors may inadvertently trigger "
-	                 "this effect. Enable this option to prevent the light change from occuring in these instances.", 0,          1 << 9, false },
+	     "Boom (and ZDoom) add the ability to specify tagged sectors whose light level changes as a matching-tagged "
+	     "door is opened and closed. However, some older maps with incorrectly-tagged doors may inadvertently trigger "
+	     "this effect. Enable this option to prevent the light change from occuring in these instances.", 0,          1 << 9, false         },
 		{        "Raven scrollers use original speed",
-	                 "Heretic and Hexen floor scrollers had the odd effect of visibly moving the floor texture at a slower rate "
-	                 "than the player was carried. ZDoom corrects this glitch. The original effect can be restored by enabling "
-	                 "this compatibility option.", 0,         1 << 10, false																	},
+	     "Heretic and Hexen floor scrollers had the odd effect of visibly moving the floor texture at a slower rate "
+	     "than the player was carried. ZDoom corrects this glitch. The original effect can be restored by enabling "
+	     "this compatibility option.", 0,         1 << 10, false																			},
 		{        "Use original sound target handling",
-	                 "Doom and older versions of ZDoom (up to 2.0.63a) used a sector flag to determine when monsters in each "
-	                 "sector had heard the player. Since the flag never got reset once activated, monsters spawned into the map at "
-	                 "a later time could wake up immediately without having to actually see or hear the player. Newer versions of "
-	                 "ZDoom use a more realistic method by which enemies spawned into the map begin dormant and must be woken up "
-	                 "in the usual way. However, certain older maps may rely on the original behavior and so enemies which are "
-	                 "supposed to wake up immediately may remain dormant. Enable this option to restore the original "
-	                 "functionality.", 0,         1 << 11, false																				},
+	     "Doom and older versions of ZDoom (up to 2.0.63a) used a sector flag to determine when monsters in each "
+	     "sector had heard the player. Since the flag never got reset once activated, monsters spawned into the map at "
+	     "a later time could wake up immediately without having to actually see or hear the player. Newer versions of "
+	     "ZDoom use a more realistic method by which enemies spawned into the map begin dormant and must be woken up "
+	     "in the usual way. However, certain older maps may rely on the original behavior and so enemies which are "
+	     "supposed to wake up immediately may remain dormant. Enable this option to restore the original "
+	     "functionality.", 0,         1 << 11, false																						},
 		{        "DEH health settings like Doom2.exe",
-	                 "Boom introduced a known bug that caused DeHackEd's max health value to affect stimpacks and medikits in "
-	                 "addition to health bonuses. ZDoom retains that same bug to allow maps to define a new maximum health value "
-	                 "for players to remain compatible. To restore the original (correct) Doom behavior, enable this option.",
-	                 0,         1 << 12, false																								  },
+	     "Boom introduced a known bug that caused DeHackEd's max health value to affect stimpacks and medikits in "
+	     "addition to health bonuses. ZDoom retains that same bug to allow maps to define a new maximum health value "
+	     "for players to remain compatible. To restore the original (correct) Doom behavior, enable this option.", 0,         1 << 12, false},
 		{"Self-referencing sectors don't block shots",
-	                 "Doom ignored lines which had both sides in the same sector when determining whether a hitscan attack will "
-	                 "pass through. ZDoom uses a more accurate routine which takes these lines into account. Enable this option to "
-	                 "restore Doom's less accurate method.", 0,         1 << 13, false														  },
+	     "Doom ignored lines which had both sides in the same sector when determining whether a hitscan attack will "
+	     "pass through. ZDoom uses a more accurate routine which takes these lines into account. Enable this option to "
+	     "restore Doom's less accurate method.", 0,         1 << 13, false																  },
 		{		  "Monsters get stuck over dropoffs",
-	                 "Originally, monsters using Doom's AI could get stuck if they were pushed onto a ledge and would be unable to "
-	                 "move. ZDoom adds code that specifically checks for such a situation and finds a valid direction for the "
-	                 "monster to move away from the ledge. This option disables that new movement code and allows monsters to "
-	                 "remain stuck.", 0,         1 << 14, false																				 },
+	     "Originally, monsters using Doom's AI could get stuck if they were pushed onto a ledge and would be unable to "
+	     "move. ZDoom adds code that specifically checks for such a situation and finds a valid direction for the "
+	     "monster to move away from the ledge. This option disables that new movement code and allows monsters to "
+	     "remain stuck.", 0,         1 << 14, false																						 },
 		{			   "Boom scrollers are additive",
-	                 "Boom's texture scrolling specials were designed to stack with each other and with Doom's default scroll "
-	                 "types, however ZDoom does not use this additive behavior. Enable this option to use Boom's method and allow "
-	                 "them to stack with each other.", 0,         1 << 15, false																},
+	     "Boom's texture scrolling specials were designed to stack with each other and with Doom's default scroll "
+	     "types, however ZDoom does not use this additive behavior. Enable this option to use Boom's method and allow "
+	     "them to stack with each other.", 0,         1 << 15, false																		},
 		{			"Monsters see invisible players",
-	                 "Enemies in ZDoom will not normally wake up when they \"see\" a player who is using an invisibility powerup. "
-	                 "Enable this option to restore Doom's original behavior where enemies would always wake up in these "
-	                 "circumstances.", 0,         1 << 16, false																				},
+	     "Enemies in ZDoom will not normally wake up when they \"see\" a player who is using an invisibility powerup. "
+	     "Enable this option to restore Doom's original behavior where enemies would always wake up in these "
+	     "circumstances.", 0,         1 << 16, false																						},
 		{      "Instant moving floors are not silent",
-	                 "If a sector moves instantly from one height to another, ZDoom will normally prevent any associated movement "
-	                 "sounds from playing. This option re-enables the original Doom behavior where only the stop sound would be "
-	                 "played in this cases.", 0,         1 << 17, false																		 },
+	     "If a sector moves instantly from one height to another, ZDoom will normally prevent any associated movement "
+	     "sounds from playing. This option re-enables the original Doom behavior where only the stop sound would be "
+	     "played in this cases.", 0,         1 << 17, false																				 },
 		{        "Sector sounds use center as source",
-	                 "Doom and older versions of ZDoom considered the center of a sector to be the original point of any sounds "
-	                 "that sector makes. In certain cases, this could cause the sound position to be inaccurate or players to hear "
-	                 "a directional sound while standing within the sector that is generating it. This has since been fixed to "
-	                 "where players hear the sound coming from the point of the sector nearest to them, ensuring an equal level of "
-	                 "sound throughout the sector. This option will restore the older, less accurate sound behavior.", 0,         1 << 18, false},
+	     "Doom and older versions of ZDoom considered the center of a sector to be the original point of any sounds "
+	     "that sector makes. In certain cases, this could cause the sound position to be inaccurate or players to hear "
+	     "a directional sound while standing within the sector that is generating it. This has since been fixed to "
+	     "where players hear the sound coming from the point of the sector nearest to them, ensuring an equal level of "
+	     "sound throughout the sector. This option will restore the older, less accurate sound behavior.", 0,         1 << 18, false        },
 		{     "Use Doom heights for missile clipping",
-	                 "If enabled, actors use their original heights for the purposes of projectile collision. This allows for "
-	                 "decorations to be pass-through for projectiles as they were originally in Doom while still blocking other "
-	                 "actors correctly. Specifically, this affects actors with negative values defined for their "
-	                 "ProjectilePassHeight property.", 0,         1 << 19, false																},
+	     "If enabled, actors use their original heights for the purposes of projectile collision. This allows for "
+	     "decorations to be pass-through for projectiles as they were originally in Doom while still blocking other "
+	     "actors correctly. Specifically, this affects actors with negative values defined for their "
+	     "ProjectilePassHeight property.", 0,         1 << 19, false																		},
 		{			"Monsters cannot cross dropoffs",
-	                 "Doom's physics code prevented enemies from being pushed off of ledges that are greater than the monster's "
-	                 "maxstepheight property. ZDoom normally allows monsters to be pushed over these dropoffs by outside force. If "
-	                 "enabled, this CVAR restores the original Doom behavior.", 0,         1 << 20, false									   },
+	     "Doom's physics code prevented enemies from being pushed off of ledges that are greater than the monster's "
+	     "maxstepheight property. ZDoom normally allows monsters to be pushed over these dropoffs by outside force. If "
+	     "enabled, this CVAR restores the original Doom behavior.", 0,         1 << 20, false											   },
 		{     "Allow any bossdeath for level special",
-	                 "Early versions of Doom executed the level's special action whenever the last monster of a kind that called "
-	                 "A_BossDeath died. This allowed to have several different bosses on the same map, and have the special action "
-	                 "repeated as many times, a fact that was used notably by 'Doomsday of UAC' to free a Cyberdemon once all "
-	                 "Barons of Hell were defeated, and to make a red skull key accessible once the Cyberdemon was slain. Id "
-	                 "Software considered this behavior a bug and fixed it, breaking this level.", 0,         1 << 21, false                    },
+	     "Early versions of Doom executed the level's special action whenever the last monster of a kind that called "
+	     "A_BossDeath died. This allowed to have several different bosses on the same map, and have the special action "
+	     "repeated as many times, a fact that was used notably by 'Doomsday of UAC' to free a Cyberdemon once all "
+	     "Barons of Hell were defeated, and to make a red skull key accessible once the Cyberdemon was slain. Id "
+	     "Software considered this behavior a bug and fixed it, breaking this level.", 0,         1 << 21, false							},
 		{		 "No Minotaur floor flames in water",
-	                 "Heretic introduced two new elements to the Doom engine: floor clipping to simulate actors wading through "
-	                 "shallow water (or other liquids), and floor-hugging projectiles. The combination of the two, however, was "
-	                 "not properly tested. When a maulotaur had its feet clipped by terrain and used its floor-hugging attack, the "
-	                 "missiles were created below the floor, and were instantly destroyed as a result. Enabling this option "
-	                 "prevents minotaurs from successfully creating their floor flames if their feet are clipped. Other "
-	                 "floor-hugging projectiles are not affected.", 0,         1 << 22, false												   },
+	     "Heretic introduced two new elements to the Doom engine: floor clipping to simulate actors wading through "
+	     "shallow water (or other liquids), and floor-hugging projectiles. The combination of the two, however, was "
+	     "not properly tested. When a maulotaur had its feet clipped by terrain and used its floor-hugging attack, the "
+	     "missiles were created below the floor, and were instantly destroyed as a result. Enabling this option "
+	     "prevents minotaurs from successfully creating their floor flames if their feet are clipped. Other "
+	     "floor-hugging projectiles are not affected.", 0,         1 << 22, false														   },
 		{     "Original A_Mushroom speed in DEH mods",
-	                 "Doom originally calculated a missile's velocity on the X and Y axes based on its Speed property, and then "
-	                 "added a Z velocity to reach the point aimed at. In other words, the horizontal velocity was the same "
-	                 "regardless of the angle, meaning that the higher you aimed, the faster the projectile actually was overall. "
-	                 "Since ZDoom allows, through freelook, to aim much higher or much lower than is normally possible in Doom, "
-	                 "the effect at steep angles looked visibly bugged and the formula was changed to derive all three components "
-	                 "of the actor's velocity from its angle and pitch. However, MBF introduced a codepointer, A_Mushroom, that "
-	                 "aimed projectiles at very steep angles, and the new ZDoom formula caused the effects of A_Mushroom to be "
-	                 "very different in ZDoom compared to MBF. Enable this option to let A_Mushroom use the old formula when "
-	                 "called from a state that was modified by DeHackEd.", 0,         1 << 23, false											},
+	     "Doom originally calculated a missile's velocity on the X and Y axes based on its Speed property, and then "
+	     "added a Z velocity to reach the point aimed at. In other words, the horizontal velocity was the same "
+	     "regardless of the angle, meaning that the higher you aimed, the faster the projectile actually was overall. "
+	     "Since ZDoom allows, through freelook, to aim much higher or much lower than is normally possible in Doom, "
+	     "the effect at steep angles looked visibly bugged and the formula was changed to derive all three components "
+	     "of the actor's velocity from its angle and pitch. However, MBF introduced a codepointer, A_Mushroom, that "
+	     "aimed projectiles at very steep angles, and the new ZDoom formula caused the effects of A_Mushroom to be "
+	     "very different in ZDoom compared to MBF. Enable this option to let A_Mushroom use the old formula when "
+	     "called from a state that was modified by DeHackEd.", 0,         1 << 23, false													},
 		{   "Monster movement is affected by effects",
-	                 "Boom introduced sector friction and pusher/puller effects, and MBF subjected monsters to them. ZDoom, by "
-	                 "default, does not, as the AI is unaware of such effects and incapable of coping up with them. Use this "
-	                 "option to enable the MBF behavior. This does not affect \"conveyor belt\" effects.", 0,         1 << 24, false            },
+	     "Boom introduced sector friction and pusher/puller effects, and MBF subjected monsters to them. ZDoom, by "
+	     "default, does not, as the AI is unaware of such effects and incapable of coping up with them. Use this "
+	     "option to enable the MBF behavior. This does not affect \"conveyor belt\" effects.", 0,         1 << 24, false                    },
 		{       "Crushed monsters can be resurrected",
-	                 "Doom originally changed the state of an actor's corpse to the \"crushed gibs\" state if they were ground by "
-	                 "a closing door, raising elevator, crusher, or similar effect. This behavior later led to a bug with the skin "
-	                 "code in ZDoom as when a player's corpse was crushed, only its sprite's letter was changed, not the full "
-	                 "sprite name, meaning that a crushed player corpse looked like a standing player. To solve the problem, the "
-	                 "fix at the time was to remove the corpse and spawn in its place a gibs actor, and this in turn led to the "
-	                 "result that arch-viles or similar monsters could no longer raise the monsters whose corpses had been "
-	                 "crushed. Enabling this option to restore the original Doom behavior of changing the actor's state instead of "
-	                 "replacing the actor. Note that player corpses are not affected, and any actor with a custom Crush state will "
-	                 "use it in all cases.", 0,         1 << 25, false																		  },
+	     "Doom originally changed the state of an actor's corpse to the \"crushed gibs\" state if they were ground by "
+	     "a closing door, raising elevator, crusher, or similar effect. This behavior later led to a bug with the skin "
+	     "code in ZDoom as when a player's corpse was crushed, only its sprite's letter was changed, not the full "
+	     "sprite name, meaning that a crushed player corpse looked like a standing player. To solve the problem, the "
+	     "fix at the time was to remove the corpse and spawn in its place a gibs actor, and this in turn led to the "
+	     "result that arch-viles or similar monsters could no longer raise the monsters whose corpses had been "
+	     "crushed. Enabling this option to restore the original Doom behavior of changing the actor's state instead of "
+	     "replacing the actor. Note that player corpses are not affected, and any actor with a custom Crush state will "
+	     "use it in all cases.", 0,         1 << 25, false																				  },
 		{		  "Friendly monsters aren't blocked",
-	                 "Friendly monsters are still monsters, and therefore blocked by monster-blocking lines. This can severely "
-	                 "limit their utility, as for example a friendly monster summoned at the start of 'MAP01: Entryway' in Doom II "
-	                 "will be unable to climb the steps of the triangle stairway. To counter this, MBF allowed any friendly "
-	                 "monster to pass through monster-blocking lines. Enable this option to do the same.", 0,         1 << 26, false            },
+	     "Friendly monsters are still monsters, and therefore blocked by monster-blocking lines. This can severely "
+	     "limit their utility, as for example a friendly monster summoned at the start of 'MAP01: Entryway' in Doom II "
+	     "will be unable to climb the steps of the triangle stairway. To counter this, MBF allowed any friendly "
+	     "monster to pass through monster-blocking lines. Enable this option to do the same.", 0,         1 << 26, false                    },
 		{					 "Invert sprite sorting",
-	                 "ZDoom normally does not display overlapping sprites in the same order they were in Doom. Certain mods use "
-	                 "overlapping sprites to achieve certain types of special effects, combining two different decorations into "
-	                 "seemingly a single one. However, some mods require the original Doom order to work as intended, and others "
-	                 "require the inverted ZDoom order. This compatibility option, if enabled, restores the original Doom order "
-	                 "for sprite sorting.", 0,         1 << 27, false																		   },
+	     "ZDoom normally does not display overlapping sprites in the same order they were in Doom. Certain mods use "
+	     "overlapping sprites to achieve certain types of special effects, combining two different decorations into "
+	     "seemingly a single one. However, some mods require the original Doom order to work as intended, and others "
+	     "require the inverted ZDoom order. This compatibility option, if enabled, restores the original Doom order "
+	     "for sprite sorting.", 0,         1 << 27, false																				   },
 		{		  "Use Doom code for hitscan checks",
-	                 "ZDoom fixed a couple of bugs in the hitscan trace routines, which had the effect of making hitscan attacks "
-	                 "more efficient overall as in the original code they would sometimes \"magically\" miss. The first is that it "
-	                 "is a monster's cross-section, rather than its bounding box, that is used to check for impact; this makes "
-	                 "attacks with a limited range (especially player melee attacks) unlikely to hit very wide monsters. The "
-	                 "second is the blockmap bug: if an actor crosses block boundaries and its center is in a different block than "
-	                 "the one in which the impact happens, then there is no collision at all, letting attacks pass through it "
-	                 "harmlessly. If enabled, this option restores the original, flawed behavior.", 0,         1 << 28, false                   },
+	     "ZDoom fixed a couple of bugs in the hitscan trace routines, which had the effect of making hitscan attacks "
+	     "more efficient overall as in the original code they would sometimes \"magically\" miss. The first is that it "
+	     "is a monster's cross-section, rather than its bounding box, that is used to check for impact; this makes "
+	     "attacks with a limited range (especially player melee attacks) unlikely to hit very wide monsters. The "
+	     "second is the blockmap bug: if an actor crosses block boundaries and its center is in a different block than "
+	     "the one in which the impact happens, then there is no collision at all, letting attacks pass through it "
+	     "harmlessly. If enabled, this option restores the original, flawed behavior.", 0,         1 << 28, false						   },
 		{		  "Find neighboring light like Doom",
-	                 "Doom had a logical bug in its algorithm to search for the highest light level in neighboring sectors, which "
-	                 "prevented it from looking past the first tagged sector's neighbors. This bug was fixed in Boom, and later "
-	                 "ZDoom adopted the fix as well. If enabled, this option uses the Doom behavior rather than the corrected Boom "
-	                 "one.", 0,         1 << 29, false																						  },
+	     "Doom had a logical bug in its algorithm to search for the highest light level in neighboring sectors, which "
+	     "prevented it from looking past the first tagged sector's neighbors. This bug was fixed in Boom, and later "
+	     "ZDoom adopted the fix as well. If enabled, this option uses the Doom behavior rather than the corrected Boom "
+	     "one.", 0,         1 << 29, false																								  },
 		{			   "Draw polyobjects like Hexen", "Uses the old flawed polyobject system, for maps that relied on its glitches.",
-	                 0,         1 << 30, false																								  },
+	     0,         1 << 30, false																										  },
 		{    "Ignore Y offsets on masked midtextures",
-	                 "This option emulates a vanilla renderer glitch by ignoring the Y locations of patches drawn on two-sided "
-	                 "midtextures and instead always drawing them at the top of the texture.", 0, (int)2147483648, false                        }, //  fix checked bug
+	     "This option emulates a vanilla renderer glitch by ignoring the Y locations of patches drawn on two-sided "
+	     "midtextures and instead always drawing them at the top of the texture.", 0, (int)2147483648, false                                }, //  fix checked bug
 
 		// compatflags2
 		{			   "Cannot travel straight NSEW",
-	                 "This option emulates the error in the original engine's sine table by offsetting player angle when spawning "
-	                 "or teleporting by one fineangle (approximatively 0.044°), preventing the player from facing directly in a "
-	                 "cardinal direction.", 1,          1 << 0, false																		   },
+	     "This option emulates the error in the original engine's sine table by offsetting player angle when spawning "
+	     "or teleporting by one fineangle (approximatively 0.044°), preventing the player from facing directly in a "
+	     "cardinal direction.", 1,          1 << 0, false																				   },
 		{		  "Use Doom's floor motion behavior",
-	                 "Vanilla Doom allows floors to move up past their ceilings, and ceilings to move down past their floors. "
-	                 "ZDoom adopted a Boom fix to prevents this from happening. This compatibility option allows to turn off this "
-	                 "fix.", 1,          1 << 1, false																						  },
+	     "Vanilla Doom allows floors to move up past their ceilings, and ceilings to move down past their floors. "
+	     "ZDoom adopted a Boom fix to prevents this from happening. This compatibility option allows to turn off this "
+	     "fix.", 1,          1 << 1, false																								  },
 		{		   "Sounds stop when actor vanishes",
-	                 "If enabled, a playing sound gets cut off if its source no longer exists in the game world.", 1,          1 << 2,
-	                 false																													  },
+	     "If enabled, a playing sound gets cut off if its source no longer exists in the game world.", 1,          1 << 2,
+	     false																															  },
 		{        "Use Doom's point-on-line algorithm",
-	                 "Re-enables Doom's original, bugged behaviour for deciding exactly what side of a line a point that sits "
-	                 "exactly on a line should be on.", 1,          1 << 3, false															   },
+	     "Re-enables Doom's original, bugged behaviour for deciding exactly what side of a line a point that sits "
+	     "exactly on a line should be on.", 1,          1 << 3, false																	   },
 		{"Level exit can be triggered more than once",
-	                 "Allows level exits to be triggered multiple times. This is required by (and automatically applied to) "
-	                 "Daedalus: Alien Defense's \"Travel Tube\" maps to work around some faulty scripting.", 1,          1 << 4, false          }
+	     "Allows level exits to be triggered multiple times. This is required by (and automatically applied to) "
+	     "Daedalus: Alien Defense's \"Travel Tube\" maps to work around some faulty scripting.", 1,          1 << 4, false                  }
     };
 
 	int vars[] = {currEdit->compatflags, currEdit->compatflags2};
@@ -596,16 +594,12 @@ void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 	mainSizer->Add(generalGroup, 0, wxEXPAND | wxALL, 10);
 
 	// Rendering API Group
-	wxStaticBoxSizer *renderGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Rendering API");
-	wxBoxSizer       *renderRow   = new wxBoxSizer(wxHORIZONTAL);
-
-	renderRow->Add(new wxRadioButton(panel, wxID_ANY, "Vulkan", wxDefaultPosition, wxDefaultSize, wxRB_GROUP,
-	                                 wxGenericValidator(&(currEdit->renderingBackend))),
-	               0, wxRIGHT, 15);
-	renderRow->Add(new wxRadioButton(panel, wxID_ANY, "OpenGL"), 0, wxRIGHT, 15);
-	renderRow->Add(new wxRadioButton(panel, wxID_ANY, "OpenGL ES"), 0);
-	renderGroup->Add(renderRow, 0, wxALL, 5);
-	mainSizer->Add(renderGroup, 0, wxEXPAND | wxALL, 10);
+	wxBoxSizer *renderRow       = new wxBoxSizer(wxHORIZONTAL);
+	wxString    renderChoices[] = {"Vulkan - Most Recent (Recommended) ", "OpenGL - Legacy", "OpenGL ES - Legacy"};
+	wxRadioBox *renderBox =
+		new wxRadioBox(panel, wxID_ANY, "Rendering Backend", wxDefaultPosition, wxDefaultSize, 3, renderChoices, 0,
+	                   wxRA_SPECIFY_ROWS, wxGenericValidator(&currEdit->renderingBackend));
+	mainSizer->Add(renderBox, 0, wxEXPAND | wxALL, 10);
 
 	// Extra Graphics
 	wxStaticBoxSizer *graphicsGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Extra Graphics");
@@ -758,15 +752,23 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	wxStaticBoxSizer *launchModeGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Launch Mode");
 
+	// capture the radio button value manually and set values (beause wxValidator with radio buttons is not suitable)
+	auto setupRadio = [currEdit](wxRadioButton *rb, int index) {
+		if (currEdit->launchParameters == index)
+			rb->SetValue(true);
+		rb->Bind(wxEVT_RADIOBUTTON, [currEdit, index](wxCommandEvent &) { currEdit->launchParameters = index; });
+	};
+
 	// Normal
 	{
 		wxBoxSizer    *row = new wxBoxSizer(wxHORIZONTAL);
-		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, "Normal", wxDefaultPosition, wxDefaultSize, wxRB_GROUP,
-		                                       wxGenericValidator(&currEdit->launchParameters));
+		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, "Normal", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
 		rb->SetValue(true);
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
 		launchModeGroup->Add(row, 0, wxEXPAND | wxALL, 3);
+
+		setupRadio(rb, 0);
 	}
 
 	// Map
@@ -779,6 +781,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		mapSpinner->SetValidator(wxGenericValidator(&currEdit->selectedLaunchMap));
 		row->Add(mapSpinner, 0, wxALIGN_CENTER_VERTICAL);
 		launchModeGroup->Add(row, 0, wxEXPAND | wxALL, 3);
+
+		setupRadio(rb, 1);
 	}
 
 	// Savegame
@@ -797,6 +801,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		row->Add(loadSavePath, 0, wxALIGN_CENTER_VERTICAL);
 		row->Add(loadSavePathButton, 0);
 		launchModeGroup->Add(row, 0, wxEXPAND | wxALL, 3);
+
+		setupRadio(rb, 2);
 	}
 
 	// Demo Playback
@@ -815,6 +821,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		row->Add(playDemPath, 0, wxALIGN_CENTER_VERTICAL);
 		row->Add(playDemPathButton, 0);
 		launchModeGroup->Add(row, 0, wxEXPAND | wxALL, 3);
+
+		setupRadio(rb, 3);
 	}
 
 	// Demo Record
@@ -833,6 +841,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		row->Add(recDemPath, 0, wxALIGN_CENTER_VERTICAL);
 		row->Add(recDemPathButton, 0);
 		launchModeGroup->Add(row, 0, wxEXPAND | wxALL, 3);
+
+		setupRadio(rb, 4);
 	}
 
 	leftCol->Add(launchModeGroup, 0, wxEXPAND | wxALL, 5);
@@ -918,7 +928,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	hostGrid->Add(new wxStaticText(panel, wxID_ANY, "Tickrate:"), 0, wxALIGN_CENTER_VERTICAL);
 
 	wxComboBox *TickRateCombo = new wxComboBox(panel, wxID_ANY, "25Hz", wxDefaultPosition, wxDefaultSize, 0, NULL, 0,
-	                                           wxTextValidator(wxFILTER_NONE, &currEdit->hostTickRate));
+	                                           wxGenericValidator(&currEdit->hostTickRate));
 	TickRateCombo->Append("25Hz");
 	TickRateCombo->Append("17.5Hz");
 	TickRateCombo->Append("11.6Hz");
@@ -927,7 +937,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	hostGrid->Add(new wxStaticText(panel, wxID_ANY, "Gamemode:"), 0, wxALIGN_CENTER_VERTICAL);
 	wxComboBox *gameModeCombo = new wxComboBox(panel, wxID_ANY, "Cooperative", wxDefaultPosition, wxDefaultSize, 0,
-	                                           NULL, 0, wxTextValidator(wxFILTER_NONE, &currEdit->hostGamemode));
+	                                           NULL, 0, wxGenericValidator(&currEdit->hostGamemode));
 	gameModeCombo->Append("Cooperative");
 	gameModeCombo->Append("Team Deathmatch");
 	gameModeCombo->Append("Alt. Team Deathmatch");
@@ -938,7 +948,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	hostGrid->Add(new wxStaticText(panel, wxID_ANY, "Network Mode:"), 0, wxALIGN_CENTER_VERTICAL);
 	wxComboBox *netModeCombo = new wxComboBox(panel, wxID_ANY, "Peer-to-Peer", wxDefaultPosition, wxDefaultSize, 0,
-	                                          NULL, 0, wxTextValidator(wxFILTER_NONE, &currEdit->hostNetworkMode));
+	                                          NULL, 0, wxGenericValidator(&currEdit->hostNetworkMode));
 	netModeCombo->Append("Peer-to-Peer");
 	netModeCombo->Append("Packet Server");
 	netModeCombo->SetEditable(false);
@@ -1104,7 +1114,6 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 
 	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
-
 
 	wxBoxSizer *mainSizer   = new wxBoxSizer(wxVERTICAL); // Main vertical sizer so fit everything
 	wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);

@@ -4,7 +4,7 @@ void About::ReleaseNotesDialog(wxWindow *parent)
 {
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "Release Notes", wxDefaultPosition, wxSize(1000, 800));
+	this->Create(parent, wxID_ANY, "Release Notes", wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
 
 	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
@@ -55,7 +55,7 @@ void About::CreditsDialog(wxWindow *parent)
 {
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "Credits", wxDefaultPosition, wxSize(1000, 800));
+	this->Create(parent, wxID_ANY, "Credits", wxDefaultPosition,  parent->FromDIP(wxSize(1000, 800)));
 
 	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing

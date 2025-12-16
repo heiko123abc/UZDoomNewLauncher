@@ -30,7 +30,7 @@ struct FlagInfo
 void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, std::vector<FlagInfo> &flags,
                     int *definedVars, int varCount, bool showForceCheck = false)
 {
-	wxDialog dlg(parent, wxID_ANY, title, wxDefaultPosition, wxSize(500, 600));
+	wxDialog dlg(parent, wxID_ANY, title, wxDefaultPosition, parent->FromDIP(wxSize(500, 600)));
 	dlg.SetExtraStyle(dlg.GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
 	dlg.SetWindowStyle(wxDEFAULT_DIALOG_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX));
 
@@ -78,7 +78,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 		if (title == "Custom Compatibility Options")
 			grid->Add(new wxStaticText(&dlg, wxID_ANY, wxString::Format("compatflags%d:", i + 1)), 0,
 			          wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
-		wxTextCtrl *tc = new wxTextCtrl(&dlg, wxID_ANY, "", wxDefaultPosition, wxSize(100, -1));
+		wxTextCtrl *tc = new wxTextCtrl(&dlg, wxID_ANY, "", wxDefaultPosition, parent->FromDIP(wxSize(100, -1)));
 		textCtrls.push_back(tc);
 		grid->Add(tc, 0, wxEXPAND);
 	}
@@ -487,7 +487,7 @@ void OpenPathPicker(wxWindow *parent, wxTextCtrl *targetInput, const wxString &t
 	}
 }
 
-void RefreshModList(Profile *currEdit, wxScrolledWindow *listWindow, wxBoxSizer *listSizer)
+void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listWindow, wxBoxSizer *listSizer)
 {
 
 	listSizer->Clear(true); // force a redraw
@@ -511,35 +511,35 @@ void RefreshModList(Profile *currEdit, wxScrolledWindow *listWindow, wxBoxSizer 
 		rowSizer->Add(label, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
 
 		// UP Button
-		wxButton *btnUp = new wxButton(row, wxID_ANY, "^", wxDefaultPosition, wxSize(25, 20));
+		wxButton *btnUp = new wxButton(row, wxID_ANY, "^", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
 		btnUp->Enable(i > 0);
 		btnUp->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			if (i > 0)
 			{
 				std::swap(currEdit->modFiles[i], currEdit->modFiles[i - 1]);
-				RefreshModList(currEdit, listWindow, listSizer);
+				RefreshModList(parent, currEdit, listWindow, listSizer);
 			}
 		});
 		rowSizer->Add(btnUp, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
 		// DOWN Button
-		wxButton *btnDown = new wxButton(row, wxID_ANY, "v", wxDefaultPosition, wxSize(25, 20));
+		wxButton *btnDown = new wxButton(row, wxID_ANY, "v", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
 		btnDown->Enable(i < currEdit->modFiles.size() - 1);
 		btnDown->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			if (i < currEdit->modFiles.size() - 1)
 			{
 				std::swap(currEdit->modFiles[i], currEdit->modFiles[i + 1]);
-				RefreshModList(currEdit, listWindow, listSizer);
+				RefreshModList(parent, currEdit, listWindow, listSizer);
 			}
 		});
 		rowSizer->Add(btnDown, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
 		// DELETE Button
-		wxButton *btnDel = new wxButton(row, wxID_ANY, "X", wxDefaultPosition, wxSize(25, 20));
+		wxButton *btnDel = new wxButton(row, wxID_ANY, "X", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
 		btnDel->SetForegroundColour(*wxRED);
 		btnDel->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			currEdit->modFiles.erase(currEdit->modFiles.begin() + i); // Remove from vector
-			RefreshModList(currEdit, listWindow, listSizer);
+			RefreshModList(parent, currEdit, listWindow, listSizer);
 		});
 		rowSizer->Add(btnDel, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
@@ -557,16 +557,18 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 
 	// prepend parameters field
 	wxStaticBoxSizer *pparamGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Prepend Additional Parameters");
-	wxTextCtrl       *pparams = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(-1, 100), wxTE_MULTILINE,
-	                                           wxTextValidator(wxFILTER_NONE, &currEdit->prependAdditionalParameters));
+	wxTextCtrl       *pparams =
+		new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
+	                   wxTextValidator(wxFILTER_NONE, &currEdit->prependAdditionalParameters));
 	pparamGroup->Add(pparams, 1, wxEXPAND);
 
 	mainSizer->Add(pparamGroup, 1, wxEXPAND | wxALL, 10);
 
 	// append parameters field
 	wxStaticBoxSizer *aparamGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Append Additional Parameters");
-	wxTextCtrl       *aparams = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxSize(-1, 100), wxTE_MULTILINE,
-	                                           wxTextValidator(wxFILTER_NONE, &currEdit->appendAdditionalParameters));
+	wxTextCtrl       *aparams =
+		new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
+	                   wxTextValidator(wxFILTER_NONE, &currEdit->appendAdditionalParameters));
 	aparamGroup->Add(aparams, 1, wxEXPAND);
 
 	mainSizer->Add(aparamGroup, 1, wxEXPAND | wxALL, 10);
@@ -605,18 +607,18 @@ void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 	wxStaticBoxSizer *renderGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Rendering API");
 	wxBoxSizer       *renderRow   = new wxBoxSizer(wxHORIZONTAL);
 
-	wxRadioButton *vk = new wxRadioButton(panel, wxID_ANY, "Vulkan", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-	wxRadioButton *gl = new wxRadioButton(panel, wxID_ANY, "OpenGL", wxDefaultPosition, wxDefaultSize);
+	wxRadioButton *vk   = new wxRadioButton(panel, wxID_ANY, "Vulkan", wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+	wxRadioButton *gl   = new wxRadioButton(panel, wxID_ANY, "OpenGL", wxDefaultPosition, wxDefaultSize);
 	wxRadioButton *gles = new wxRadioButton(panel, wxID_ANY, "OpenGL ES", wxDefaultPosition, wxDefaultSize);
 
-	renderRow->Add(vk,0, wxRIGHT, 15);
+	renderRow->Add(vk, 0, wxRIGHT, 15);
 	renderRow->Add(gl, 0, wxRIGHT, 15);
 	renderRow->Add(gles, 0);
 
 	// setup bindings
-	setupRadio(vk,0);
-	setupRadio(gl,1);
-	setupRadio(gles,2);
+	setupRadio(vk, 0);
+	setupRadio(gl, 1);
+	setupRadio(gles, 2);
 
 	renderGroup->Add(renderRow, 0, wxALL, 5);
 	mainSizer->Add(renderGroup, 0, wxEXPAND | wxALL, 10);
@@ -655,7 +657,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                                       wxTextValidator(wxFILTER_NONE, &currEdit->configFilePath));
 	configTxt->SetInsertionPointEnd();
 
-	wxButton *configButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	wxButton *configButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 	// bind it
 	configButton->Bind(wxEVT_BUTTON, [panel, configTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, configTxt, "Select Config File", false, "INI files (*.ini)|*.ini");
@@ -672,7 +674,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->saveDirPath));
 	saveTxt->SetInsertionPointEnd();
 
-	wxButton *saveDirButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	wxButton *saveDirButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 	// bind it
 	saveDirButton->Bind(wxEVT_BUTTON, [panel, saveTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, saveTxt, "Select Save Directory", true);
@@ -689,7 +691,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->screenshotDirPath));
 	shotTxt->SetInsertionPointEnd();
 
-	wxButton *scrnDirButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	wxButton *scrnDirButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 	// bind it
 	scrnDirButton->Bind(wxEVT_BUTTON, [panel, shotTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, shotTxt, "Select Screenshot Directory", true);
@@ -706,7 +708,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->demoDirPath));
 	demoTxt->SetInsertionPointEnd();
 
-	wxButton *demoDirButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	wxButton *demoDirButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 	// bind it
 	demoDirButton->Bind(wxEVT_BUTTON, [panel, demoTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, demoTxt, "Select Demo Directory", true);
@@ -753,10 +755,10 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 		}
 
 		// Force Refresh the UI
-		RefreshModList(currEdit, modList, modListSizer);
+		RefreshModList(panel, currEdit, modList, modListSizer);
 	});
 
-	RefreshModList(currEdit, modList, modListSizer); // redraw the ui when user comes over
+	RefreshModList(panel, currEdit, modList, modListSizer); // redraw the ui when user comes over
 
 	mainSizer->Add(modList, 1, wxEXPAND | wxALL, 15);
 
@@ -811,9 +813,10 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, "Savegame");
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
-		wxTextCtrl *loadSavePath       = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
-		                                                wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchSave));
-		wxButton   *loadSavePathButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+		wxTextCtrl *loadSavePath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
+		                                          wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchSave));
+		wxButton   *loadSavePathButton =
+			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 		// bind it
 		loadSavePathButton->Bind(wxEVT_BUTTON, [panel, loadSavePath](wxCommandEvent &) {
 			OpenPathPicker(panel, loadSavePath, "Select Save File", false, "Zdoom Save files (*.zds)|*.zds");
@@ -831,9 +834,10 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, "Play Demo");
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
-		wxTextCtrl *playDemPath       = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
-		                                               wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchDemoPlayback));
-		wxButton   *playDemPathButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+		wxTextCtrl *playDemPath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
+		                                         wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchDemoPlayback));
+		wxButton   *playDemPathButton =
+			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 		// bind it
 		playDemPathButton->Bind(wxEVT_BUTTON, [panel, playDemPath](wxCommandEvent &) {
 			OpenPathPicker(panel, playDemPath, "Select Demo File", false, "Demo Lump files (*.lmp)|*.lmp");
@@ -851,9 +855,10 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, "Record Demo");
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
-		wxTextCtrl *recDemPath       = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
-		                                              wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchDemoRecord));
-		wxButton   *recDemPathButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+		wxTextCtrl *recDemPath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
+		                                        wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchDemoRecord));
+		wxButton   *recDemPathButton =
+			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 		// bind it
 		recDemPathButton->Bind(wxEVT_BUTTON, [panel, recDemPath](wxCommandEvent &) {
 			OpenPathPicker(panel, recDemPath, "Select Demo File", false, "Demo Lump files (*.lmp)|*.lmp");
@@ -1058,7 +1063,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	wxTextCtrl *iwadTxt = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->iwadFilePath));
 	iwadBox->Add(iwadTxt, 1, wxEXPAND | wxRIGHT, 5);
-	wxButton *iwadButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	wxButton *iwadButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 	iwadBox->Add(iwadButton, 0);
 	// bind it
 	iwadButton->Bind(wxEVT_BUTTON, [panel, iwadTxt](wxCommandEvent &) {
@@ -1074,7 +1079,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	wxTextCtrl *pwadTxt = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->pwadFilePath));
 	pwadBox->Add(pwadTxt, 1, wxEXPAND | wxRIGHT, 5);
-	wxButton *pwadButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+	wxButton *pwadButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)));
 	pwadBox->Add(pwadButton, 0);
 	// bind it
 	pwadButton->Bind(wxEVT_BUTTON, [panel, pwadTxt](wxCommandEvent &) {
@@ -1128,7 +1133,7 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 	// we have read it, now fill in all fields
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "Profile Settings", wxDefaultPosition, wxSize(850, 650));
+	this->Create(parent, wxID_ANY, "Profile Settings", wxDefaultPosition, this->FromDIP(wxSize(850, 650)));
 
 	this->SetExtraStyle(GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
 

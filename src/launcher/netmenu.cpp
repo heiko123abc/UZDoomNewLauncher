@@ -5,7 +5,7 @@ void Netmenu::hostGameLobby(wxWindow *parent, const wxString &title, int players
 {
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "UZDoom - Host Game Lobby", wxDefaultPosition, wxSize(500, 800));
+	this->Create(parent, wxID_ANY, "UZDoom - Host Game Lobby", wxDefaultPosition,  parent->FromDIP(wxSize(500, 800)));
 
 	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
@@ -63,7 +63,7 @@ void Netmenu::joinGameLobby(wxWindow *parent, const wxString &title)
 {
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "UZDoom - Join Game Lobby", wxDefaultPosition, wxSize(500, 800));
+	this->Create(parent, wxID_ANY, "UZDoom - Join Game Lobby", wxDefaultPosition,  parent->FromDIP(wxSize(500, 800)));
 
 	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
 	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing

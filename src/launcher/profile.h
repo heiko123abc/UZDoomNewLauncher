@@ -49,6 +49,7 @@ class Profile
 	wxString saveDirPath{};     // Path to the save directory to use with this profile
 	wxString screenshotDirPath{}; // Path to the screenshot directory to use with this profile
 	wxString demoDirPath{};       // Path to the demo directory to use with this profile
+	wxString modsDirPath{};       // Path to the mods directory to use with this profile
 
 	std::vector<std::string> modFiles{}; // List of mod files to load with this profile, MUST BE ORDERED THIS WAY
 

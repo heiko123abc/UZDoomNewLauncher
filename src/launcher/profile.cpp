@@ -74,6 +74,7 @@ void Profile::saveToFile(const std::string &filepath)
 	j["files"]["saveDirPath"]       = this->saveDirPath;
 	j["files"]["screenshotDirPath"] = this->screenshotDirPath;
 	j["files"]["demoDirPath"]       = this->demoDirPath;
+	j["files"]["modsDirPath"]       = this->modsDirPath;
 	j["files"]["modFiles"]          = this->modFiles;
 
 	j["output"]["enableFullscreen"] = this->enableFullscreen;
@@ -149,6 +150,7 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->saveDirPath       = j["files"].value("saveDirPath", "");
 		this->screenshotDirPath = j["files"].value("screenshotDirPath", "");
 		this->demoDirPath       = j["files"].value("demoDirPath", "");
+		this->modsDirPath       = j["files"].value("modsDirPath", "");
 		this->modFiles          = j["files"].value("modFiles", std::vector<std::string>{});
 
 		this->enableFullscreen = j["output"].value("enableFullscreen", false);

@@ -538,6 +538,7 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		wxButton *btnDel = new wxButton(row, wxID_ANY, "X", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
 		btnDel->SetForegroundColour(*wxRED);
 		btnDel->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
+			std::filesystem::remove(currEdit->modFiles[i]);           // Wipe the mod file itsself first
 			currEdit->modFiles.erase(currEdit->modFiles.begin() + i); // Remove from vector
 			RefreshModList(parent, currEdit, listWindow, listSizer);
 		});
@@ -752,10 +753,13 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 		wxArrayString paths;
 		openFileDialog.GetPaths(paths);
 
-		// Add selected paths to vector
+		// Copy all selected mods over into mod folder and add to list
 		for (const wxString &path : paths)
 		{
-			currEdit->modFiles.push_back(path.ToStdString());
+			wxFileName fileName(path);
+			wxCopyFile(path, currEdit->modsDirPath + "/" + fileName.GetFullName());
+			currEdit->modFiles.push_back(currEdit->modsDirPath.ToStdString() + "/" +
+			                             fileName.GetFullName().ToStdString());
 		}
 
 		// Force Refresh the UI

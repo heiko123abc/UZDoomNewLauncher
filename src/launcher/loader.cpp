@@ -184,12 +184,14 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	std::filesystem::create_directories(path + "saves");
 	std::filesystem::create_directories(path + "screenshots");
 	std::filesystem::create_directories(path + "demos");
+	std::filesystem::create_directories(path + "mods");
 
 	// bind the paths + config
 	newProfile.configFilePath    = path + profileFilename + ".ini";
 	newProfile.saveDirPath       = path + "saves";
 	newProfile.screenshotDirPath = path + "screenshots";
 	newProfile.demoDirPath       = path + "demos";
+	newProfile.modsDirPath       = path + "mods";
 
 	// save the profile in the respective foler
 	newProfile.saveToFile(path + profileFilename + ".txt");

@@ -31,7 +31,10 @@ class Profile
 	bool difficultyNoMonsters{};
 
 	int compatLevel = 0; // Custom difficulty parameters for this profile (more can be set in the UI)
-
+	wxString playerName = "Player";   //Player name
+	wxString playerClass = "Fighter";  //Player class
+	wxString playerGender = "Male"; // Player gender
+	
 	wxString hostPort        = "5029";
 	int      hostMaxPlayers  = 8;
 	wxString hostTickRate    = "25Hz";

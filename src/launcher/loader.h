@@ -1,5 +1,5 @@
 #pragma once
-#include "Const.h"
+#include "const.h"
 #include <memory>
 #include <wx/filename.h>
 #include <wx/progdlg.h>

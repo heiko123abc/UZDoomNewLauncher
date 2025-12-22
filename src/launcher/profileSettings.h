@@ -1,6 +1,6 @@
 #pragma once
-#include "Const.h"
-#include "Profile.h"
+#include "const.h"
+#include "profile.h"
 #include <wx/wx.h>
 
 class ProfileSettings : public wxDialog

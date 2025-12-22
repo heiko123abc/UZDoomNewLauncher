@@ -1,4 +1,4 @@
-#include "Profile.h"
+#include "profile.h"
 
 #include <nlohmann/json.hpp> //for JSON file support
 
@@ -54,6 +54,9 @@ void Profile::saveToFile(const std::string &filepath)
 	j["launch"]["difficultyRespawnMonsters"]  = this->difficultyRespawnMonsters;
 	j["launch"]["difficultyNoMonsters"]       = this->difficultyNoMonsters;
 	j["launch"]["compatLevel"]                = this->compatLevel;
+	j["launch"]["playerName"]                = this->playerName;
+	j["launch"]["playerClass"]                = this->playerClass;
+	j["launch"]["playerGender"]                = this->playerGender;
 	j["launch"]["hostPort"]                   = this->hostPort;
 	j["launch"]["hostMaxPlayers"]             = this->hostMaxPlayers;
 	j["launch"]["hostTickRate"]               = this->hostTickRate;
@@ -130,6 +133,9 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->difficultyRespawnMonsters  = j["launch"].value("difficultyRespawnMonsters", false);
 		this->difficultyNoMonsters       = j["launch"].value("difficultyNoMonsters", false);
 		this->compatLevel                = j["launch"].value("compatLevel", 0);
+		this->playerName                 = j["launch"].value("playerName", "Player");
+		this->playerClass                = j["launch"].value("playerClass", "Fighter");
+		this->playerGender               = j["launch"].value("playerGender", "male");
 		this->hostPort                   = j["launch"].value("hostPort", "");
 		this->hostMaxPlayers             = j["launch"].value("hostMaxPlayers", 8);
 		this->hostTickRate               = j["launch"].value("hostTickRate", "");
@@ -280,6 +286,12 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	// user wants dmflags elsewhere too
 	if (alwaysapplydmflags)
 		cmd << "+set alwaysapplydmflags 1 ";
+
+        //apply names,class and gender
+        cmd << "+set name " << this->playerName << " ";
+        cmd << "+set playerclass " << this->playerClass << " ";
+        cmd << "+set gender " << this->playerGender << " ";
+
 
 	// pass directories
 	cmd << "-config " << this->configFilePath << " ";

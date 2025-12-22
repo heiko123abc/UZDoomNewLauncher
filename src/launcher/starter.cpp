@@ -1,5 +1,5 @@
-#include "Starter.h"
-#include "LauncherMainWindow.h"
+#include "starter.h"
+#include "launcherMainWindow.h"
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>

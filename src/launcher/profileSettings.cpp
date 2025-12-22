@@ -1,4 +1,4 @@
-#include "ProfileSettings.h"
+#include "profileSettings.h"
 #include <filesystem>
 #include <fstream>
 #include <memory>
@@ -918,6 +918,32 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// bind it
 	advGameplayButton->Bind(wxEVT_BUTTON, [currEdit, panel](wxCommandEvent &) { advGameplay(currEdit, panel); });
 	leftCol->Add(gameplayGroup, 0, wxEXPAND | wxALL, 5);
+
+        // miscellaneous
+	wxStaticBoxSizer *miscGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Miscellaneous");
+	wxFlexGridSizer  *miscGrid  = new wxFlexGridSizer(3, 2, 5, 5);
+	miscGrid->AddGrowableCol(1);
+
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Name:"), 0, wxALIGN_CENTER_VERTICAL);
+	miscGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
+	                               wxTextValidator(wxFILTER_NONE, &currEdit->playerName)),
+	                0, wxEXPAND);
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Class:"), 0, wxALIGN_CENTER_VERTICAL);
+	miscGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
+	                               wxTextValidator(wxFILTER_NONE, &currEdit->playerClass)),
+	                0, wxEXPAND);
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Gender:"), 0, wxALIGN_CENTER_VERTICAL);
+	wxComboBox *genderCombo = new wxComboBox(panel, wxID_ANY, "Male", wxDefaultPosition, wxDefaultSize, 0, NULL, 0,
+	                                           wxGenericValidator(&currEdit->playerGender));
+	genderCombo->Append("Male");
+	genderCombo->Append("Female");
+	genderCombo->Append("Neutral");
+	genderCombo->Append("Object");
+	genderCombo->SetEditable(false);
+	miscGrid->Add(genderCombo, 0, wxEXPAND);
+
+	miscGroup->Add(miscGrid, 1, wxEXPAND | wxALL, 5);
+	leftCol->Add(miscGroup, 0, wxEXPAND | wxALL, 5);
 
 	// right side
 	wxBoxSizer *rightCol = new wxBoxSizer(wxVERTICAL);

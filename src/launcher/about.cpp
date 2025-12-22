@@ -1,4 +1,4 @@
-#include "About.h"
+#include "about.h"
 
 void About::ReleaseNotesDialog(wxWindow *parent)
 {

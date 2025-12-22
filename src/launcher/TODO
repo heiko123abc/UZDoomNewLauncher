@@ -1,3 +1,2 @@
-- Add Michallenious section for Player name and class
-- [Linux] Fix file Scaling issue
+- [Linux] Fix Scaling issue
 - Change IWAD selector into a dropdown, derived from the added total IWADS

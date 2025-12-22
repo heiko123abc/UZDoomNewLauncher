@@ -1,4 +1,4 @@
-#include "Netmenu.h"
+#include "netmenu.h"
 #include <wx/listctrl.h>
 
 void Netmenu::hostGameLobby(wxWindow *parent, const wxString &title, int playerslots)

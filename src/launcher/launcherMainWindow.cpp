@@ -1,4 +1,4 @@
-#include "LauncherMainWindow.h"
+#include "launcherMainWindow.h"
 
 #include <chrono>
 #include <filesystem>
@@ -16,10 +16,10 @@
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
 
-#include "About.h"
-#include "Loader.h"
-#include "Profile.h"
-#include "ProfileSettings.h"
+#include "about.h"
+#include "loader.h"
+#include "profile.h"
+#include "profileSettings.h"
 
 using json = nlohmann::json;
 

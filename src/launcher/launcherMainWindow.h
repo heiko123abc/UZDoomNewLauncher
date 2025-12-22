@@ -1,5 +1,5 @@
 #pragma once
-#include "Const.h"
+#include "const.h"
 #include <wx/artprov.h> // Required for icons
 #include <wx/dataview.h>
 #include <wx/dcclient.h>

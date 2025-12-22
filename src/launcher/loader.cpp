@@ -1,5 +1,5 @@
-#include "Loader.h"
-#include "Profile.h"
+#include "loader.h"
+#include "profile.h"
 
 #include <chrono>
 #include <filesystem>

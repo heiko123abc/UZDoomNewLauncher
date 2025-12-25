@@ -1173,24 +1173,30 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 
 	this->SetExtraStyle(GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
 
-	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
-	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
-
 	wxBoxSizer *mainSizer   = new wxBoxSizer(wxVERTICAL); // Main vertical sizer so fit everything
 	wxBoxSizer *buttonSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	wxNotebook *tabber = new wxNotebook(this, wxID_ANY); // Used for the tabs in the settings menu
 
 	// Generate every tab panel
-	wxPanel *generalPanel = new wxPanel(tabber);
+	wxScrolledWindow *generalPanel = new wxScrolledWindow(tabber);
+	generalPanel->SetScrollRate(5, 5);
 	CreateGeneralTab(currEdit, generalPanel);
-	wxPanel *launchPanel = new wxPanel(tabber);
+
+	wxScrolledWindow *launchPanel = new wxScrolledWindow(tabber);
+	launchPanel->SetScrollRate(5, 5);
 	CreateLaunchTab(currEdit, launchPanel);
-	wxPanel *filesPanel = new wxPanel(tabber);
+
+	wxScrolledWindow *filesPanel = new wxScrolledWindow(tabber);
+	filesPanel->SetScrollRate(5, 5);
 	CreateFilesTab(currEdit, filesPanel);
-	wxPanel *outputPanel = new wxPanel(tabber);
+
+	wxScrolledWindow *outputPanel = new wxScrolledWindow(tabber);
+	outputPanel->SetScrollRate(5, 5);
 	CreateOutputTab(currEdit, outputPanel);
-	wxPanel *advancedPanel = new wxPanel(tabber);
+
+	wxScrolledWindow *advancedPanel = new wxScrolledWindow(tabber);
+	advancedPanel->SetScrollRate(5, 5);
 	CreateAdvancedTab(currEdit, advancedPanel);
 
 	// finer error checking for validation fails

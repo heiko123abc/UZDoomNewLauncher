@@ -6,9 +6,6 @@ void About::ReleaseNotesDialog(wxWindow *parent)
 	// create the window here since above is not a constructor
 	this->Create(parent, wxID_ANY, "Release Notes", wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
 
-	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
-	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
-
 	// hardcoded patch notes (for now), supports basic HTML formatting
 	wxString patchNotes = wxString::FromUTF8("UZDoom version 4.14.2, released 2025-05-03<br><br>"
 
@@ -56,9 +53,6 @@ void About::CreditsDialog(wxWindow *parent)
 
 	// create the window here since above is not a constructor
 	this->Create(parent, wxID_ANY, "Credits", wxDefaultPosition,  parent->FromDIP(wxSize(1000, 800)));
-
-	this->SetWindowStyle(wxDEFAULT_DIALOG_STYLE &
-	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
 
 	// hardcoded credits (for now), supports basic HTML formatting
 	wxString credits = wxString::FromUTF8(R"(<html>

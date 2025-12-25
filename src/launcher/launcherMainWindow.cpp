@@ -139,8 +139,6 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 {
 	// This Panel is the base for all other UI components
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
-	this->SetWindowStyle(wxDEFAULT_FRAME_STYLE &
-	                     ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)); // ban the user from resizing and maximizing
 
 	// create menu item to add Archive or WAD for new profile
 	wxMenu *AddMenu = new wxMenu;

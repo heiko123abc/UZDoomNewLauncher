@@ -200,7 +200,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	                                            wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 
 	// do exactly that above when event is captured and when user clicks away they will be disabled again
-	profileList->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, [=](wxDataViewEvent &event) {
+	profileList->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, [=, this](wxDataViewEvent &event) {
 		bool hasSelection = (profileList->GetSelectedRow() != wxNOT_FOUND);
 
 		// Toggle buttons on

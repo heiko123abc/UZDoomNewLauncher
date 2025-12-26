@@ -478,7 +478,7 @@ void OpenPathPicker(wxWindow *parent, wxTextCtrl *targetInput, const wxString &t
 	else
 	{
 		// a file path is needed
-		wxFileDialog fileDialog(parent, title, wxGetCwd() + ROOT_DIR.ToUTF8(), targetInput->GetValue(), filter,
+		wxFileDialog fileDialog(parent, title, wxGetCwd() + ROOT_DIR.ToUTF8(), "", filter,
 		                        wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 		if (fileDialog.ShowModal() == wxID_OK)
 		{

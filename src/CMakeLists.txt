@@ -331,7 +331,7 @@ if (HAVE_VULKAN)
 endif()
 
 list( APPEND PROJECT_LIBRARIES "zwidget" )
-list( APPEND PROJECT_LIBRARIES "wxWidgets" )
+list( APPEND PROJECT_LIBRARIES ${wxWidgets_LIBRARIES})
 list( APPEND PROJECT_LIBRARIES "webp" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")
@@ -380,6 +380,14 @@ if ( CPPDAP_FOUND )
 else()
 	message( SEND_ERROR "Could not find cppdap" )
 endif()
+
+
+#wxWidgets
+find_package(wxWidgets REQUIRED COMPONENTS net core base)
+if(wxWidgets_USE_FILE) # not defined in CONFIG mode
+    include(${wxWidgets_USE_FILE})
+endif()
+
 
 # Start defining source files for ZDoom
 set( PLAT_WIN32_SOURCES
@@ -1365,7 +1373,6 @@ include_directories(
 	launcher
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
-	../libraries/wxWidgets/include
 	../libraries/webp/include
 	../libraries/range_map/include
 	${SYSTEM_SOURCES_DIR}

@@ -658,8 +658,8 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                                       wxTextValidator(wxFILTER_NONE, &currEdit->configFilePath));
 	configTxt->SetInsertionPointEnd();
 
-	wxButton *configButton =
-		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+	wxButton *configButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(configTxt->GetBestSize().y*1.2, configTxt->GetBestSize().y)));
 	// bind it
 	configButton->Bind(wxEVT_BUTTON, [panel, configTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, configTxt, "Select Config File", false, "INI files (*.ini)|*.ini");
@@ -677,7 +677,8 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	saveTxt->SetInsertionPointEnd();
 
 	wxButton *saveDirButton =
-		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(saveTxt->GetBestSize().y * 1.2, saveTxt->GetBestSize().y)));
 	// bind it
 	saveDirButton->Bind(wxEVT_BUTTON, [panel, saveTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, saveTxt, "Select Save Directory", true);
@@ -695,7 +696,8 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	shotTxt->SetInsertionPointEnd();
 
 	wxButton *scrnDirButton =
-		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(shotTxt->GetBestSize().y * 1.2, shotTxt->GetBestSize().y)));
 	// bind it
 	scrnDirButton->Bind(wxEVT_BUTTON, [panel, shotTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, shotTxt, "Select Screenshot Directory", true);
@@ -713,7 +715,8 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	demoTxt->SetInsertionPointEnd();
 
 	wxButton *demoDirButton =
-		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(demoTxt->GetBestSize().y * 1.2, demoTxt->GetBestSize().y)));
 	// bind it
 	demoDirButton->Bind(wxEVT_BUTTON, [panel, demoTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, demoTxt, "Select Demo Directory", true);
@@ -824,7 +827,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		wxTextCtrl *loadSavePath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 		                                          wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchSave));
 		wxButton   *loadSavePathButton =
-			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+		                 panel->FromDIP(wxSize(loadSavePath->GetBestSize().y * 1.2, loadSavePath->GetBestSize().y)));
 		// bind it
 		loadSavePathButton->Bind(wxEVT_BUTTON, [panel, loadSavePath](wxCommandEvent &) {
 			OpenPathPicker(panel, loadSavePath, "Select Save File", false, "Zdoom Save files (*.zds)|*.zds");
@@ -845,7 +849,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		wxTextCtrl *playDemPath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 		                                         wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchDemoPlayback));
 		wxButton   *playDemPathButton =
-			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+		                 panel->FromDIP(wxSize(playDemPath->GetBestSize().y * 1.2, playDemPath->GetBestSize().y)));
 		// bind it
 		playDemPathButton->Bind(wxEVT_BUTTON, [panel, playDemPath](wxCommandEvent &) {
 			OpenPathPicker(panel, playDemPath, "Select Demo File", false, "Demo Lump files (*.lmp)|*.lmp");
@@ -866,7 +871,8 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		wxTextCtrl *recDemPath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 		                                        wxTextValidator(wxFILTER_NONE, &currEdit->selectedLaunchDemoRecord));
 		wxButton   *recDemPathButton =
-			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+			new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+		                 panel->FromDIP(wxSize(recDemPath->GetBestSize().y * 1.2, recDemPath->GetBestSize().y)));
 		// bind it
 		recDemPathButton->Bind(wxEVT_BUTTON, [panel, recDemPath](wxCommandEvent &) {
 			OpenPathPicker(panel, recDemPath, "Select Demo File", false, "Demo Lump files (*.lmp)|*.lmp");
@@ -1098,7 +1104,8 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->iwadFilePath));
 	iwadBox->Add(iwadTxt, 1, wxEXPAND | wxRIGHT, 5);
 	wxButton *iwadButton =
-		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(iwadTxt->GetBestSize().y * 1.2, iwadTxt->GetBestSize().y)));
 	iwadBox->Add(iwadButton, 0);
 	// bind it
 	iwadButton->Bind(wxEVT_BUTTON, [panel, iwadTxt](wxCommandEvent &) {
@@ -1115,7 +1122,8 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	                                     wxTextValidator(wxFILTER_NONE, &currEdit->pwadFilePath));
 	pwadBox->Add(pwadTxt, 1, wxEXPAND | wxRIGHT, 5);
 	wxButton *pwadButton =
-		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition, panel->FromDIP(wxSize(30, -1)), wxBU_EXACTFIT);
+		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(pwadTxt->GetBestSize().y * 1.2, pwadTxt->GetBestSize().y)));
 	pwadBox->Add(pwadButton, 0);
 	// bind it
 	pwadButton->Bind(wxEVT_BUTTON, [panel, pwadTxt](wxCommandEvent &) {

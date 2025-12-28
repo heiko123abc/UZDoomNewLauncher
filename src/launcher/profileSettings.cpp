@@ -511,7 +511,7 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		rowSizer->Add(label, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
 
 		// UP Button
-		wxButton *btnUp = new wxButton(row, wxID_ANY, "^", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
+		wxButton *btnUp = new wxButton(row, wxID_ANY, wxString::FromUTF8("▲"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
 		btnUp->Enable(i > 0);
 		btnUp->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			if (i > 0)
@@ -523,7 +523,7 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		rowSizer->Add(btnUp, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
 		// DOWN Button
-		wxButton *btnDown = new wxButton(row, wxID_ANY, "v", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
+		wxButton *btnDown = new wxButton(row, wxID_ANY, wxString::FromUTF8("▼"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
 		btnDown->Enable(i < currEdit->modFiles.size() - 1);
 		btnDown->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			if (i < currEdit->modFiles.size() - 1)
@@ -535,7 +535,7 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		rowSizer->Add(btnDown, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
 		// DELETE Button
-		wxButton *btnDel = new wxButton(row, wxID_ANY, "X", wxDefaultPosition, parent->FromDIP(wxSize(25, 20)));
+		wxButton *btnDel = new wxButton(row, wxID_ANY, wxString::FromUTF8("X"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
 		btnDel->SetForegroundColour(*wxRED);
 		btnDel->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			std::filesystem::remove(currEdit->modFiles[i]);           // Wipe the mod file itsself first

@@ -66,7 +66,7 @@
 #include "i_interface.h"
 #include "i_mainwindow.h"
 
-#include "launcherwindow.h"
+#include "launcherMainWindow.h"
 
 // MACROS ------------------------------------------------------------------
 
@@ -354,7 +354,7 @@ bool I_PickIWad(bool showwin, FStartupSelectionInfo& info)
 {
 	if (showwin)
 	{
-		return LauncherWindow::ExecModal(info);
+		//return LauncherWindow::ExecModal(info);
 	}
 	return true;
 }

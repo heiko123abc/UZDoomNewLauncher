@@ -383,11 +383,14 @@ endif()
 
 
 #wxWidgets
-find_package(wxWidgets REQUIRED COMPONENTS net core base webview)
-if(wxWidgets_USE_FILE) # not defined in CONFIG mode
-    include(${wxWidgets_USE_FILE})
+if(WIN32) #(the prestep is needed for Windows Systems)
+ set( wxWidgets_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets/lib/vc_x64_lib)
 endif()
-
+set( wxWidgets_USE_UNICODE ON)
+set( wxBUILD_SHARED OFF)
+set( wxBUILD_MONOLITHIC ON)
+find_package(wxWidgets REQUIRED)
 
 # Start defining source files for ZDoom
 set( PLAT_WIN32_SOURCES
@@ -1374,6 +1377,9 @@ include_directories(
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
 	../libraries/webp/include
+	../libraries/wxWidgets/include
+	../libraries/cppdap/third_party/json/include
+        ../libraries/wxWidgets/include/msvc
 	../libraries/range_map/include
 	${SYSTEM_SOURCES_DIR}
 )

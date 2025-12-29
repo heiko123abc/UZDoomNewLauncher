@@ -331,7 +331,6 @@ if (HAVE_VULKAN)
 endif()
 
 list( APPEND PROJECT_LIBRARIES "zwidget" )
-list( APPEND PROJECT_LIBRARIES ${wxWidgets_LIBRARIES})
 list( APPEND PROJECT_LIBRARIES "webp" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")
@@ -1378,8 +1377,8 @@ include_directories(
 	../libraries/ZWidget/include
 	../libraries/webp/include
 	../libraries/wxWidgets/include
-	../libraries/cppdap/third_party/json/include
         ../libraries/wxWidgets/include/msvc
+	../libraries/cppdap/third_party/json/include
 	../libraries/range_map/include
 	${SYSTEM_SOURCES_DIR}
 )

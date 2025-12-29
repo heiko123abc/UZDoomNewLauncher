@@ -387,10 +387,15 @@ if (HAVE_VULKAN)
 	add_subdirectory( libraries/ZVulkan )
 endif()
 
+set( wxWidgets_USE_REL_AND_DBG ON)
+set( wxBUILD_SHARED OFF)
+set( wxBUILD_MONOLITHIC ON)
+add_subdirectory( libraries/wxWidgets )
+
 set(ZWIDGET_BUILD_EXAMPLE OFF CACHE INTERNAL "" FORCE)
 add_subdirectory( libraries/ZWidget )
 
-add_subdirectory( libraries/webp )
+#add_subdirectory( libraries/webp )
 
 add_subdirectory( libraries/discordrpc EXCLUDE_FROM_ALL )
 set( DRPC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/discordrpc/include" )

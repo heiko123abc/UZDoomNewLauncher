@@ -330,6 +330,7 @@ if (HAVE_VULKAN)
 	list( APPEND PROJECT_LIBRARIES "zvulkan" )
 endif()
 
+list( APPEND PROJECT_LIBRARIES "wxWidgets" )
 list( APPEND PROJECT_LIBRARIES "zwidget" )
 list( APPEND PROJECT_LIBRARIES "webp" )
 
@@ -379,18 +380,6 @@ if ( CPPDAP_FOUND )
 else()
 	message( SEND_ERROR "Could not find cppdap" )
 endif()
-
-
-# wxWidgets
-set( wxWidgets_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
-if(WIN32) #(the step is needed for Windows Systems)
- link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets/lib/vc_x64_lib)
-endif()
-set( wxWidgets_USE_UNICODE ON)
-set( wxWidgets_USE_STATIC ON)
-set( wxBUILD_SHARED OFF)
-set( wxBUILD_MONOLITHIC ON)
-find_package(wxWidgets REQUIRED)
 
 # Start defining source files for ZDoom
 set( PLAT_WIN32_SOURCES

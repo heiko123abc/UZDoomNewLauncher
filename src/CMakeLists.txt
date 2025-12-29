@@ -381,17 +381,6 @@ else()
 	message( SEND_ERROR "Could not find cppdap" )
 endif()
 
-if ( WXWIDGETS_FOUND )
-	include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIR}" )
-	#Special case for wxWidgets under MS-Windows
-	if(WIN32)
-		include_directories(SYSTEM "../build/libraries/wxWidgets/include/msvc")
-	endif()
-	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${WXWIDGETS_LIBRARIES}")
-else()
-	message( SEND_ERROR "Could not find wxWidgets" )
-endif()
-
 # Start defining source files for ZDoom
 set( PLAT_WIN32_SOURCES
 	win32/i_steam.cpp
@@ -1376,11 +1365,17 @@ include_directories(
 	launcher
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
+	../libraries/wxWidgets/include
 	../libraries/webp/include
 	../libraries/cppdap/third_party/json/include
 	../libraries/range_map/include
 	${SYSTEM_SOURCES_DIR}
 )
+
+# Special case for win32 wxWidgets compile
+if(WIN32)
+	include_directories(../libraries/wxWidgets/include/msvc)
+endif()
 
 add_dependencies( zdoom revision_check )
 

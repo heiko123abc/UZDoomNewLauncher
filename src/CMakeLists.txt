@@ -381,7 +381,7 @@ else()
 endif()
 
 
-wxWidgets
+# wxWidgets
 set( wxWidgets_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
 if(WIN32) #(the step is needed for Windows Systems)
  link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets/lib/vc_x64_lib)

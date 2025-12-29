@@ -390,6 +390,8 @@ endif()
 set( wxWidgets_USE_REL_AND_DBG ON)
 set( wxBUILD_SHARED OFF)
 set( wxBUILD_MONOLITHIC ON)
+set( wxWidgets_ROOT_DIR "${CMAKE_SOURCE_DIR}/libraries/wxWidgets" )
+set( wxWidgets_LIB_DIR "${CMAKE_SOURCE_DIR}/build/libraries/wxWidgets/lib/vc_x64_lib" )
 add_subdirectory( libraries/wxWidgets )
 
 set(ZWIDGET_BUILD_EXAMPLE OFF CACHE INTERNAL "" FORCE)

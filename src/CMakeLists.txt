@@ -385,9 +385,11 @@ if ( WXWIDGETS_FOUND )
 	include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIR}" )
 	#Special case for wxWidgets under MS-Windows
 	if(WIN32)
-		include_directories(SYSTEM "../libraries/wxWidgets/include/msvc")
+		include_directories(SYSTEM "../build/libraries/wxWidgets/include/msvc")
 	endif()
 	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${WXWIDGETS_LIBRARIES}")
+else()
+	message( SEND_ERROR "Could not find wxWidgets" )
 endif()
 
 # Start defining source files for ZDoom

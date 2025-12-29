@@ -387,6 +387,7 @@ if (HAVE_VULKAN)
 	add_subdirectory( libraries/ZVulkan )
 endif()
 
+set( wxBUILD_INSTALL OFF CACHE BOOL "" FORCE )
 set( wxBUILD_SHARED OFF CACHE BOOL "" FORCE )
 set( wxBUILD_MONOLITHIC ON CACHE BOOL "" FORCE )
 add_subdirectory( libraries/wxWidgets )

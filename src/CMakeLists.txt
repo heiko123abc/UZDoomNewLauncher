@@ -382,9 +382,9 @@ endif()
 
 
 #wxWidgets
+set( wxWidgets_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
 if(WIN32) #(the prestep is needed for Windows Systems)
- set( wxWidgets_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
-link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets/lib/vc_x64_lib)
+ link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets/lib/vc_x64_lib)
 endif()
 set( wxWidgets_USE_UNICODE ON)
 set( wxWidgets_USE_STATIC ON)

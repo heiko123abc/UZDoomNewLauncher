@@ -337,22 +337,15 @@ message("Building for target architecture: ${TARGET_ARCHITECTURE}")
 
 # WxWidgets
 
-if( MSVC AND NOT WXWIDGETS_FOUND )
-	# Use prebuilt library
-	set( WXWIDGETS_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
-	set( WXWIDGETS_INCLUDE_DIRS ${WXWIDGETS_ROOT_PATH}/include/msvc )
-	set( WXWIDGETS_LIBRARIES wxWidgets )
-	link_directories(
-	set( WXWIDGETS_FOUND TRUE )
-endif()
+set( WXWIDGETS_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
+set( WXWIDGETS_INCLUDE_DIR ${WXWIDGETS_ROOT_PATH}/include )
+set( WXWIDGETS_INCLUDE_DIRWIN ${WXWIDGETS_ROOT_PATH}/include/msvc )
+set( WXWIDGETS_LIBRARIES wxWidgets )
+link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../build/libraries/wxWidgets/lib/vc_x64_lib")
 
-if( WXWIDGETS_FOUND )
-	add_definitions( "-DwxBUILD_SHARED=OFF" )
-	include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIRS}" )
-	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} ${WXWIDGETS_LIBRARIES} )
-else()
-	message( SEND_ERROR "Could not find wxWidgets" )
-endif()
+include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIR}" )
+include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIRWIN}" )
+set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} ${WXWIDGETS_LIBRARIES} )
 
 # VPX
 
@@ -1383,17 +1376,11 @@ include_directories(
 	launcher
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
-	../libraries/wxWidgets/include
 	../libraries/webp/include
 	../libraries/cppdap/third_party/json/include
 	../libraries/range_map/include
 	${SYSTEM_SOURCES_DIR}
 )
-
-# Special case for win32 wxWidgets compile
-if(WIN32)
-	include_directories(../libraries/wxWidgets/include/msvc)
-endif()
 
 add_dependencies( zdoom revision_check )
 

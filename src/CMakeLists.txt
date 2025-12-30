@@ -331,10 +331,28 @@ if (HAVE_VULKAN)
 endif()
 
 list( APPEND PROJECT_LIBRARIES "zwidget" )
-list( APPEND PROJECT_LIBRARIES "wxWidgets" )
 list( APPEND PROJECT_LIBRARIES "webp" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")
+
+# WxWidgets
+
+if( MSVC AND NOT WXWIDGETS_FOUND )
+	# Use prebuilt library
+	set( WXWIDGETS_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
+	set( WXWIDGETS_INCLUDE_DIRS ${WXWIDGETS_ROOT_PATH}/include/msvc )
+	set( WXWIDGETS_LIBRARIES wxWidgets )
+	link_directories(
+	set( WXWIDGETS_FOUND TRUE )
+endif()
+
+if( WXWIDGETS_FOUND )
+	add_definitions( "-DwxBUILD_SHARED=OFF" )
+	include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIRS}" )
+	set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} ${WXWIDGETS_LIBRARIES} )
+else()
+	message( SEND_ERROR "Could not find wxWidgets" )
+endif()
 
 # VPX
 

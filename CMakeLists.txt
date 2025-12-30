@@ -247,6 +247,7 @@ option( NO_OPENAL "Disable OpenAL sound support" OFF )
 
 find_package( BZip2 )
 find_package( VPX )
+find_package( wxWidgets COMPONENTS base core webview)
 if (NOT FORCE_INTERNAL_CPPDAP)
 	find_package( cppdap CONFIG )
 endif()
@@ -386,12 +387,6 @@ mark_as_advanced( FORCE_INTERNAL_ASMJIT )
 if (HAVE_VULKAN)
 	add_subdirectory( libraries/ZVulkan )
 endif()
-
-set( wxBUILD_INSTALL OFF CACHE BOOL "" FORCE )
-set( wxBUILD_SHARED OFF CACHE BOOL "" FORCE )
-set( wxBUILD_MONOLITHIC ON CACHE BOOL "" FORCE )
-add_subdirectory( libraries/wxWidgets )
-
 
 set(ZWIDGET_BUILD_EXAMPLE OFF CACHE INTERNAL "" FORCE)
 add_subdirectory( libraries/ZWidget )

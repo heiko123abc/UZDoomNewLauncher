@@ -10,7 +10,6 @@ fmodapi*linux/
 gitinfo.h
 wadsrc*/**/language.csv
 wadsrc*/**/language.0
-/libraries/wxWidgets/lib
 
 # editor/tooling/os files
 *~

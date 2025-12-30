@@ -335,17 +335,6 @@ list( APPEND PROJECT_LIBRARIES "webp" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")
 
-# WxWidgets
-
-set( WXWIDGETS_ROOT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../libraries/wxWidgets" )
-set( WXWIDGETS_INCLUDE_DIR ${WXWIDGETS_ROOT_PATH}/include )
-set( WXWIDGETS_INCLUDE_DIRWIN ${WXWIDGETS_ROOT_PATH}/include/msvc )
-set( WXWIDGETS_LIBRARIES wxWidgets )
-link_directories("${CMAKE_CURRENT_SOURCE_DIR}/../build/libraries/wxWidgets/lib/vc_x64_lib")
-
-include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIR}" )
-include_directories( SYSTEM "${WXWIDGETS_INCLUDE_DIRWIN}" )
-set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} ${WXWIDGETS_LIBRARIES} )
 
 # VPX
 
@@ -1312,7 +1301,7 @@ if( UNIX )
 	endif()
 endif()
 
-target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} )
+target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} wxmono)
 include_directories(
 	BEFORE
 	.

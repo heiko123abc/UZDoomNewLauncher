@@ -11,7 +11,7 @@
 class WXDLLIMPEXP_CORE wxBitmapButton : public wxBitmapButtonBase
 {
 public:
-    wxBitmapButton() = default;
+    wxBitmapButton();
 
     wxBitmapButton(wxWindow *parent,
                    wxWindowID id,

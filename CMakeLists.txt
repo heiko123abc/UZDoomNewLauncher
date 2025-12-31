@@ -313,7 +313,7 @@ if( MSVC )
 	set( DEB_C_FLAGS "/D _CRTDBG_MAP_ALLOC" )
 
 	# Disable warnings for unsecure CRT functions from VC8+
-	set( ALL_C_FLAGS "${ALL_C_FLAGS} /DUNICODE /D_UNICODE /D_WIN32_WINNT=0x0601 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS" )
+	set( ALL_C_FLAGS "${ALL_C_FLAGS} /DUNICODE /D_UNICODE /D_WIN32_WINNT=0x0600 /D_CRT_SECURE_NO_DEPRECATE /D_CRT_SECURE_NO_WARNINGS /D_CRT_NONSTDC_NO_WARNINGS" )
 
 	string(REPLACE "/Ob1 " "/Ob2 " CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO} )
 else()
@@ -388,7 +388,7 @@ if (HAVE_VULKAN)
 	add_subdirectory( libraries/ZVulkan )
 endif()
 
-# add_subdirectory( libraries/webp )
+add_subdirectory( libraries/webp )
 
 set( wxBUILD_INSTALL OFF CACHE BOOL "" FORCE )
 set( wxBUILD_SHARED OFF CACHE BOOL "" FORCE )

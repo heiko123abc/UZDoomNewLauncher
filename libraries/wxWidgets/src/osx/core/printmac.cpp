@@ -2,6 +2,7 @@
 // Name:        src/osx/core/printmac.cpp
 // Purpose:     wxMacPrinter framework
 // Author:      Julian Smart, Stefan Csomor
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart, Stefan Csomor
 // Licence:     wxWindows licence
@@ -31,8 +32,6 @@
 #include "wx/paper.h"
 #include "wx/display.h"
 #include "wx/osx/printdlg.h"
-
-#include "wx/private/print.h"
 
 #include <stdlib.h>
 
@@ -66,7 +65,7 @@ static int ResolutionSorter(const void *e1, const void *e2)
 
 static PMResolution *GetSupportedResolutions(PMPrinter printer, UInt32 *count)
 {
-    PMResolution res, *resolutions = nullptr;
+    PMResolution res, *resolutions = NULL;
     OSStatus status = PMPrinterGetPrinterResolutionCount(printer, count);
     if (status == noErr)
     {
@@ -84,7 +83,7 @@ static PMResolution *GetSupportedResolutions(PMPrinter printer, UInt32 *count)
     if ((*count == 0) && (resolutions))
     {
         free(resolutions);
-        resolutions = nullptr;
+        resolutions = NULL;
     }
     return resolutions;
 }
@@ -125,7 +124,7 @@ void wxOSXPrintData::TransferPrinterNameFrom( const wxPrintData &data )
     if (PMServerCreatePrinterList(kPMServerLocal, &printerList) == noErr)
     {
         CFIndex index, count;
-        PMPrinter printer = nullptr;
+        PMPrinter printer = NULL;
         count = CFArrayGetCount(printerList);
         for (index = 0; index < count; index++)
         {
@@ -176,7 +175,7 @@ void wxOSXPrintData::TransferPaperInfoFrom( const wxPrintData &data )
             fabs( height - papersize.y ) >= 5 )
         {
             // we have to change the current paper
-            CFArrayRef paperlist = nullptr ;
+            CFArrayRef paperlist = 0 ;
             if ( PMPrinterGetPaperList( printer, &paperlist ) == noErr )
             {
                 PMPaper bestPaper = kPMNoData ;
@@ -204,8 +203,8 @@ void wxOSXPrintData::TransferPaperInfoFrom( const wxPrintData &data )
                     if ( PMPaperCreateCustom
                          (
                             printer,
-                            wxCFStringRef(id),
-                            wxCFStringRef(name),
+                            wxCFStringRef(id, wxFont::GetDefaultEncoding()),
+                            wxCFStringRef(name, wxFont::GetDefaultEncoding()),
                             papersize.x, papersize.y,
                             &margins,
                             &paper
@@ -502,6 +501,7 @@ void wxOSXPrintData::TransferTo( wxPrintDialogData* data )
 
 void wxOSXPrintData::TransferFrom( const wxPrintDialogData* data )
 {
+    // Respect the value of m_printAllPages
     if ( data->GetAllPages() )
         PMSetPageRange( m_macPrintSettings , data->GetMinPage() , (UInt32) kPMPrintAllPages ) ;
     else
@@ -523,7 +523,7 @@ wxPrintNativeDataBase* wxOSXCreatePrintData()
 #if wxOSX_USE_COCOA
     return new wxOSXCocoaPrintData();
 #else
-    return nullptr;
+    return NULL;
 #endif
 }
 
@@ -545,6 +545,7 @@ wxMacPrinter::~wxMacPrinter()
 bool wxMacPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt)
 {
     sm_abortIt = false;
+    sm_abortWindow = NULL;
 
     if (!printout)
     {
@@ -558,25 +559,28 @@ bool wxMacPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt)
         m_printDialogData.SetMaxPage(9999);
 
     // Create a suitable device context
-    std::unique_ptr<wxPrinterDC> dc;
+    wxPrinterDC *dc = NULL;
     if (prompt)
     {
         wxMacPrintDialog dialog(parent, & m_printDialogData);
         if (dialog.ShowModal() == wxID_OK)
         {
-            dc.reset(wxDynamicCast(dialog.GetPrintDC(), wxPrinterDC));
-            wxASSERT(dc.get());
+            dc = wxDynamicCast(dialog.GetPrintDC(), wxPrinterDC);
+            wxASSERT(dc);
             m_printDialogData = dialog.GetPrintDialogData();
         }
     }
     else
     {
-        dc.reset(new wxPrinterDC( m_printDialogData.GetPrintData() ));
+        dc = new wxPrinterDC( m_printDialogData.GetPrintData() ) ;
     }
 
     // May have pressed cancel.
     if (!dc || !dc->IsOk())
+    {
+        delete dc;
         return false;
+    }
 
     PMResolution res;
     PMPrinter printer;
@@ -598,79 +602,86 @@ bool wxMacPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt)
     printout->SetPPIPrinter(int(res.hRes), int(res.vRes));
 
     // Set printout parameters
-    if ( !printout->SetUp(*dc) )
-    {
-        sm_lastError = wxPRINTER_ERROR;
-        return false;
-    }
+    printout->SetUp(*dc);
 
     // Create an abort window
-    wxBusyCursor busyCursor;
+    wxBeginBusyCursor();
 
     printout->OnPreparePrinting();
 
     // Get some parameters from the printout, if defined
-    wxPrintPageRanges ranges = m_printDialogData.GetPageRanges();
-    const auto all = printout->GetPagesInfo(ranges);
+    int fromPage, toPage;
+    int minPage, maxPage;
+    printout->GetPageInfo(&minPage, &maxPage, &fromPage, &toPage);
 
-    if ( !all.IsValid() )
+    if (maxPage == 0)
     {
         sm_lastError = wxPRINTER_ERROR;
         return false;
-    }
-
-    if ( ranges.empty() )
-    {
-        // Not having any ranges to print is equivalent to printing all pages.
-        ranges.push_back(all);
     }
 
     // Only set min and max, because from and to will be
     // set by the user if prompted for the print dialog above
-    m_printDialogData.SetMinPage(all.fromPage);
-    m_printDialogData.SetMaxPage(all.toPage);
+    m_printDialogData.SetMinPage(minPage);
+    m_printDialogData.SetMaxPage(maxPage);
 
-    wxPrintingGuard guard(printout);
+    // Set from and to pages if bypassing the print dialog
+    if ( !prompt )
+    {
+        m_printDialogData.SetFromPage(fromPage);
+        
+        if( m_printDialogData.GetAllPages() )
+            m_printDialogData.SetToPage(maxPage);
+        else
+            m_printDialogData.SetToPage(toPage);
+    }
 
-    sm_lastError = wxPRINTER_NO_ERROR;
+    printout->OnBeginPrinting();
+
+    bool keepGoing = true;
 
     if (!printout->OnBeginDocument(m_printDialogData.GetFromPage(), m_printDialogData.GetToPage()))
     {
-        wxMessageBox(wxT("Could not start printing."), wxT("Print Error"), wxOK, parent);
-        sm_lastError = wxPRINTER_ERROR;
-        return false;
+            wxEndBusyCursor();
+            wxMessageBox(wxT("Could not start printing."), wxT("Print Error"), wxOK, parent);
     }
 
-    for ( const wxPrintPageRange& range : ranges )
+    int pn;
+    for (pn = m_printDialogData.GetFromPage();
+        keepGoing && (pn <= m_printDialogData.GetToPage()) && printout->HasPage(pn);
+        pn++)
     {
-        for ( int pn = range.fromPage; pn <= range.toPage; pn++ )
+        if (sm_abortIt)
         {
-            if ( !printout->HasPage(pn) )
-                continue;
-
-            if (sm_abortIt)
-            {
                 break;
-            }
-            else
-            {
-                wxPrintingPageGuard pageGuard(*dc);
-                if ( !printout->OnPrintPage(pn) )
-                {
-                    sm_lastError = wxPRINTER_CANCELLED;
-                    break;
-                }
-            }
+        }
+        else
+        {
+                dc->StartPage();
+                keepGoing = printout->OnPrintPage(pn);
+                dc->EndPage();
         }
     }
     printout->OnEndDocument();
 
-    return sm_lastError == wxPRINTER_NO_ERROR;
+    printout->OnEndPrinting();
+
+    if (sm_abortWindow)
+    {
+        sm_abortWindow->Show(false);
+        wxDELETE(sm_abortWindow);
+    }
+
+    wxEndBusyCursor();
+
+    delete dc;
+
+    return true;
 }
 
 wxDC* wxMacPrinter::PrintDialog(wxWindow *parent)
 {
-    wxDC* dc = nullptr;
+    wxDC* dc = NULL;
 
     wxPrintDialog dialog(parent, & m_printDialogData);
     int ret = dialog.ShowModal();

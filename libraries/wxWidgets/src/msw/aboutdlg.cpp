@@ -45,19 +45,20 @@ void wxAboutBox(const wxAboutDialogInfo& info, wxWindow* parent)
         wxString msg;
         msg << name;
         if ( info.HasVersion() )
-            msg << wxT(' ') << info.GetVersion();
+        {
+            msg << wxT('\n');
+            msg << info.GetLongVersion();
+        }
 
-        // Separate the title from the rest with an extra blank line.
         msg << wxT("\n\n");
 
+        if ( info.HasCopyright() )
+            msg << info.GetCopyrightToDisplay() << wxT('\n');
+
+        // add everything remaining
         msg << info.GetDescriptionAndCredits();
 
-        if ( info.HasCopyright() )
-            msg << wxT('\n') << info.GetCopyrightToDisplay();
-
-        wxMessageBox(msg, wxString::Format(
-                     /* TRANSLATORS: %s is application name */
-                     _("About %s"), name), wxOK | wxCENTRE, parent);
+        wxMessageBox(msg, wxString::Format(_("About %s"), name), wxOK | wxCENTRE, parent);
     }
     else // simple "native" version is not enough
     {

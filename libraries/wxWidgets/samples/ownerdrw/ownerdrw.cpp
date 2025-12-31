@@ -2,6 +2,7 @@
 // Name:        ownerdrw.cpp
 // Purpose:     Owner-draw sample, for Windows
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     13.11.97
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -27,14 +28,16 @@
 class OwnerDrawnApp: public wxApp
 {
 public:
-    bool OnInit() override;
+    bool OnInit() wxOVERRIDE;
 };
 
 // Define a new frame type
 class OwnerDrawnFrame : public wxFrame
 {
 public:
-    OwnerDrawnFrame();
+    // ctor & dtor
+    OwnerDrawnFrame(wxFrame *frame, const wxString& title, int x, int y, int w, int h);
+    ~OwnerDrawnFrame(){}
 
     // notifications
     void OnQuit             (wxCommandEvent& event);
@@ -86,7 +89,7 @@ bool OwnerDrawnApp::OnInit(void)
     if ( !wxApp::OnInit() )
         return false;
 
-    new OwnerDrawnFrame();
+    new OwnerDrawnFrame(NULL, "wxWidgets Ownerdraw Sample", 50, 50, 450, 340);
 
     return true;
 }
@@ -156,7 +159,8 @@ void OwnerDrawnFrame::InitMenu()
     pItem->SetBitmaps(bmpBell);
     file_menu->Append(pItem);
 
-    pItem = new wxMenuItem(file_menu, Menu_Bitmap2, "So&und with a very very very very very very long label", "", wxITEM_CHECK);
+    pItem = new wxMenuItem(file_menu, Menu_Bitmap2, "So&und",
+                           "icon changes!", wxITEM_CHECK);
     pItem->SetFont(fontBmp);
     pItem->SetBitmaps(bmpSound, bmpNoSound);
     file_menu->Append(pItem);
@@ -211,9 +215,7 @@ void OwnerDrawnFrame::InitMenu()
     drawn_menu->Append(pItem);
 
     pItem = new wxMenuItem(drawn_menu, Menu_Drawn5, "&Other\tCtrl+O", "other item");
-#ifndef __WXUNIVERSAL__
     pItem->SetTextColour(*wxRED);
-#endif
     drawn_menu->Append(pItem);
 
     wxMenu* native_menu = new wxMenu;
@@ -250,8 +252,9 @@ void OwnerDrawnFrame::InitMenu()
 }
 
 // main frame constructor
-OwnerDrawnFrame::OwnerDrawnFrame()
-         : wxFrame(nullptr, wxID_ANY, "wxWidgets Ownerdraw Sample")
+OwnerDrawnFrame::OwnerDrawnFrame(wxFrame *frame, const wxString& title,
+                                 int x, int y, int w, int h)
+         : wxFrame(frame, wxID_ANY, title, wxPoint(x, y), wxSize(w, h))
 {
     // set the icon
     SetIcon(wxICON(sample));
@@ -261,7 +264,7 @@ OwnerDrawnFrame::OwnerDrawnFrame()
 
 #if wxUSE_STATUSBAR
     // create the status line
-    const int widths[] = { -1, FromDIP(60) };
+    const int widths[] = { -1, 60 };
     CreateStatusBar(2);
     SetStatusWidths(2, widths);
     SetStatusText("no selection", 0);
@@ -275,25 +278,29 @@ OwnerDrawnFrame::OwnerDrawnFrame()
                                           "goodbye", "cruel", "world",
                                           "-------", "owner-drawn", "listbox" };
 
+    wxString *astrChoices = new wxString[WXSIZEOF(aszChoices)];
+    unsigned int ui;
+    for ( ui = 0; ui < WXSIZEOF(aszChoices); ui++ )
+        astrChoices[ui] = aszChoices[ui];
+
     m_pListBox = new wxCheckListBox
         (
             pPanel,             // parent
             Control_Listbox,    // control id
-            FromDIP(wxPoint(10, 10)),    // listbox position
-            FromDIP(wxSize(200, 200)),   // listbox size
+            wxPoint(10, 10),    // listbox position
+            wxSize(200, 200),   // listbox size
             WXSIZEOF(aszChoices), // number of strings
-            aszChoices          // array of strings
+            astrChoices         // array of strings
         );
 
-#if defined(__WXMSW__) && !defined(__WXUNIVERSAL__)
-    unsigned int ui;
+    delete [] astrChoices;
+
     for ( ui = 0; ui < WXSIZEOF(aszChoices); ui += 2 )
     {
-        m_pListBox->GetItem(ui)->SetBackgroundColour(*wxBLUE);
-    }
-
-    m_pListBox->GetItem(3)->SetTextColour(*wxRED);
+#if defined(__WXMSW__) && !defined(__WXUNIVERSAL__)
+        m_pListBox->GetItem(ui)->SetBackgroundColour(wxColor(200, 200, 200));
 #endif
+    }
 
     m_pListBox->Check(2);
 
@@ -302,14 +309,21 @@ OwnerDrawnFrame::OwnerDrawnFrame()
                                          "Green", "Yellow",
                                          "Black", "Violet"  };
 
+    astrChoices = new wxString[WXSIZEOF(aszColors)];
+
+    for ( ui = 0; ui < WXSIZEOF(aszColors); ui++ )
+    {
+        astrChoices[ui] = aszColors[ui];
+    }
+
     wxListBox *pListBox = new wxListBox
         (
             pPanel,              // parent
             Control_Listbox2,    // control id
-            FromDIP(wxPoint(220, 10)),    // listbox position
-            FromDIP(wxSize(200, 200)),    // listbox size
+            wxPoint(220, 10),    // listbox position
+            wxSize(200, 200),    // listbox size
             WXSIZEOF(aszColors), // number of strings
-            aszColors,           // array of strings
+            astrChoices,         // array of strings
             wxLB_OWNERDRAW       // owner-drawn
         );
 
@@ -332,17 +346,13 @@ OwnerDrawnFrame::OwnerDrawnFrame()
         {
             pListBox->GetItem(ui)->SetBackgroundColour(wxColor(0, 0, 0));
         }
-        else if ( ui == 5 ) // black on dark grey is barely visible
-        {
-            pListBox->GetItem(ui)->SetBackgroundColour(*wxYELLOW);
-        }
     }
 
 #else
     wxUnusedVar( pListBox );
 #endif
 
-    SetSize(FromDIP(wxSize(450, 340)));
+    delete[] astrChoices;
 
     Show(true);
 }

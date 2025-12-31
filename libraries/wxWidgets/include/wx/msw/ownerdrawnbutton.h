@@ -10,6 +10,15 @@
 #ifndef _WX_MSW_OWNERDRAWNBUTTON_H_
 #define _WX_MSW_OWNERDRAWNBUTTON_H_
 
+// With MSVC 2017 and earlier, explicitly defining the destructor below
+// _causes_ exactly the kind of compiler warnings (C4265) the definition
+// was meant to avoid (on GCC). With later versions of MSVC, there is no
+// warning either way. We'll disable C4265 temporarily here.
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4265) // non-virtual destructor with virtual functions
+#endif
+
 // ----------------------------------------------------------------------------
 // wxMSWOwnerDrawnButton: base class for any kind of Windows buttons
 // ----------------------------------------------------------------------------
@@ -24,7 +33,7 @@
 class WXDLLIMPEXP_CORE wxMSWOwnerDrawnButtonBase
 {
 protected:
-    // Ctor takes the back pointer to the real window, must be non-null.
+    // Ctor takes the back pointer to the real window, must be non-NULL.
     wxMSWOwnerDrawnButtonBase(wxWindow* win) :
         m_win(win)
     {
@@ -37,7 +46,7 @@ protected:
     // has virtual functions, but no virtual destructor without making the dtor
     // virtual which is not needed here as objects are never deleted via
     // pointers to this class (and protected dtor enforces this).
-    ~wxMSWOwnerDrawnButtonBase() = default;
+    ~wxMSWOwnerDrawnButtonBase() { }
 
     // Make the control owner drawn if necessary to implement support for the
     // given foreground colour.
@@ -110,7 +119,7 @@ public:
     {
     }
 
-    virtual bool SetForegroundColour(const wxColour& colour) override
+    virtual bool SetForegroundColour(const wxColour& colour) wxOVERRIDE
     {
         if ( !Base::SetForegroundColour(colour) )
             return false;
@@ -120,7 +129,7 @@ public:
         return true;
     }
 
-    virtual bool MSWOnDraw(WXDRAWITEMSTRUCT *item) override
+    virtual bool MSWOnDraw(WXDRAWITEMSTRUCT *item) wxOVERRIDE
     {
         return MSWDrawButton(item) || Base::MSWOnDraw(item);
     }
@@ -128,5 +137,9 @@ public:
 protected:
     bool IsOwnerDrawn() const { return MSWIsOwnerDrawn(); }
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif // _WX_MSW_OWNERDRAWNBUTTON_H_

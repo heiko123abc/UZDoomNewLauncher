@@ -2,6 +2,7 @@
 // Name:        src/osx/cocoa/evtloop.mm
 // Purpose:     implementation of wxEventLoop for OS X
 // Author:      Vadim Zeitlin, Stefan Csomor
+// Modified by:
 // Created:     2006-01-12
 // Copyright:   (c) 2006 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
@@ -30,10 +31,9 @@
 #include "wx/log.h"
 #include "wx/scopeguard.h"
 #include "wx/vector.h"
+#include "wx/hashmap.h"
 
 #include "wx/osx/private.h"
-
-#include <unordered_map>
 
 struct wxModalSessionStackElement
 {
@@ -43,7 +43,8 @@ struct wxModalSessionStackElement
 
 typedef wxVector<wxModalSessionStackElement> wxModalSessionStack;
 
-using wxModalSessionStackMap = std::unordered_map<wxGUIEventLoop*, wxModalSessionStack*>;
+WX_DECLARE_HASH_MAP(wxGUIEventLoop*, wxModalSessionStack*, wxPointerHash, wxPointerEqual,
+                    wxModalSessionStackMap);
 
 static wxModalSessionStackMap gs_modalSessionStackMap;
 
@@ -59,10 +60,10 @@ static NSUInteger CalculateNSEventMaskFromEventCategory(wxEventCategory cat)
 {
     // the masking system doesn't really help, as only the lowlevel UI events
     // are split in a useful way, all others are way to broad
-
+        
     if ( (cat | wxEVT_CATEGORY_USER_INPUT) && (cat | (~wxEVT_CATEGORY_USER_INPUT) ) )
         return NSAnyEventMask;
-
+    
     NSUInteger mask = 0;
 
     if ( cat | wxEVT_CATEGORY_USER_INPUT )
@@ -95,17 +96,17 @@ static NSUInteger CalculateNSEventMaskFromEventCategory(wxEventCategory cat)
             NSEventMaskEndGesture |
             0;
     }
-
+    
     if ( cat | (~wxEVT_CATEGORY_USER_INPUT) )
     {
-        mask |=
+        mask |= 
             NSAppKitDefinedMask |
             NSSystemDefinedMask |
             NSApplicationDefinedMask |
             NSPeriodicMask |
             NSCursorUpdateMask;
     }
-
+    
     return mask;
 }
 
@@ -116,7 +117,7 @@ wxGUIEventLoop::wxGUIEventLoop()
     m_modalSession = nil;
     m_dummyWindow = nil;
     m_modalNestedLevel = 0;
-    m_modalWindow = nullptr;
+    m_modalWindow = NULL;
     m_osxLowLevelWakeUp = false;
 }
 
@@ -142,7 +143,7 @@ bool wxGUIEventLoop::Pending() const
     // as otherwise we end up in a tight loop when idle events are responded
     // to by RequestMore(true)
     wxMacAutoreleasePool autoreleasepool;
-
+  
     return [[NSApplication sharedApplication]
             nextEventMatchingMask: NSAnyEventMask
             untilDate: nil
@@ -167,11 +168,11 @@ bool wxGUIEventLoop::Dispatch()
                 inMode:NSDefaultRunLoopMode
                 dequeue: YES])
     {
-        WXEVENTREF formerEvent = wxTheApp == nullptr ? nullptr : wxTheApp->MacGetCurrentEvent();
-        WXEVENTHANDLERCALLREF formerHandler = wxTheApp == nullptr ? nullptr : wxTheApp->MacGetCurrentEventHandlerCallRef();
+        WXEVENTREF formerEvent = wxTheApp == NULL ? NULL : wxTheApp->MacGetCurrentEvent();
+        WXEVENTHANDLERCALLREF formerHandler = wxTheApp == NULL ? NULL : wxTheApp->MacGetCurrentEventHandlerCallRef();
 
         if (wxTheApp)
-            wxTheApp->MacSetCurrentEvent(event, nullptr);
+            wxTheApp->MacSetCurrentEvent(event, NULL);
         m_sleepTime = 0.0;
         [NSApp sendEvent: event];
 
@@ -182,7 +183,7 @@ bool wxGUIEventLoop::Dispatch()
     {
         if (wxTheApp)
             wxTheApp->ProcessPendingEvents();
-
+        
         if ( wxTheApp->ProcessIdle() )
             m_sleepTime = 0.0 ;
         else
@@ -208,8 +209,8 @@ int wxGUIEventLoop::DoDispatchTimeout(unsigned long timeout)
     if ( m_modalSession )
     {
         NSInteger response = [NSApp runModalSession:(NSModalSession)m_modalSession];
-
-        switch (response)
+        
+        switch (response) 
         {
             case NSModalResponseContinue:
             {
@@ -222,7 +223,7 @@ int wxGUIEventLoop::DoDispatchTimeout(unsigned long timeout)
                         inMode: NSDefaultRunLoopMode
                         dequeue: NO] != nil )
                     return 1;
-
+                
                 return -1;
             }
             case NSModalResponseStop:
@@ -234,14 +235,14 @@ int wxGUIEventLoop::DoDispatchTimeout(unsigned long timeout)
         }
         return -1;
     }
-    else
-    {
+    else 
+    {        
         NSEvent *event = [NSApp
                     nextEventMatchingMask:NSAnyEventMask
                     untilDate:[NSDate dateWithTimeIntervalSinceNow: timeout/1000.0]
                     inMode:NSDefaultRunLoopMode
                     dequeue: YES];
-
+        
         if ( event == nil )
             return -1;
 
@@ -351,7 +352,7 @@ void wxGUIEventLoop::OSXDoStop()
     // We should only stop the top level event loop.
     if ( gs_loopNestingLevel <= 1 )
     {
-        [NSApp stop:nullptr];
+        [NSApp stop:0];
     }
 
     // For the top level loop only calling stop: is not enough when called from
@@ -365,24 +366,24 @@ void wxGUIEventLoop::WakeUp()
 {
     // NSEvent* cevent = [NSApp currentEvent];
     // NSString* mode = [[NSRunLoop mainRunLoop] currentMode];
-
+    
     // when already in a mouse event handler, don't add higher level event
     // if ( cevent != nil && [cevent type] <= NSMouseMoved && )
     if ( m_osxLowLevelWakeUp /* [NSEventTrackingRunLoopMode isEqualToString:mode] */ )
     {
         // NSLog(@"event for wakeup %@ in mode %@",cevent,mode);
-        wxCFEventLoop::WakeUp();
+        wxCFEventLoop::WakeUp();        
     }
     else
     {
         wxMacAutoreleasePool autoreleasepool;
-        NSEvent *event = [NSEvent otherEventWithType:NSApplicationDefined
-                                        location:NSMakePoint(0.0, 0.0)
-                                   modifierFlags:0
-                                       timestamp:0
-                                    windowNumber:0
+        NSEvent *event = [NSEvent otherEventWithType:NSApplicationDefined 
+                                        location:NSMakePoint(0.0, 0.0) 
+                                   modifierFlags:0 
+                                       timestamp:0 
+                                    windowNumber:0 
                                          context:nil
-                                         subtype:0 data1:0 data2:0];
+                                         subtype:0 data1:0 data2:0]; 
         [NSApp postEvent:event atStart:FALSE];
     }
 }
@@ -399,14 +400,14 @@ CFRunLoopRef wxGUIEventLoop::CFGetCurrentRunLoop() const
 wxModalEventLoop::wxModalEventLoop(wxWindow *modalWindow)
 {
     m_modalWindow = dynamic_cast<wxNonOwnedWindow*> (modalWindow);
-    wxASSERT_MSG( m_modalWindow != nullptr, "must pass in a toplevel window for modal event loop" );
+    wxASSERT_MSG( m_modalWindow != NULL, "must pass in a toplevel window for modal event loop" );
     m_modalNativeWindow = m_modalWindow->GetWXWindow();
 }
 
 wxModalEventLoop::wxModalEventLoop(WXWindow modalNativeWindow)
 {
-    m_modalWindow = nullptr;
-    wxASSERT_MSG( modalNativeWindow != nullptr, "must pass in a toplevel window for modal event loop" );
+    m_modalWindow = NULL;
+    wxASSERT_MSG( modalNativeWindow != NULL, "must pass in a toplevel window for modal event loop" );
     m_modalNativeWindow = modalNativeWindow;
 }
 
@@ -455,8 +456,8 @@ void wxGUIEventLoop::BeginModalSession( wxWindow* modalWindow )
     m_modalNestedLevel++;
     if ( m_modalNestedLevel > 1 )
     {
-        wxModalSessionStack* stack = nullptr;
-
+        wxModalSessionStack* stack = NULL;
+        
         if ( m_modalNestedLevel == 2 )
         {
             stack = new wxModalSessionStack;
@@ -466,30 +467,30 @@ void wxGUIEventLoop::BeginModalSession( wxWindow* modalWindow )
         {
             stack = gs_modalSessionStackMap[this];
         }
-
+        
         wxModalSessionStackElement element;
         element.dummyWindow = m_dummyWindow;
         element.modalSession = m_modalSession;
-
+        
         stack->push_back(element);
-
+        
         // shortcut if nothing changed in this level
-
+        
         if ( m_modalWindow == modalWindow )
             return;
     }
-
+    
     m_modalWindow = modalWindow;
-
+    
     if ( modalWindow )
     {
         // we must show now, otherwise beginModalSessionForWindow does it but it
         // also would do a centering of the window before overriding all our position
         if ( !modalWindow->IsShownOnScreen() )
             modalWindow->Show();
-
+        
         wxNonOwnedWindow* now = dynamic_cast<wxNonOwnedWindow*> (modalWindow);
-        wxASSERT_MSG( now != nullptr, "must pass in a toplevel window for modal event loop" );
+        wxASSERT_MSG( now != NULL, "must pass in a toplevel window for modal event loop" );
         nsnow = now ? now->GetWXWindow() : nil;
     }
     else
@@ -505,16 +506,16 @@ void wxGUIEventLoop::BeginModalSession( wxWindow* modalWindow )
         [nsnow orderOut:nil];
     }
     m_modalSession = [NSApp beginModalSessionForWindow:nsnow];
-    wxASSERT_MSG(m_modalSession != nullptr, "modal session couldn't be started");
+    wxASSERT_MSG(m_modalSession != NULL, "modal session couldn't be started");
 }
 
 void wxGUIEventLoop::EndModalSession()
 {
-    wxASSERT_MSG(m_modalSession != nullptr, "no modal session active");
-
+    wxASSERT_MSG(m_modalSession != NULL, "no modal session active");
+    
     wxASSERT_MSG(m_modalNestedLevel > 0, "incorrect modal nesting level");
 
-    m_modalWindow = nullptr;
+    m_modalWindow = NULL;
 
     --m_modalNestedLevel;
     if ( m_modalNestedLevel == 0 )
@@ -533,19 +534,19 @@ void wxGUIEventLoop::EndModalSession()
         wxModalSessionStack* stack = gs_modalSessionStackMap[this];
         wxModalSessionStackElement element = stack->back();
         stack->pop_back();
-
+        
         if( m_modalNestedLevel == 1 )
         {
             gs_modalSessionStackMap.erase(this);
             delete stack;
         }
-
+        
         if ( m_modalSession != element.modalSession )
         {
             [NSApp endModalSession:(NSModalSession)m_modalSession];
             m_modalSession = element.modalSession;
         }
-
+        
         if ( m_dummyWindow != element.dummyWindow )
         {
             if ( m_dummyWindow )
@@ -560,7 +561,7 @@ void wxGUIEventLoop::EndModalSession()
 }
 
 //
-//
+// 
 //
 
 void wxWindowDisabler::AfterDisable(wxWindow* winToSkip)

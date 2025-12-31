@@ -94,7 +94,6 @@ bool wxUIActionSimulatorImpl::MouseDragDrop(long x1, long y1, long x2, long y2,
 bool
 wxUIActionSimulator::Key(int keycode, int modifiers, bool isDown)
 {
-#ifndef __WXQT__
     wxASSERT_MSG( !(modifiers & wxMOD_META ),
         "wxMOD_META is not implemented" );
     wxASSERT_MSG( !(modifiers & wxMOD_WIN ),
@@ -109,11 +108,6 @@ wxUIActionSimulator::Key(int keycode, int modifiers, bool isDown)
         SimulateModifiers(modifiers, false);
 
     return rc;
-#else
-    // Under wxQt we have to pass modifiers along with keycode for the simulation
-    // to succeed.
-    return m_impl->DoKey(keycode, modifiers, isDown);
-#endif
 }
 
 void wxUIActionSimulator::SimulateModifiers(int modifiers, bool isDown)
@@ -195,25 +189,21 @@ bool wxUIActionSimulator::Select(const wxString& text)
     // We can only select something in controls inheriting from
     // wxItemContainer, so check that we have it.
 #ifdef wxNO_RTTI
-    wxItemContainer* container = nullptr;
+    wxItemContainer* container = NULL;
 
 #if wxUSE_COMBOBOX
     if ( wxComboBox* combo = wxDynamicCast(focus, wxComboBox) )
         container = combo;
 #endif // wxUSE_COMBOBOX
 #if wxUSE_CHOICE
-    if ( !container )
-    {
-        if ( wxChoice* choice = wxDynamicCast(focus, wxChoice) )
-            container = choice;
-    }
+    wxChoice* choice;
+    if ( !container && (choice = wxDynamicCast(focus, wxChoice)) )
+        container = choice;
 #endif // wxUSE_CHOICE
 #if wxUSE_LISTBOX
-    if ( !container )
-    {
-        if ( wxListBox* listbox = wxDynamicCast(focus, wxListBox) )
-            container = listbox;
-    }
+    wxListBox* listbox;
+    if ( !container && (listbox = wxDynamicCast(focus, wxListBox)) )
+        container = listbox;
 #endif // wxUSE_LISTBOX
 #else // !wxNO_RTTI
     wxItemContainer* const container = dynamic_cast<wxItemContainer*>(focus);

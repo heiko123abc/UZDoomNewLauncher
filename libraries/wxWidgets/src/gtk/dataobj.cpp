@@ -40,10 +40,7 @@ class wxGdkAtom
 {
 public:
     // Name is literal, so we don't copy it but just store the pointer.
-    wxGdkAtom(const char* name) : m_name{name} {}
-
-    wxGdkAtom(const wxGdkAtom&) = delete;
-    wxGdkAtom& operator=(const wxGdkAtom&) = delete;
+    wxGdkAtom(const char* name) : m_name(name), m_atom(NULL) {}
 
     GdkAtom Get() const
     {
@@ -55,7 +52,7 @@ public:
 
 private:
     const char* const m_name;
-    mutable GdkAtom m_atom = nullptr;
+    mutable GdkAtom m_atom;
 };
 
 inline bool operator==(wxDataFormat format, const wxGdkAtom& wxatom)
@@ -73,14 +70,14 @@ inline bool operator==(GdkAtom atom, const wxGdkAtom& wxatom)
 //
 // Note that there are also other atoms for text, e.g. "COMPOUND_TEXT" and
 // "TEXT", but it doesn't seem necessary to support them, so we don't.
-wxGdkAtom g_u8strAtom   {"UTF8_STRING"};
-wxGdkAtom g_strAtom     {"STRING"};
-wxGdkAtom g_u8textAtom  {"text/plain;charset=utf-8"};
-wxGdkAtom g_textAtom    {"text/plain"};
+wxGdkAtom g_u8strAtom   ("UTF8_STRING");
+wxGdkAtom g_strAtom     ("STRING");
+wxGdkAtom g_u8textAtom  ("text/plain;charset=utf-8");
+wxGdkAtom g_textAtom    ("text/plain");
 
-wxGdkAtom g_pngAtom     {"image/png"};
-wxGdkAtom g_fileAtom    {"text/uri-list"};
-wxGdkAtom g_htmlAtom    {"text/html"};
+wxGdkAtom g_pngAtom     ("image/png");
+wxGdkAtom g_fileAtom    ("text/uri-list");
+wxGdkAtom g_htmlAtom    ("text/html");
 
 } // anonymous namespace
 
@@ -91,7 +88,7 @@ wxGdkAtom g_htmlAtom    {"text/html"};
 wxDataFormat::wxDataFormat()
 {
     m_type = wxDF_INVALID;
-    m_format = (GdkAtom) nullptr;
+    m_format = (GdkAtom) 0;
 }
 
 wxDataFormat::wxDataFormat( wxDataFormatId type )
@@ -113,10 +110,18 @@ void wxDataFormat::SetType( wxDataFormatId type )
 {
     m_type = type;
 
+#if wxUSE_UNICODE
     if (m_type == wxDF_UNICODETEXT)
         m_format = g_u8strAtom.Get();
     else if (m_type == wxDF_TEXT)
         m_format = g_strAtom.Get();
+#else // !wxUSE_UNICODE
+    // notice that we don't map wxDF_UNICODETEXT to g_u8strAtom here, this
+    // would lead the code elsewhere to treat data objects with this format as
+    // containing UTF-8 data which is not true
+    if (m_type == wxDF_TEXT)
+        m_format = g_u8strAtom.Get();
+#endif // wxUSE_UNICODE/!wxUSE_UNICODE
     else
     if (m_type == wxDF_BITMAP)
         m_format = g_pngAtom.Get();
@@ -148,7 +153,11 @@ void wxDataFormat::SetId( NativeFormat format )
     m_format = format;
 
     if (m_format == g_u8strAtom || m_format == g_u8textAtom)
+#if wxUSE_UNICODE
         m_type = wxDF_UNICODETEXT;
+#else
+        m_type = wxDF_TEXT;
+#endif
     else
     if (m_format == g_strAtom || m_format == g_textAtom)
         m_type = wxDF_TEXT;
@@ -196,7 +205,7 @@ extern GdkAtom wxGTKGetAltWaylandFormat(GdkAtom atom)
     if (atom == g_strAtom)
         return g_textAtom.Get();
 
-    return nullptr;
+    return NULL;
 }
 
 bool wxDataFormat::operator==(const wxDataFormat& other) const
@@ -207,6 +216,10 @@ bool wxDataFormat::operator==(const wxDataFormat& other) const
     return wxGTKIsSameFormat(m_format, other.m_format);
 }
 
+void wxDataFormat::PrepareFormats()
+{
+    // This function is not used any longer, but kept for ABI compatibility.
+}
 
 //-------------------------------------------------------------------------
 // wxDataObject
@@ -244,6 +257,22 @@ bool wxDataObject::IsSupportedFormat(const wxDataFormat& format, Direction dir) 
 }
 
 // ----------------------------------------------------------------------------
+// wxTextDataObject
+// ----------------------------------------------------------------------------
+
+#if wxUSE_UNICODE
+
+void
+wxTextDataObject::GetAllFormats(wxDataFormat *formats,
+                                wxDataObjectBase::Direction WXUNUSED(dir)) const
+{
+    *formats++ = wxDataFormat(wxDF_UNICODETEXT);
+    *formats = wxDataFormat(wxDF_TEXT);
+}
+
+#endif // wxUSE_UNICODE
+
+// ----------------------------------------------------------------------------
 // wxFileDataObject
 // ----------------------------------------------------------------------------
 
@@ -253,7 +282,7 @@ bool wxFileDataObject::GetDataHere(void *buf) const
 
     for (size_t i = 0; i < m_filenames.GetCount(); i++)
     {
-        wxGtkString uri(g_filename_to_uri(m_filenames[i].mbc_str(), nullptr, nullptr));
+        char* uri = g_filename_to_uri(m_filenames[i].mbc_str(), 0, 0);
         if (uri)
         {
             size_t const len = strlen(uri);
@@ -261,6 +290,7 @@ bool wxFileDataObject::GetDataHere(void *buf) const
             out += len;
             *(out++) = '\r';
             *(out++) = '\n';
+            g_free(uri);
         }
     }
     *out = 0;
@@ -274,10 +304,10 @@ size_t wxFileDataObject::GetDataSize() const
 
     for (size_t i = 0; i < m_filenames.GetCount(); i++)
     {
-        wxGtkString uri(g_filename_to_uri(m_filenames[i].mbc_str(), nullptr, nullptr));
-        if (uri)
-        {
+        char* uri = g_filename_to_uri(m_filenames[i].mbc_str(), 0, 0);
+        if (uri) {
             res += strlen(uri) + 2; // Including "\r\n"
+            g_free(uri);
         }
     }
 
@@ -326,13 +356,16 @@ bool wxFileDataObject::SetData(size_t WXUNUSED(size), const void *buf)
             break;
 
         // required to give it a trailing zero
-        wxGtkString uri(g_strndup( temp, len ));
+        gchar *uri = g_strndup( temp, len );
 
-        wxGtkString fn(g_filename_from_uri( uri, nullptr, nullptr ));
+        gchar *fn = g_filename_from_uri( uri, NULL, NULL );
+
+        g_free( uri );
 
         if (fn)
         {
             AddFile( wxConvFileName->cMB2WX( fn ) );
+            g_free( fn );
         }
     }
 
@@ -393,7 +426,7 @@ bool wxBitmapDataObject::SetData(size_t size, const void *buf)
 {
     Clear();
 
-    wxCHECK_MSG( wxImage::FindHandler(wxBITMAP_TYPE_PNG) != nullptr,
+    wxCHECK_MSG( wxImage::FindHandler(wxBITMAP_TYPE_PNG) != NULL,
                  false, wxT("You must call wxImage::AddHandler(new wxPNGHandler); to be able to use clipboard with bitmaps!") );
 
     m_pngSize = size;
@@ -418,7 +451,7 @@ void wxBitmapDataObject::DoConvertToPng()
     if ( !m_bitmap.IsOk() )
         return;
 
-    wxCHECK_RET( wxImage::FindHandler(wxBITMAP_TYPE_PNG) != nullptr,
+    wxCHECK_RET( wxImage::FindHandler(wxBITMAP_TYPE_PNG) != NULL,
                  wxT("You must call wxImage::AddHandler(new wxPNGHandler); to be able to use clipboard with bitmaps!") );
 
     wxImage image = m_bitmap.ConvertToImage();
@@ -450,7 +483,7 @@ public:
     void SetURL(const wxString& url) { m_url = url; }
 
 
-    virtual size_t GetDataSize() const override
+    virtual size_t GetDataSize() const wxOVERRIDE
     {
         // It is not totally clear whether we should include "\r\n" at the end
         // of the string if there is only one URL or not, but not doing it
@@ -458,7 +491,7 @@ public:
         return strlen(m_url.utf8_str()) + 1;
     }
 
-    virtual bool GetDataHere(void *buf) const override
+    virtual bool GetDataHere(void *buf) const wxOVERRIDE
     {
         char* const dst = static_cast<char*>(buf);
 
@@ -467,15 +500,14 @@ public:
         return true;
     }
 
-    virtual bool SetData(size_t len, const void *buf) override
+    virtual bool SetData(size_t len, const void *buf) wxOVERRIDE
     {
         const char* const src = static_cast<const char*>(buf);
 
-        // Length here includes the trailing NUL, but we don't want to include
-        // it into the string contents.
-        wxCHECK_MSG( len != 0 && !src[len], false, "must have trailing NUL" );
-
-        len--;
+        // Length here normally includes the trailing NUL, but we don't want to
+        // include it into the string contents.
+        if ( len && !src[len] )
+            len--;
 
         // The string might be "\r\n"-terminated but this is not necessarily
         // the case (e.g. when dragging an URL from Firefox, it isn't).
@@ -493,15 +525,15 @@ public:
     }
 
     // Must provide overloads to avoid hiding them (and warnings about it)
-    virtual size_t GetDataSize(const wxDataFormat&) const override
+    virtual size_t GetDataSize(const wxDataFormat&) const wxOVERRIDE
     {
         return GetDataSize();
     }
-    virtual bool GetDataHere(const wxDataFormat&, void *buf) const override
+    virtual bool GetDataHere(const wxDataFormat&, void *buf) const wxOVERRIDE
     {
         return GetDataHere(buf);
     }
-    virtual bool SetData(const wxDataFormat&, size_t len, const void *buf) override
+    virtual bool SetData(const wxDataFormat&, size_t len, const void *buf) wxOVERRIDE
     {
         return SetData(len, buf);
     }

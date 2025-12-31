@@ -21,9 +21,6 @@
 
 #if wxUSE_SECRETSTORE
 
-#include "wx/dynlib.h"
-#include "wx/log.h"
-#include "wx/module.h"
 #include "wx/secretstore.h"
 #include "wx/private/secretstore.h"
 
@@ -64,135 +61,17 @@ private:
     wxDECLARE_NO_ASSIGN_CLASS(wxGHashTable);
 };
 
-// We load libsecret dynamically: this allows the applications using this
-// wxSecretStore implementation to run even on the systems without libsecret
-// (but not work there, of course).
-namespace wxLibSecret
-{
-
-// X-macro executing the given macro for all libsecret functions that we use.
-#define wxFOR_ALL_SECRETLIB_SYMBOLS(m) \
-    m(secret_attributes_build) \
-    m(secret_item_get_attributes) \
-    m(secret_item_get_secret) \
-    m(secret_service_clear_sync) \
-    m(secret_service_get_sync) \
-    m(secret_service_search_sync) \
-    m(secret_service_store_sync) \
-    m(secret_value_get) \
-    m(secret_value_new) \
-    m(secret_value_unref)
-
-#define DECLARE_SECRETLIB_FUNC(name) \
-    decltype(::name)* name = nullptr;
-
-wxFOR_ALL_SECRETLIB_SYMBOLS(DECLARE_SECRETLIB_FUNC)
-
-#undef DECLARE_SECRETLIB_FUNC
-
-wxDynamicLibrary gs_dynlib;
-
-// Unload the library if it is loaded.
-void UnloadAll()
-{
-    // Reset all function pointers before the library is unloaded.
-    if ( wxLibSecret::gs_dynlib.IsLoaded() )
-    {
-        #define RESET_SECRETLIB_FUNC(name) name = nullptr;
-
-        wxFOR_ALL_SECRETLIB_SYMBOLS(RESET_SECRETLIB_FUNC);
-
-        #undef RESET_SECRETLIB_FUNC
-
-        wxLibSecret::gs_dynlib.Unload();
-    }
-}
-
-// Load the library and initialize all function pointers.
-//
-// If errmsg is non-null, fill it with the errors logged while trying to load
-// on failure.
-bool LoadAll(wxString* errmsg = nullptr)
-{
-    if ( gs_dynlib.IsLoaded() )
-        return true;
-
-    wxLogCollector logCollect;
-
-    if ( gs_dynlib.Load("libsecret-1") )
-    {
-        for ( ;; )
-        {
-            #define LOAD_SECRETLIB_FUNC(name) \
-                name = (decltype(::name)*)gs_dynlib.GetSymbol(#name); \
-                if ( !name ) \
-                    break;
-
-            wxFOR_ALL_SECRETLIB_SYMBOLS(LOAD_SECRETLIB_FUNC)
-
-            #undef LOAD_SECRETLIB_FUNC
-
-            // If we didn't break out of the loop, we must have loaded all the
-            // functions successfully.
-            return true;
-        }
-    }
-
-    // Get all the errors without the trailing new line, if any.
-    if ( errmsg )
-        *errmsg = logCollect.GetMessages().Strip();
-
-    // If we failed to load all the functions, don't keep the library loaded.
-    UnloadAll();
-
-    return false;
-}
-
-} // namespace wxLibSecret
-
-class wxLibSecretModule : public wxModule
-{
-public:
-    virtual bool OnInit() override { return true; }
-    virtual void OnExit() override { wxLibSecret::UnloadAll(); }
-};
-
 // ============================================================================
 // wxSecretStoreImpl using libsecret
 // ============================================================================
-
-// Dummy implementation used when libsecret is not available.
-class wxSecretValueNotAvailableImpl : public wxSecretValueImpl
-{
-public:
-    wxSecretValueNotAvailableImpl(size_t size, const void* data)
-        : m_buf(size)
-    {
-        memcpy(m_buf.data(), data, size);
-    }
-
-    virtual ~wxSecretValueNotAvailableImpl()
-    {
-        wxSecretValue::Wipe(m_buf.size(), m_buf.data());
-    }
-
-    virtual size_t GetSize() const override { return m_buf.size(); }
-    virtual const void *GetData() const override { return m_buf.data(); }
-
-private:
-    std::vector<unsigned char> m_buf;
-};
 
 class wxSecretValueLibSecretImpl : public wxSecretValueImpl
 {
 public:
     // Create a new secret value for the given content type.
     wxSecretValueLibSecretImpl(size_t size, const void* data, const char* contentType)
-        : m_value(wxLibSecret::secret_value_new(
-                    static_cast<const gchar*>(data),
-                    size,
-                    contentType
-                  ))
+        : m_value(secret_value_new(static_cast<const gchar*>(data), size,
+                                   contentType))
     {
     }
 
@@ -208,19 +87,19 @@ public:
     virtual ~wxSecretValueLibSecretImpl()
     {
         // No need to wipe memory, this will happen by default.
-        wxLibSecret::secret_value_unref(m_value);
+        secret_value_unref(m_value);
     }
 
-    virtual size_t GetSize() const override
+    virtual size_t GetSize() const wxOVERRIDE
     {
         gsize length = 0;
-        (void)wxLibSecret::secret_value_get(m_value, &length);
+        (void)secret_value_get(m_value, &length);
         return length;
     }
 
-    virtual const void *GetData() const override
+    virtual const void *GetData() const wxOVERRIDE
     {
-        return wxLibSecret::secret_value_get(m_value, nullptr);
+        return secret_value_get(m_value, NULL);
     }
 
     SecretValue* GetValue() const
@@ -241,7 +120,7 @@ public:
     {
     }
 
-    virtual bool IsOk(wxString* errmsg) const override
+    virtual bool IsOk(wxString* errmsg) const wxOVERRIDE
     {
         if ( errmsg )
             *errmsg = m_error;
@@ -252,7 +131,7 @@ public:
     virtual bool Save(const wxString& WXUNUSED(service),
                       const wxString& WXUNUSED(user),
                       const wxSecretValueImpl& WXUNUSED(secret),
-                      wxString& errmsg) override
+                      wxString& errmsg) wxOVERRIDE
     {
         errmsg = m_error;
         return false;
@@ -261,14 +140,14 @@ public:
     virtual bool Load(const wxString& WXUNUSED(service),
                       wxString* WXUNUSED(user),
                       wxSecretValueImpl** WXUNUSED(secret),
-                      wxString& errmsg) const override
+                      wxString& errmsg) const wxOVERRIDE
     {
         errmsg = m_error;
         return false;
     }
 
     virtual bool Delete(const wxString& WXUNUSED(service),
-                        wxString& errmsg) override
+                        wxString& errmsg) wxOVERRIDE
     {
         errmsg = m_error;
         return false;
@@ -288,21 +167,17 @@ class wxSecretStoreLibSecretImpl : public wxSecretStoreImpl
 public:
     static wxSecretStoreLibSecretImpl* Create(wxString& errmsg)
     {
-        // First of all, load the library if not done yet.
-        if ( !wxLibSecret::LoadAll(&errmsg) )
-            return nullptr;
-
         wxGtkError error;
-        SecretService* const service = wxLibSecret::secret_service_get_sync
+        SecretService* const service = secret_service_get_sync
                                        (
                                             SECRET_SERVICE_OPEN_SESSION,
-                                            nullptr,   // No cancellation
+                                            NULL,   // No cancellation
                                             error.Out()
                                        );
         if ( !service )
         {
             errmsg = error.GetMessage();
-            return nullptr;
+            return NULL;
         }
 
         // This passes ownership of service to the new object.
@@ -312,7 +187,7 @@ public:
     virtual bool Save(const wxString& service,
                       const wxString& user,
                       const wxSecretValueImpl& secret,
-                      wxString& errmsg) override
+                      wxString& errmsg) wxOVERRIDE
     {
         // We don't have any argument for the user-visible secret description
         // supported by libsecret, so we just reuse the service string. It
@@ -322,7 +197,7 @@ public:
         // Notice that we can't use secret_password_store_sync() here because
         // our secret can contain NULs, so we must pass by the lower level API.
         wxGtkError error;
-        if ( !wxLibSecret::secret_service_store_sync
+        if ( !secret_service_store_sync
               (
                 m_service,
                 GetSchema(),
@@ -330,7 +205,7 @@ public:
                 SECRET_COLLECTION_DEFAULT,
                 service.utf8_str(),
                 static_cast<const wxSecretValueLibSecretImpl&>(secret).GetValue(),
-                nullptr,                           // Can't be cancelled
+                NULL,                           // Can't be cancelled
                 error.Out()
               ) )
         {
@@ -344,10 +219,10 @@ public:
     virtual bool Load(const wxString& service,
                       wxString* user,
                       wxSecretValueImpl** secret,
-                      wxString& errmsg) const override
+                      wxString& errmsg) const wxOVERRIDE
     {
         wxGtkError error;
-        GList* const found = wxLibSecret::secret_service_search_sync
+        GList* const found = secret_service_search_sync
             (
                 m_service,
                 GetSchema(),
@@ -357,7 +232,7 @@ public:
                     SECRET_SEARCH_UNLOCK |
                     SECRET_SEARCH_LOAD_SECRETS
                 ),
-                nullptr,                           // Can't be cancelled
+                NULL,                           // Can't be cancelled
                 error.Out()
             );
 
@@ -377,26 +252,26 @@ public:
         SecretItem* const item = static_cast<SecretItem*>(found->data);
         wxGtkObject<SecretItem> ensureItemFreed(item);
 
-        const wxGHashTable attrs(wxLibSecret::secret_item_get_attributes(item));
+        const wxGHashTable attrs(secret_item_get_attributes(item));
         const gpointer field = g_hash_table_lookup(attrs, FIELD_USER);
         if ( field )
             *user = wxString::FromUTF8(static_cast<char*>(field));
 
-        *secret = new wxSecretValueLibSecretImpl(wxLibSecret::secret_item_get_secret(item));
+        *secret = new wxSecretValueLibSecretImpl(secret_item_get_secret(item));
 
         return true;
     }
 
     virtual bool Delete(const wxString& service,
-                        wxString& errmsg) override
+                        wxString& errmsg) wxOVERRIDE
     {
         wxGtkError error;
-        if ( !wxLibSecret::secret_service_clear_sync
+        if ( !secret_service_clear_sync
               (
                 m_service,
                 GetSchema(),
                 BuildAttributes(service),
-                nullptr,                           // Can't be cancelled
+                NULL,                           // Can't be cancelled
                 error.Out()
               ) )
         {
@@ -430,7 +305,7 @@ private:
                 {
                     { FIELD_SERVICE,    SECRET_SCHEMA_ATTRIBUTE_STRING },
                     { FIELD_USER,       SECRET_SCHEMA_ATTRIBUTE_STRING },
-                    { nullptr }
+                    { NULL }
                 }
             };
 
@@ -442,23 +317,23 @@ private:
     // Return attributes for the schema defined above.
     static wxGHashTable BuildAttributes(const wxString& service)
     {
-        return wxGHashTable(wxLibSecret::secret_attributes_build
+        return wxGHashTable(secret_attributes_build
                             (
                                 GetSchema(),
                                 FIELD_SERVICE,  service.utf8_str().data(),
-                                nullptr
+                                NULL
                             ));
     }
 
     static wxGHashTable BuildAttributes(const wxString& service,
                                         const wxString& user)
     {
-        return wxGHashTable(wxLibSecret::secret_attributes_build
+        return wxGHashTable(secret_attributes_build
                             (
                                 GetSchema(),
                                 FIELD_SERVICE,  service.utf8_str().data(),
                                 FIELD_USER,     user.utf8_str().data(),
-                                nullptr
+                                NULL
                             ));
     }
 
@@ -487,9 +362,6 @@ wxSecretValue::NewImpl(size_t size,
                        const void *data,
                        const char* contentType)
 {
-    if ( !wxLibSecret::LoadAll() )
-        return new wxSecretValueNotAvailableImpl(size, data);
-
     return new wxSecretValueLibSecretImpl(size, data, contentType);
 }
 

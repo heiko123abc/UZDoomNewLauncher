@@ -13,6 +13,4 @@
 /(?<=ab\Cde)X/
     abZdeX
 
-/[\C]/
-
 # End of testinput21

@@ -33,6 +33,10 @@
     #include <stat.h>
 #endif
 
+#if wxUSE_STD_IOSTREAM
+    #include <fstream>
+#endif
+
 #include "wx/filefn.h"
 #include "wx/sysopt.h"
 #include "wx/thread.h"
@@ -67,7 +71,7 @@ void wxTextCtrl::Init()
 {
     m_dirty = false;
 
-    m_privateContextMenu = nullptr;
+    m_privateContextMenu = NULL;
 }
 
 wxTextCtrl::~wxTextCtrl()
@@ -88,6 +92,9 @@ bool wxTextCtrl::Create( wxWindow *parent,
 {
     DontCreatePeer();
     m_editable = true ;
+
+    if ( ! (style & wxNO_BORDER) )
+        style = (style & ~wxBORDER_MASK) | wxSUNKEN_BORDER ;
 
     if ( !wxTextCtrlBase::Create( parent, id, pos, size, style & ~(wxHSCROLL | wxVSCROLL), validator, name ) )
         return false;
@@ -144,21 +151,6 @@ void wxTextCtrl::OSXDisableAllSmartSubstitutions()
 {
     OSXEnableAutomaticDashSubstitution(false);
     OSXEnableAutomaticQuoteSubstitution(false);
-}
-
-wxTextSearchResult wxTextCtrl::SearchText(const wxTextSearch& search) const
-{
-    return GetTextPeer()->SearchText(search);
-}
-
-wxString wxTextCtrl::GetRTFValue() const
-{
-    return GetTextPeer()->GetRTFValue();
-}
-
-void wxTextCtrl::SetRTFValue(const wxString& val)
-{
-    GetTextPeer()->SetRTFValue(val);
 }
 
 bool wxTextCtrl::SetFont( const wxFont& font )
@@ -411,7 +403,6 @@ void wxTextCtrl::OnKeyDown(wxKeyEvent& event)
                     return;
                 }
                 // else fall through to Redo
-                wxFALLTHROUGH;
             case 'Y':
                 if ( CanRedo() )
                     Redo() ;
@@ -468,10 +459,10 @@ void wxTextCtrl::OnChar(wxKeyEvent& event)
         case WXK_NUMPAD_ENTER:
             if (m_windowStyle & wxTE_PROCESS_ENTER)
             {
-                wxCommandEvent evt(wxEVT_TEXT_ENTER, m_windowId);
-                evt.SetEventObject(this);
-                evt.SetString(GetValue());
-                if (HandleWindowEvent(evt))
+                wxCommandEvent event(wxEVT_TEXT_ENTER, m_windowId);
+                event.SetEventObject( this );
+                event.SetString( GetValue() );
+                if ( HandleWindowEvent(event) )
                     return;
             }
 
@@ -483,9 +474,9 @@ void wxTextCtrl::OnChar(wxKeyEvent& event)
                     wxButton *def = wxDynamicCast(tlw->GetDefaultItem(), wxButton);
                     if ( def && def->IsEnabled() )
                     {
-                        wxCommandEvent evt(wxEVT_BUTTON, def->GetId());
-                        evt.SetEventObject(def);
-                        def->Command(evt);
+                        wxCommandEvent event(wxEVT_BUTTON, def->GetId() );
+                        event.SetEventObject(def);
+                        def->Command(event);
 
                         return ;
                     }
@@ -640,7 +631,7 @@ void wxTextCtrl::OnContextMenu(wxContextMenuEvent& event)
     }
 
 #if wxUSE_MENUS
-    if (m_privateContextMenu == nullptr)
+    if (m_privateContextMenu == NULL)
     {
         m_privateContextMenu = new wxMenu;
         m_privateContextMenu->Append(wxID_UNDO, _("&Undo"));

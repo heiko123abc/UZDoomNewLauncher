@@ -118,7 +118,7 @@ wxCFEventLoop::DefaultModeObserverCallBack(CFRunLoopObserverRef WXUNUSED(observe
     if ( activity & kCFRunLoopBeforeTimers )
     {
     }
-
+    
     if ( activity & kCFRunLoopBeforeWaiting )
     {
     }
@@ -134,7 +134,7 @@ wxCFEventLoop::wxCFEventLoop()
 #if wxUSE_UIACTIONSIMULATOR
     m_shouldWaitForEvent = false;
 #endif
-
+    
     m_runLoop = CFGetCurrentRunLoop();
 
     CFRunLoopObserverContext ctxt;
@@ -355,9 +355,12 @@ int wxCFEventLoop::DoRun()
     return m_exitcode;
 }
 
-void wxCFEventLoop::DoStop(int rc)
+// sets the "should exit" flag and wakes up the loop so that it terminates
+// soon
+void wxCFEventLoop::ScheduleExit(int rc)
 {
     m_exitcode = rc;
+    m_shouldExit = true;
     OSXDoStop();
 }
 
@@ -394,10 +397,10 @@ static bool gs_bGuiOwnedByMainThread = true;
 // critical section which controls access to all GUI functions: any secondary
 // thread (i.e. except the main one) must enter this crit section before doing
 // any GUI calls
-static wxCriticalSection *gs_critsectGui = nullptr;
+static wxCriticalSection *gs_critsectGui = NULL;
 
 // critical section which protects gs_nWaitingForGui variable
-static wxCriticalSection *gs_critsectWaitingForGui = nullptr;
+static wxCriticalSection *gs_critsectWaitingForGui = NULL;
 
 // number of threads waiting for GUI in wxMutexGuiEnter()
 static size_t gs_nWaitingForGui = 0;

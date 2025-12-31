@@ -60,14 +60,14 @@ FORCE_LINK_ME(m_layout)
 class wxHtmlPageBreakCell : public wxHtmlCell
 {
 public:
-    explicit wxHtmlPageBreakCell(const wxHtmlTag& tag) : wxHtmlCell(tag) {}
+    wxHtmlPageBreakCell() {}
 
-    bool AdjustPagebreak(int* pagebreak, int pageHeight) const override;
+    bool AdjustPagebreak(int* pagebreak, int pageHeight) const wxOVERRIDE;
 
     void Draw(wxDC& WXUNUSED(dc),
               int WXUNUSED(x), int WXUNUSED(y),
               int WXUNUSED(view_y1), int WXUNUSED(view_y2),
-              wxHtmlRenderingInfo& WXUNUSED(info)) override {}
+              wxHtmlRenderingInfo& WXUNUSED(info)) wxOVERRIDE {}
 
 private:
     wxDECLARE_NO_COPY_CLASS(wxHtmlPageBreakCell);
@@ -95,13 +95,11 @@ TAG_HANDLER_BEGIN(P, "P")
 
     TAG_HANDLER_PROC(tag)
     {
-        if (m_WParser->GetContainer()->GetFirstChild() != nullptr ||
-                m_WParser->GetContainer()->HasId())
+        if (m_WParser->GetContainer()->GetFirstChild() != NULL)
         {
             m_WParser->CloseContainer();
             m_WParser->OpenContainer();
         }
-        m_WParser->GetContainer()->CopyId(tag);
         m_WParser->GetContainer()->SetIndent(m_WParser->GetCharHeight(), wxHTML_INDENT_TOP);
         m_WParser->GetContainer()->SetAlign(tag);
         return false;
@@ -121,7 +119,6 @@ TAG_HANDLER_BEGIN(BR, "BR")
 
         m_WParser->CloseContainer();
         c = m_WParser->OpenContainer();
-        c->CopyId(tag);
         c->SetAlignHor(al);
         c->SetAlign(tag);
         c->SetMinHeight(m_WParser->GetCharHeight());
@@ -141,7 +138,7 @@ TAG_HANDLER_BEGIN(CENTER, "CENTER")
         wxHtmlContainerCell *c = m_WParser->GetContainer();
 
         m_WParser->SetAlign(wxHTML_ALIGN_CENTER);
-        if (c->GetFirstChild() != nullptr || c->HasId())
+        if (c->GetFirstChild() != NULL)
         {
             m_WParser->CloseContainer();
             m_WParser->OpenContainer();
@@ -154,7 +151,7 @@ TAG_HANDLER_BEGIN(CENTER, "CENTER")
             ParseInner(tag);
 
             m_WParser->SetAlign(old);
-            if (c->GetFirstChild() != nullptr || c->HasId())
+            if (c->GetFirstChild() != NULL)
             {
                 m_WParser->CloseContainer();
                 m_WParser->OpenContainer();
@@ -182,7 +179,7 @@ TAG_HANDLER_BEGIN(DIV, "DIV")
             if(style.IsSameAs(wxT("PAGE-BREAK-BEFORE:ALWAYS"), false))
             {
                 m_WParser->CloseContainer();
-                m_WParser->OpenContainer()->InsertCell(new wxHtmlPageBreakCell(tag));
+                m_WParser->OpenContainer()->InsertCell(new wxHtmlPageBreakCell);
                 m_WParser->CloseContainer();
                 m_WParser->OpenContainer();
                 return false;
@@ -191,14 +188,13 @@ TAG_HANDLER_BEGIN(DIV, "DIV")
             {
                 // As usual, reuse the current container if it's empty.
                 wxHtmlContainerCell *c = m_WParser->GetContainer();
-                if (c->GetFirstChild() != nullptr || c->HasId())
+                if (c->GetFirstChild() != NULL)
                 {
                     // If not, open a new one.
                     m_WParser->CloseContainer();
                     c = m_WParser->OpenContainer();
                 }
 
-                c->CopyId(tag);
                 // Force this container to live entirely on the same page.
                 c->SetCanLiveOnPagebreak(false);
 
@@ -227,7 +223,7 @@ TAG_HANDLER_BEGIN(DIV, "DIV")
         {
             int old = m_WParser->GetAlign();
             wxHtmlContainerCell *c = m_WParser->GetContainer();
-            if (c->GetFirstChild() != nullptr || c->HasId())
+            if (c->GetFirstChild() != NULL)
             {
                 m_WParser->CloseContainer();
                 m_WParser->OpenContainer();
@@ -240,12 +236,11 @@ TAG_HANDLER_BEGIN(DIV, "DIV")
                 c->SetAlign(tag);
                 m_WParser->SetAlign(c->GetAlignHor());
             }
-            c->CopyId(tag);
 
             ParseInner(tag);
 
             m_WParser->SetAlign(old);
-            if (c->GetFirstChild() != nullptr || c->HasId())
+            if (c->GetFirstChild() != NULL)
             {
                 m_WParser->CloseContainer();
                 m_WParser->OpenContainer();
@@ -263,7 +258,6 @@ TAG_HANDLER_BEGIN(DIV, "DIV")
 
             m_WParser->CloseContainer();
             c = m_WParser->OpenContainer();
-            c->CopyId(tag);
             c->SetAlignHor(al);
             c->SetAlign(tag);
             c->SetMinHeight(m_WParser->GetCharHeight());
@@ -285,6 +279,15 @@ TAG_HANDLER_BEGIN(TITLE, "TITLE")
         if (winIface)
         {
             wxString title(tag.GetBeginIter(), tag.GetEndIter1());
+#if !wxUSE_UNICODE
+            const wxFontEncoding enc = m_WParser->GetInputEncoding();
+            if ( enc != wxFONTENCODING_DEFAULT )
+            {
+                // need to convert to the current one
+                title = wxString(title.wc_str(wxCSConv(enc)), wxConvLocal);
+            }
+#endif // !wxUSE_UNICODE
+
             title = m_WParser->GetEntitiesParser()->Parse(title);
 
             winIface->SetHTMLWindowTitle(title);
@@ -360,7 +363,6 @@ TAG_HANDLER_BEGIN(BLOCKQUOTE, "BLOCKQUOTE")
         m_WParser->CloseContainer();
         c = m_WParser->OpenContainer();
 
-        c->CopyId(tag);
         if (c->GetAlignHor() == wxHTML_ALIGN_RIGHT)
             c->SetIndent(5 * m_WParser->GetCharWidth(), wxHTML_INDENT_RIGHT);
         else

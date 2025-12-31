@@ -19,6 +19,7 @@
 
 #include "wx/gtk/private.h"
 #include "wx/gtk/private/list.h"
+#include "wx/gtk/private/image.h"
 
 // ----------------------------------------------------------------------------
 // GTK callbacks
@@ -49,8 +50,8 @@ wxgtk_button_style_set_callback(GtkWidget* widget, GtkStyle*, wxButton* win)
     wxWindow* parent = win->GetParent();
     if (parent && parent->m_wxwindow && gtk_widget_get_can_default(widget))
     {
-        GtkBorder* border = nullptr;
-        gtk_widget_style_get(widget, "default_border", &border, nullptr);
+        GtkBorder* border = NULL;
+        gtk_widget_style_get(widget, "default_border", &border, NULL);
         if (border)
         {
             win->MoveWindow(
@@ -101,6 +102,10 @@ bool wxButton::Create(wxWindow *parent,
     else // no label, suppose we will have a bitmap
     {
         m_widget = gtk_button_new();
+
+        GtkWidget* image = wxGtkImage::New(this);
+        gtk_widget_show(image);
+        gtk_container_add(GTK_CONTAINER(m_widget), image);
     }
 
     g_object_ref(m_widget);
@@ -121,7 +126,7 @@ bool wxButton::Create(wxWindow *parent,
     if (useLabel)
     {
         g_object_set(gtk_bin_get_child(GTK_BIN(m_widget)),
-            "xalign", x_alignment, "yalign", y_alignment, nullptr);
+            "xalign", x_alignment, "yalign", y_alignment, NULL);
     }
 #else
     wxGCC_WARNING_SUPPRESS(deprecated-declarations)
@@ -181,7 +186,7 @@ wxWindow *wxButton::SetDefault()
     gtk_widget_grab_default( m_widget );
 
     // resize for default border
-    wxgtk_button_style_set_callback( m_widget, nullptr, this );
+    wxgtk_button_style_set_callback( m_widget, NULL, this );
 
     return oldDefault;
 }
@@ -212,13 +217,13 @@ wxSize wxButtonBase::GetDefaultSize(wxWindow* WXUNUSED(win))
         gtk_container_add(GTK_CONTAINER(box), btn);
         gtk_container_add(GTK_CONTAINER(wnd), box);
         GtkRequisition req;
-        gtk_widget_get_preferred_size(btn, nullptr, &req);
+        gtk_widget_get_preferred_size(btn, NULL, &req);
 
         gint minwidth, minheight;
         gtk_widget_style_get(box,
                              "child-min-width", &minwidth,
                              "child-min-height", &minheight,
-                             nullptr);
+                             NULL);
 
         size.x = wxMax(minwidth, req.width);
         size.y = wxMax(minheight, req.height);
@@ -230,7 +235,7 @@ wxSize wxButtonBase::GetDefaultSize(wxWindow* WXUNUSED(win))
 
 void wxButton::SetLabel( const wxString &lbl )
 {
-    wxCHECK_RET( m_widget != nullptr, wxT("invalid button") );
+    wxCHECK_RET( m_widget != NULL, wxT("invalid button") );
 
     wxString label(lbl);
 
@@ -263,7 +268,7 @@ void wxButton::SetLabel( const wxString &lbl )
     // so "use-underline" GtkButton property remained unset
     gtk_button_set_use_underline(GTK_BUTTON(m_widget), TRUE);
     const wxString labelGTK = GTKConvertMnemonics(label);
-    gtk_button_set_label(GTK_BUTTON(m_widget), labelGTK.utf8_str());
+    gtk_button_set_label(GTK_BUTTON(m_widget), wxGTK_CONV(labelGTK));
 #ifndef __WXGTK4__
     wxGCC_WARNING_SUPPRESS(deprecated-declarations)
     gtk_button_set_use_stock(GTK_BUTTON(m_widget), FALSE);
@@ -276,7 +281,7 @@ void wxButton::SetLabel( const wxString &lbl )
 #if wxUSE_MARKUP
 bool wxButton::DoSetLabelMarkup(const wxString& markup)
 {
-    wxCHECK_MSG( m_widget != nullptr, false, "invalid button" );
+    wxCHECK_MSG( m_widget != NULL, false, "invalid button" );
 
     const wxString stripped = RemoveMarkup(markup);
     if ( stripped.empty() && !markup.empty() )
@@ -299,13 +304,13 @@ GtkLabel *wxButton::GTKGetLabel() const
     if (GTK_IS_LABEL(child))
         return GTK_LABEL(child);
 
-    return nullptr;
+    return NULL;
 #else
     wxGCC_WARNING_SUPPRESS(deprecated-declarations)
     if ( GTK_IS_ALIGNMENT(child) )
     {
         GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
-        GtkLabel* label = nullptr;
+        GtkLabel* label = NULL;
         wxGtkList list(gtk_container_get_children(GTK_CONTAINER(box)));
         for (GList* item = list; item; item = item->next)
         {

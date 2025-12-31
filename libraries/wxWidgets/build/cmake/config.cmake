@@ -100,18 +100,21 @@ function(wx_write_config_inplace)
     execute_process(
         COMMAND
         "${CMAKE_COMMAND}" -E ${COPY_CMD}
-        "${wxBINARY_DIR}/lib/wx/config/inplace-${TOOLCHAIN_FULLNAME}"
+        "${wxCONFIG_DIR}/inplace-${TOOLCHAIN_FULLNAME}"
         "${wxBINARY_DIR}/wx-config"
         )
 endfunction()
 
 function(wx_write_config)
+    wx_get_install_dir(include)
+    wx_get_install_platform_dir(library)
+    wx_get_install_platform_dir(runtime)
 
     set(prefix ${CMAKE_INSTALL_PREFIX})
     set(exec_prefix "\${prefix}")
-    set(includedir "\${prefix}/include")
-    set(libdir "\${exec_prefix}/lib")
-    set(bindir "\${exec_prefix}/bin")
+    set(includedir "\${prefix}/${include_dir}")
+    set(libdir "\${exec_prefix}/${library_dir}")
+    set(bindir "\${exec_prefix}/${runtime_dir}")
 
     if(wxBUILD_MONOLITHIC)
         set(MONOLITHIC 1)
@@ -123,7 +126,13 @@ function(wx_write_config)
     else()
         set(SHARED 0)
     endif()
-    set(lib_unicode_suffix u)
+    if(wxUSE_UNICODE)
+        set(WX_CHARTYPE unicode)
+        set(lib_unicode_suffix u)
+    else()
+        set(WX_CHARTYPE ansi)
+        set(lib_unicode_suffix)
+    endif()
     if(CMAKE_CROSSCOMPILING)
         set(cross_compiling yes)
         set(host_alias ${CMAKE_SYSTEM_NAME})

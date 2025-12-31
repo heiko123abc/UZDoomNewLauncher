@@ -18,8 +18,7 @@
 #endif // WX_PRECOMP
 
 #include "wx/list.h"
-
-#include <memory>
+#include "wx/scopedptr.h"
 
 // --------------------------------------------------------------------------
 // test class
@@ -181,14 +180,6 @@ void ListsTestCase::wxStdListTest()
     list1.insert(list1.end(), list2.begin(), list2.end());
     CPPUNIT_ASSERT_EQUAL( 5, list1.size() );
     CPPUNIT_ASSERT_EQUAL( (int *)4, list1.back() );
-
-    // Sort the list in the reverse order.
-    list1.Sort([](const void *a, const void *b) -> int {
-        return *static_cast<const int*>(b) - *static_cast<const int*>(a);
-    });
-    REQUIRE( list1.size() == 5 );
-    CHECK( list1.front() == (int *)4 );
-    CHECK( list1.back() == (int *)1 );
 }
 
 void ListsTestCase::wxListCtorTest()
@@ -208,7 +199,11 @@ void ListsTestCase::wxListCtorTest()
         CPPUNIT_ASSERT( list2.GetCount() == 2 );
         CPPUNIT_ASSERT( Baz::GetNumber() == 2 );
 
+#if !wxUSE_STL
         list1.DeleteContents(true);
+#else
+        WX_CLEAR_LIST(wxListBazs, list1);
+#endif
     }
 
     CPPUNIT_ASSERT( Baz::GetNumber() == 0 );
@@ -248,7 +243,7 @@ void ElementsListNode::DeleteData()
 TEST_CASE("wxWindowList::Find", "[list]")
 {
     ListElement* const el = new ListElement(17);
-    std::unique_ptr<ListElementBase> elb(el);
+    wxScopedPtr<ListElementBase> elb(el);
 
     ElementsList l;
     l.Append(el);
@@ -257,6 +252,8 @@ TEST_CASE("wxWindowList::Find", "[list]")
     ElementsList::compatibility_iterator it = l.Find(elb.get());
     CHECK( it == l.GetFirst() );
 }
+
+#if wxUSE_STD_CONTAINERS_COMPATIBLY
 
 #include <list>
 
@@ -278,3 +275,5 @@ TEST_CASE("wxList::iterator", "[list][std][iterator]")
     const wxListBazs cli;
     CHECK( std::list<Baz*>(cli.begin(), cli.end()).empty() );
 }
+
+#endif // wxUSE_STD_CONTAINERS_COMPATIBLY

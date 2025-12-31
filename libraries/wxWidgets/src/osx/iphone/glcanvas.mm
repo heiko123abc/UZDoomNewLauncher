@@ -2,6 +2,7 @@
 // Name:        src/osx/iphone/glcanvas.mm
 // Purpose:     wxGLCanvas, for using OpenGL with wxWidgets under iPhone
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -48,7 +49,7 @@
 + (void)initialize
 {
     static BOOL initialized = NO;
-    if (!initialized)
+    if (!initialized) 
     {
         initialized = YES;
         wxOSXIPhoneClassAddWXMethods( self );
@@ -65,7 +66,7 @@
 WXGLContext WXGLCreateContext( WXGLPixelFormat pixelFormat, WXGLContext shareContext )
 {
     WXGLContext context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
-
+    
     if ( !context )
         wxFAIL_MSG("NSOpenGLContext creation failed");
     return context ;
@@ -106,7 +107,7 @@ WXGLPixelFormat WXGLChoosePixelFormat(const int *GLAttrs,
 bool wxGLContext::SetCurrent(const wxGLCanvas& win) const
 {
     if ( !m_glContext )
-        return false;
+        return false;  
 
     wxUICustomOpenGLView* v = (wxUICustomOpenGLView*) win.GetPeer()->GetWXWidget();
     if ( v.context != m_glContext ) {
@@ -114,7 +115,7 @@ bool wxGLContext::SetCurrent(const wxGLCanvas& win) const
         [v bindDrawable];
     }
     WXGLSetCurrentContext(m_glContext);
-
+    
     return true;
 }
 
@@ -134,8 +135,8 @@ bool wxGLCanvas::DoCreate(wxWindow *parent,
 
     // We need a context, otherwise the view will not get an initial
     // Paint Event, making our own samples fail ...
-    WXGLPixelFormat pf = WXGLChoosePixelFormat(nullptr, 0, nullptr, 0);
-    WXGLContext context = WXGLCreateContext(pf, nullptr);
+    WXGLPixelFormat pf = WXGLChoosePixelFormat(NULL, 0, NULL, 0);
+    WXGLContext context = WXGLCreateContext(pf, NULL);
 
     wxUICustomOpenGLView* v = [[wxUICustomOpenGLView alloc] initWithFrame:r context: context ];
 

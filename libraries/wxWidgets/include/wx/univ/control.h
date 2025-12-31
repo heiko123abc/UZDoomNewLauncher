@@ -2,6 +2,7 @@
 // Name:        wx/univ/control.h
 // Purpose:     universal wxControl: adds handling of mnemonics
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     14.08.00
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
@@ -31,7 +32,6 @@ typedef wxString wxControlAction;
 // in the controls headers)
 
 #define wxACTION_NONE    wxT("")           // no action to perform
-#define wxNO_ACCEL_CHAR    wxT('\0')
 
 // ----------------------------------------------------------------------------
 // wxControl: the base class for all GUI controls
@@ -54,8 +54,6 @@ public:
         Create(parent, id, pos, size, style, validator, name);
     }
 
-    virtual ~wxControl();
-
     bool Create(wxWindow *parent,
                 wxWindowID id,
                 const wxPoint& pos = wxDefaultPosition,
@@ -65,13 +63,10 @@ public:
 
     // this function will filter out '&' characters and will put the
     // accelerator char (the one immediately after '&') into m_chAccel
-    virtual void SetLabel(const wxString& label) override;
+    virtual void SetLabel(const wxString& label) wxOVERRIDE;
 
-    // return the current label with mnemonics
-    virtual wxString GetLabel() const override { return wxControlBase::GetLabel(); }
-
-    // return the current label without mnemonics
-    virtual wxString GetLabelText() const override { return m_label; }
+    // return the current label
+    virtual wxString GetLabel() const wxOVERRIDE { return wxControlBase::GetLabel(); }
 
     // wxUniversal-specific methods
 
@@ -81,10 +76,10 @@ public:
     // return the accel char itself or 0 if none
     wxChar GetAccelChar() const
     {
-        return m_indexAccel == -1 ? wxNO_ACCEL_CHAR : (wxChar)m_label[m_indexAccel];
+        return m_indexAccel == -1 ? wxT('\0') : (wxChar)m_label[m_indexAccel];
     }
 
-    virtual wxWindow *GetInputWindow() const override
+    virtual wxWindow *GetInputWindow() const wxOVERRIDE
     {
         return const_cast<wxControl*>(this);
     }

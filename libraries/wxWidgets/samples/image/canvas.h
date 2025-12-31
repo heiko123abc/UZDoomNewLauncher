@@ -17,20 +17,13 @@
 class MyCanvas: public wxScrolledWindow
 {
 public:
-    MyCanvas(wxWindow* parent);
+    MyCanvas( wxWindow *parent, wxWindowID, const wxPoint &pos, const wxSize &size );
     ~MyCanvas();
 
-    void OnPaint(wxPaintEvent& event);
-    void OnDPIChanged(wxDPIChangedEvent& event);
-    wxBitmap const& GetPngBitmap() const;
-    wxSize GetDrawingSize() const;
-
-private:
-    void DrawSquares(wxDC& dc, int xOffset, int yOffset);
+    void OnPaint( wxPaintEvent &event );
     void CreateAntiAliasedBitmap();
 
-    wxBitmap  my_horse_png,
-              my_horse_png_scaled;
+    wxBitmap  my_horse_png;
     wxBitmap  my_horse_jpeg;
     wxBitmap  my_horse_gif;
     wxBitmap  my_horse_bmp;
@@ -39,7 +32,6 @@ private:
     wxBitmap  my_horse_pnm;
     wxBitmap  my_horse_tiff;
     wxBitmap  my_horse_tga;
-    wxBitmap  my_horse_webp;
     wxBitmap  my_horse_xpm;
     wxBitmap  my_horse_ico32;
     wxBitmap  my_horse_ico16;
@@ -68,10 +60,11 @@ private:
     wxBitmap my_toucan_scaled_high;
     wxBitmap my_toucan_blur;
 
-    wxPoint cur_hotspot;
+    int xH, yH;
     int m_ani_images;
     wxBitmap *my_horse_ani;
 
+private:
     wxBitmap m_bmpSmileXpm;
     wxIcon   m_iconSmileXpm;
 

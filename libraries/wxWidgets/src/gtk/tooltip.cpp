@@ -24,7 +24,7 @@
 //-----------------------------------------------------------------------------
 
 #if !GTK_CHECK_VERSION(3,0,0) && !defined(GTK_DISABLE_DEPRECATED)
-static GtkTooltips *gs_tooltips = nullptr;
+static GtkTooltips *gs_tooltips = NULL;
 #endif
 
 //-----------------------------------------------------------------------------
@@ -36,21 +36,21 @@ wxIMPLEMENT_ABSTRACT_CLASS(wxToolTip, wxObject);
 wxToolTip::wxToolTip( const wxString &tip )
     : m_text(tip)
 {
-    m_window = nullptr;
+    m_window = NULL;
 }
 
 void wxToolTip::SetTip( const wxString &tip )
 {
     m_text = tip;
     if (m_window)
-        m_window->GTKApplyToolTip(m_text.utf8_str());
+        m_window->GTKApplyToolTip(wxGTK_CONV_SYS(m_text));
 }
 
 void wxToolTip::GTKSetWindow(wxWindow* win)
 {
     wxASSERT(win);
     m_window = win;
-    m_window->GTKApplyToolTip(m_text.utf8_str());
+    m_window->GTKApplyToolTip(wxGTK_CONV_SYS(m_text));
 }
 
 /* static */
@@ -66,7 +66,7 @@ void wxToolTip::GTKApply(GtkWidget* widget, const char* tip)
         if ( !gs_tooltips )
             gs_tooltips = gtk_tooltips_new();
 
-        gtk_tooltips_set_tip(gs_tooltips, widget, tip, nullptr);
+        gtk_tooltips_set_tip(gs_tooltips, widget, tip, NULL);
 #endif
     }
 }
@@ -80,8 +80,10 @@ void wxToolTip::Enable( bool flag )
     if (wx_is_at_least_gtk2(12))
     {
         GtkSettings* settings = gtk_settings_get_default();
+        wxGCC_WARNING_SUPPRESS(deprecated-declarations)
         if (settings)
-            g_object_set(settings, "gtk-enable-tooltips", flag, nullptr);
+            gtk_settings_set_long_property(settings, "gtk-enable-tooltips", flag, NULL);
+        wxGCC_WARNING_RESTORE()
     }
     else
 #endif
@@ -108,8 +110,10 @@ void wxToolTip::SetDelay( long msecs )
     if (wx_is_at_least_gtk2(12))
     {
         GtkSettings* settings = gtk_settings_get_default();
+        wxGCC_WARNING_SUPPRESS(deprecated-declarations)
         if (settings)
-            g_object_set(settings, "gtk-tooltip-timeout", int(msecs), nullptr);
+            gtk_settings_set_long_property(settings, "gtk-tooltip-timeout", msecs, NULL);
+        wxGCC_WARNING_RESTORE()
     }
     else
 #endif

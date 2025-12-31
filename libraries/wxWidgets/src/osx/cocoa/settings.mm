@@ -88,7 +88,7 @@ bool wxSystemAppearance::IsDark() const
 wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
 {
     wxOSXEffectiveAppearanceSetter helper;
-
+    
     NSColor* sysColor = nil;
     switch( index )
     {
@@ -255,9 +255,9 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUN
         // TODO case wxSYS_EDGE_Y:
 
         case wxSYS_CURSOR_X:
-            return wxRound(float([[[NSCursor arrowCursor] image] size].width) * GetCursorScale());
+            return wxRound([[[NSCursor arrowCursor] image] size].width * GetCursorScale());
         case wxSYS_CURSOR_Y:
-            return wxRound(float([[[NSCursor arrowCursor] image] size].height) * GetCursorScale());
+            return wxRound([[[NSCursor arrowCursor] image] size].height * GetCursorScale());
 
         case wxSYS_HSCROLL_ARROW_X:
             return 16;
@@ -274,11 +274,11 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUN
         // TODO case wxSYS_WINDOWMIN_Y:
 
         case wxSYS_SCREEN_X:
-            wxDisplaySize(&value, nullptr);
+            wxDisplaySize(&value, NULL);
             return value;
 
         case wxSYS_SCREEN_Y:
-            wxDisplaySize(nullptr, &value);
+            wxDisplaySize(NULL, &value);
             return value;
 
         // TODO case wxSYS_FRAMESIZE_X:
@@ -341,9 +341,9 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* WXUN
              return -1;
 
         default:
-            break;
+            return -1;  // unsupported metric
     }
-    return -1;  // unsupported metric
+    return 0;
 }
 
 bool wxSystemSettingsNative::HasFeature(wxSystemFeature index)

@@ -31,8 +31,6 @@
 
 #include "wx/power.h"
 
-#include <memory>
-
 #ifndef wxHAS_IMAGES_IN_RESOURCES
     #include "../sample.xpm"
 #endif
@@ -45,9 +43,11 @@ class MyFrame : public wxFrame
 {
 public:
     MyFrame()
-        : wxFrame(nullptr, wxID_ANY, "wxWidgets Power Management Sample",
+        : wxFrame(NULL, wxID_ANY, "wxWidgets Power Management Sample",
                   wxDefaultPosition, wxSize(500, 200))
     {
+        m_powerResourceBlocker = NULL;
+
         wxMenu *fileMenu = new wxMenu;
         fileMenu->Append(wxID_NEW, "Start long running task\tCtrl-S");
         fileMenu->Append(wxID_ABORT, "Stop long running task");
@@ -79,6 +79,8 @@ public:
 
     virtual ~MyFrame()
     {
+        delete m_powerResourceBlocker;
+
         delete wxLog::SetActiveTarget(m_logOld);
     }
 
@@ -213,10 +215,8 @@ private:
         GetMenuBar()->Enable(wxID_NEW, false);
         GetMenuBar()->Enable(wxID_ABORT, true);
 
-        m_powerResourceBlocker.reset(
-            new wxPowerResourceBlocker(wxPOWER_RESOURCE_SYSTEM,
-                                       "Waiting for long task to finish")
-        );
+        m_powerResourceBlocker
+            = new wxPowerResourceBlocker(wxPOWER_RESOURCE_SYSTEM);
 
         if ( !m_powerResourceBlocker->IsInEffect() )
         {
@@ -231,7 +231,7 @@ private:
         GetMenuBar()->Enable(wxID_ABORT, false);
         m_taskTimer.Stop();
 
-        m_powerResourceBlocker.reset();
+        wxDELETE(m_powerResourceBlocker);
     }
 
     wxPowerType m_powerType;
@@ -239,7 +239,7 @@ private:
 
     wxLog *m_logOld;
     wxTimer m_taskTimer;
-    std::unique_ptr<wxPowerResourceBlocker> m_powerResourceBlocker;
+    wxPowerResourceBlocker *m_powerResourceBlocker;
     int m_taskProgress;
 
     wxDECLARE_EVENT_TABLE();
@@ -263,22 +263,12 @@ wxEND_EVENT_TABLE()
 class MyApp : public wxApp
 {
 public:
-    MyApp()
-        : m_powerDelaySleep(wxPOWER_RESOURCE_SYSTEM,
-                            "Sample needs to show sleep event",
-                            wxPOWER_DELAY)
-    {
-    }
-
-    virtual bool OnInit() override
+    virtual bool OnInit() wxOVERRIDE
     {
         new MyFrame;
 
         return true;
     }
-
-private:
-    wxPowerResourceBlocker m_powerDelaySleep;
 };
 
 wxIMPLEMENT_APP(MyApp);

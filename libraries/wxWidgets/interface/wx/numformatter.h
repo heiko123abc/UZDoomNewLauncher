@@ -53,27 +53,7 @@ public:
             This flag can't be used with ToString() overload taking the integer
             value.
          */
-        Style_NoTrailingZeroes  = 0x02,
-
-        /**
-            If this flag is given, a + will prefix the
-            number string representation of non-negative numbers.
-
-            This style cannot be used with Style_SignSpace.
-
-            @since 3.3.1
-         */
-        Style_SignPlus          = 0x04,
-
-        /**
-            If this flag is given, a space will prefix the
-            number string representation of non-negative numbers.
-
-            This style cannot be used with Style_SignPlus.
-
-            @since 3.3.1
-         */
-        Style_SignSpace         = 0x08,
+        Style_NoTrailingZeroes  = 0x02
     };
 
     /**
@@ -168,16 +148,5 @@ public:
             function return value is needed.
      */
     static bool GetThousandsSeparatorIfUsed(wxChar *sep);
-
-    /**
-        Remove trailing zeroes and, if there is nothing left after it, the
-        decimal separator itself from a string representing a floating point
-        number.
-
-        @param[in,out] str The string to remove zeroes from.
-
-        @since 3.3.1
-     */
-    static void RemoveTrailingZeroes(wxString& str);
 
 };

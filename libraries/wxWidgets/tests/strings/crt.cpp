@@ -34,7 +34,7 @@ static const wxString strWX("hello, world");
 
 TEST_CASE("CRT::SetGetEnv", "[crt][getenv][setenv]")
 {
-#define TESTVAR_NAME "WXTESTVAR"
+#define TESTVAR_NAME wxT("WXTESTVAR")
 
     wxString val;
     wxSetEnv(TESTVAR_NAME, wxT("value"));
@@ -42,40 +42,32 @@ TEST_CASE("CRT::SetGetEnv", "[crt][getenv][setenv]")
     CHECK( val == "value" );
     CHECK( wxString(wxGetenv(TESTVAR_NAME)) == "value" );
 
-    const wxString nonASCII = wxString::FromUTF8("☺");
-    wxSetEnv(TESTVAR_NAME, nonASCII);
+    wxSetEnv(TESTVAR_NAME, wxT("something else"));
     CHECK( wxGetEnv(TESTVAR_NAME, &val) );
-    CHECK( val == nonASCII );
-
-    // Under MSW the current locale encoding is used for storing the value in
-    // the ASCII environment block, so we can't expect to get it back unless
-    // this encoding is UTF-8, which is not the case by default.
-#ifndef __WINDOWS__
-    CHECK( wxString::FromUTF8(wxGetenv(TESTVAR_NAME)) == nonASCII );
-#endif
-
-    // Wide char wxGetenv() overload does work, under both MSW and Unix.
-    CHECK( wxGetenv(L"WXTESTVAR") == nonASCII );
+    CHECK( val == "something else" );
+    CHECK( wxString(wxGetenv(TESTVAR_NAME)) == "something else" );
 
     CHECK( wxUnsetEnv(TESTVAR_NAME) );
-    CHECK( !wxGetEnv(TESTVAR_NAME, nullptr) );
+    CHECK( !wxGetEnv(TESTVAR_NAME, NULL) );
     CHECK( !wxGetenv(TESTVAR_NAME) );
 
 #undef TESTVAR_NAME
 }
 
+#if wxUSE_UNICODE
 TEST_CASE("CRT::Strchr", "[crt][strchr]")
 {
     // test that searching for a wide character in a narrow string simply
     // doesn't find it but doesn't fail with an assert (#11487)
-    const wxUniChar smiley = *wxString::FromUTF8("☺").begin();
+    const wxUniChar smiley = *wxString::FromUTF8("\xe2\x98\xba").begin();
 
     CHECK( !wxStrchr("hello", smiley) );
 
     // but searching for an explicitly wide character does find it
-    CHECK( wxStrchr(wxString::FromUTF8(":-) == ☺"),
+    CHECK( wxStrchr(wxString::FromUTF8(":-) == \xe2\x98\xba"),
                     static_cast<wchar_t>(smiley)) );
 }
+#endif // wxUSE_UNICODE
 
 TEST_CASE("CRT::Strcmp", "[crt][strcmp]")
 {
@@ -234,7 +226,7 @@ TEST_CASE("CRT::Strnlen", "[crt][strnlen]")
     CHECK( wxStrnlen(L"123456789", 8) == 8 );
     CHECK( wxStrnlen(L"123456789", 12) == 9 );
 
-    // wxStrlen() is only for null-terminated strings:
+    // wxStrlen() is only for NULL-terminated strings:
     CHECK( wxStrnlen("1234" "\0" "78", 12) == 4 );
     CHECK( wxStrnlen(L"1234" L"\0" L"5678", 12) == 4 );
 }
@@ -247,7 +239,7 @@ TEST_CASE("CRT::Strtox", "[crt][strtod][strtol]")
 
     SECTION("char")
     {
-        char* end = nullptr;
+        char* end = NULL;
         CHECK( wxStrtod(s, &end) == d );
         REQUIRE( end );
         CHECK( *end == '@' );
@@ -259,7 +251,7 @@ TEST_CASE("CRT::Strtox", "[crt][strtod][strtol]")
 
     SECTION("wchar_t")
     {
-        wchar_t* end = nullptr;
+        wchar_t* end = NULL;
         CHECK( wxStrtod(s, &end) == d );
         REQUIRE( end );
         CHECK( *end == L'@' );

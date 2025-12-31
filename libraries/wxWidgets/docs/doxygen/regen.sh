@@ -239,16 +239,5 @@ fi
 # Doxygen has the annoying habit to put the full path of the
 # affected files in the log file; remove it to make the log
 # more readable
-if [[ -s doxygen.log ]]; then
-    topsrcdir=`cd ../.. && pwd`
-    sed -i'' -e "s|$topsrcdir/||g" doxygen.log
-
-    # Filter out warnings from interface/wx/stc/stc.h for now, there are tons
-    # of them and it's not clear what to do about them, see #25603
-    if grep -q -v "interface/wx/stc/stc.h" doxygen.log; then
-        echo '*** There were warnings during docs generation ***'
-    fi
-else
-    # Don't leave empty file lying around.
-    rm doxygen.log
-fi
+topsrcdir=`cd ../.. && pwd`
+sed -i'' -e "s|$topsrcdir/||g" doxygen.log

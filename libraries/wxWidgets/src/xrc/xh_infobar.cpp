@@ -20,7 +20,7 @@
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxInfoBarXmlHandler, wxXmlResourceHandler);
 
-#define XRC_ADD_SHOW_EFFECT(style) m_effectNames[style] = #style
+#define XRC_ADD_SHOW_EFFECT(style) m_effectNames[style] = #style;
 
 wxInfoBarXmlHandler::wxInfoBarXmlHandler()
     : wxXmlResourceHandler(), m_insideBar(false)
@@ -36,9 +36,6 @@ wxInfoBarXmlHandler::wxInfoBarXmlHandler()
     XRC_ADD_SHOW_EFFECT(wxSHOW_EFFECT_SLIDE_TO_BOTTOM);
     XRC_ADD_SHOW_EFFECT(wxSHOW_EFFECT_BLEND);
     XRC_ADD_SHOW_EFFECT(wxSHOW_EFFECT_EXPAND);
-
-    XRC_ADD_STYLE(wxINFOBAR_CHECKBOX);
-    AddWindowStyles();
 }
 
 wxObject *wxInfoBarXmlHandler::DoCreateResource()
@@ -47,18 +44,7 @@ wxObject *wxInfoBarXmlHandler::DoCreateResource()
     {
         XRC_MAKE_INSTANCE(control, wxInfoBar)
 
-        const wxString& checkboxLabel = GetText("checkboxlabel");
-        const bool hasCheckbox = !checkboxLabel.empty();
-
-        long style = GetStyle();
-        if ( hasCheckbox )
-        {
-            // If we have a checkbox, we need to add the wxINFOBAR_CHECKBOX
-            // style to allow using it.
-            style |= wxINFOBAR_CHECKBOX;
-        }
-
-        control->Create(m_parentAsWindow, GetID(), style);
+        control->Create(m_parentAsWindow, GetID());
 
         SetupWindow(control);
 
@@ -70,24 +56,6 @@ wxObject *wxInfoBarXmlHandler::DoCreateResource()
 
         if ( HasParam("effectduration") )
             control->SetEffectDuration(GetLong("effectduration"));
-
-        bool checked = false;
-        if ( HasParam("checked") )
-        {
-            if ( !hasCheckbox )
-            {
-                ReportError
-                (
-                    R"(The "checked" parameter can only be specified when )"
-                    R"(the "checkboxlabel" parameter is set.)"
-                );
-            }
-
-            checked = GetBool("checked");
-        }
-
-        if ( hasCheckbox )
-            control->ShowCheckBox(checkboxLabel, checked);
 
         m_insideBar = true;
         CreateChildrenPrivately(control);
@@ -101,11 +69,11 @@ wxObject *wxInfoBarXmlHandler::DoCreateResource()
         // handle buttons
 
         wxInfoBar * const infoBar = wxDynamicCast(m_parentAsWindow, wxInfoBar);
-        wxCHECK_MSG(infoBar, nullptr, "must have wxInfoBar parent");
+        wxCHECK_MSG(infoBar, NULL, "must have wxInfoBar parent");
 
         infoBar->AddButton(GetID(), GetText("label"));
 
-        return nullptr;
+        return NULL;
     }
 }
 

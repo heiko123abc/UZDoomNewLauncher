@@ -8,8 +8,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_GAUGE
-
 #include "wx/gauge.h"
 #include "wx/qt/private/converter.h"
 #include "wx/qt/private/winevent.h"
@@ -27,6 +25,12 @@ private:
 
 wxQtProgressBar::wxQtProgressBar( wxWindow *parent, wxGauge *handler )
     : wxQtEventSignalHandler< QProgressBar, wxGauge >( parent, handler )
+{
+}
+
+
+wxGauge::wxGauge() :
+    m_qtProgressBar(NULL)
 {
 }
 
@@ -51,19 +55,19 @@ bool wxGauge::Create(wxWindow *parent,
             const wxValidator& validator,
             const wxString& name)
 {
-    m_qtWindow = new wxQtProgressBar( parent, this);
+    m_qtProgressBar = new wxQtProgressBar( parent, this);
+    m_qtProgressBar->setOrientation( wxQtConvertOrientation( style, wxGA_HORIZONTAL ));
+    m_qtProgressBar->setRange( 0, range );
+    m_qtProgressBar->setTextVisible( style & wxGA_TEXT );
+    m_qtProgressBar->setValue(0);
 
-    GetQProgressBar()->setOrientation( wxQtConvertOrientation( style, wxGA_HORIZONTAL ));
-    GetQProgressBar()->setRange( 0, range );
-    GetQProgressBar()->setTextVisible( style & wxGA_TEXT );
-    GetQProgressBar()->setValue(0);
-
-    return wxControl::Create( parent, id, pos, size, style, validator, name );
+    return QtCreateControl( parent, id, pos, size, style, validator, name );
 }
 
-QProgressBar* wxGauge::GetQProgressBar() const
+
+QWidget *wxGauge::GetHandle() const
 {
-    return static_cast<QProgressBar*>(m_qtWindow);
+    return m_qtProgressBar;
 }
 
 // set/get the control range and value
@@ -71,22 +75,20 @@ QProgressBar* wxGauge::GetQProgressBar() const
 void wxGauge::SetRange(int range)
 {
     // note that in wx minimun range is fixed at 0
-    GetQProgressBar()->setMaximum(range);
+    m_qtProgressBar->setMaximum(range);
 }
 
 int wxGauge::GetRange() const
 {
-    return GetQProgressBar()->maximum();
+    return m_qtProgressBar->maximum();
 }
 
 void wxGauge::SetValue(int pos)
 {
-    GetQProgressBar()->setValue(pos);
+    m_qtProgressBar->setValue(pos);
 }
 
 int wxGauge::GetValue() const
 {
-    return GetQProgressBar()->value();
+    return m_qtProgressBar->value();
 }
-
-#endif // wxUSE_GAUGE

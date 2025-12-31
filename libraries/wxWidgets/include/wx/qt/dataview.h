@@ -69,7 +69,7 @@ public:
 class WXDLLIMPEXP_ADV wxDataViewCtrl: public wxDataViewCtrlBase
 {
 public:
-    wxDataViewCtrl() = default;
+    wxDataViewCtrl();
 
     wxDataViewCtrl( wxWindow *parent, wxWindowID id,
            const wxPoint& pos = wxDefaultPosition,
@@ -108,12 +108,12 @@ public:
     virtual void UnselectAll();
 
     virtual void EnsureVisible( const wxDataViewItem& item,
-                                const wxDataViewColumn *column = nullptr );
+                                const wxDataViewColumn *column = NULL );
     virtual void HitTest( const wxPoint &point,
                           wxDataViewItem &item,
                           wxDataViewColumn *&column ) const;
     virtual wxRect GetItemRect( const wxDataViewItem &item,
-                                const wxDataViewColumn *column = nullptr ) const;
+                                const wxDataViewColumn *column = NULL ) const;
 
     virtual void Collapse( const wxDataViewItem & item );
     virtual bool IsExpanded( const wxDataViewItem & item ) const;

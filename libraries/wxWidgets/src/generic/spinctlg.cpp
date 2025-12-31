@@ -2,6 +2,7 @@
 // Name:        src/generic/spinctlg.cpp
 // Purpose:     implements wxSpinCtrl as a composite control
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     29.01.01
 // Copyright:   (c) 2001 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -86,9 +87,9 @@ public:
     {
         // MSW sends extra kill focus event on destroy
         if (m_spin)
-            m_spin->m_textCtrl = nullptr;
+            m_spin->m_textCtrl = NULL;
 
-        m_spin = nullptr;
+        m_spin = NULL;
     }
 
     void OnChar( wxKeyEvent &event )
@@ -114,7 +115,7 @@ public:
         event.Skip();
     }
 
-    virtual wxSize DoGetBestSize() const override
+    virtual wxSize DoGetBestSize() const wxOVERRIDE
     {
         wxString minVal = m_spin->DoValueToText(m_spin->m_min);
         wxString maxVal = m_spin->DoValueToText(m_spin->m_max);
@@ -199,8 +200,8 @@ void wxSpinCtrlGenericBase::Init()
 
     m_spin_value    = 0;
 
-    m_textCtrl = nullptr;
-    m_spinButton  = nullptr;
+    m_textCtrl = NULL;
+    m_spinButton  = NULL;
 }
 
 bool wxSpinCtrlGenericBase::Create(wxWindow *parent,
@@ -215,8 +216,10 @@ bool wxSpinCtrlGenericBase::Create(wxWindow *parent,
     // don't use borders for this control itself, it wouldn't look good with
     // the text control borders (but we might want to use style border bits to
     // select the text control style)
+    const long styleWithoutBorder = (style & ~wxBORDER_MASK) | wxBORDER_NONE;
+
     if ( !wxControl::Create(parent, id, wxDefaultPosition, wxDefaultSize,
-                            (style & ~wxBORDER_MASK) | wxBORDER_NONE,
+                            styleWithoutBorder,
                             wxDefaultValidator, name) )
     {
         return false;
@@ -242,7 +245,10 @@ bool wxSpinCtrlGenericBase::Create(wxWindow *parent,
     }
 
     m_textCtrl   = new wxSpinCtrlTextGeneric(this, DoValueToText(m_value), style);
-    m_spinButton = new wxSpinCtrlButtonGeneric(this, style);
+    m_spinButton = new wxSpinCtrlButtonGeneric(this, styleWithoutBorder);
+
+    // ensure correct start value also if non-zero
+    m_spinButton->SetValue( m_value );
 
 #if wxUSE_TOOLTIPS
     m_textCtrl->SetToolTip(GetToolTipText());
@@ -268,10 +274,10 @@ wxSpinCtrlGenericBase::~wxSpinCtrlGenericBase()
     if (m_textCtrl)
     {
         // null this since MSW sends KILL_FOCUS on deletion, see ~wxSpinCtrlTextGeneric
-        wxDynamicCast(m_textCtrl, wxSpinCtrlTextGeneric)->m_spin = nullptr;
+        wxDynamicCast(m_textCtrl, wxSpinCtrlTextGeneric)->m_spin = NULL;
 
         wxSpinCtrlTextGeneric *text = (wxSpinCtrlTextGeneric*)m_textCtrl;
-        m_textCtrl = nullptr;
+        m_textCtrl = NULL;
         delete text;
     }
 
@@ -567,7 +573,7 @@ double wxSpinCtrlGenericBase::AdjustAndSnap(double val) const
         val = m_min;
     if ( val > m_max )
         val = m_max;
-
+    
     if ( m_snap_to_ticks && (m_increment != 0) )
     {
         double snap_value = val / m_increment;

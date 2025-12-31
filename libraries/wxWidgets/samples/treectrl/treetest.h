@@ -2,6 +2,7 @@
 // Name:        treectrl.h
 // Purpose:     wxTreeCtrl sample
 // Author:      Julian Smart
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -32,7 +33,7 @@ class MyApp : public wxApp
 public:
     MyApp() { m_showImages = true; m_showStates = true; m_showButtons = false; }
 
-    bool OnInit() override;
+    bool OnInit() wxOVERRIDE;
 
     void SetShowImages(bool show) { m_showImages = show; }
     bool ShowImages() const { return m_showImages; }
@@ -104,7 +105,7 @@ public:
 
     wxTreeItemId GetLastTreeITem() const;
     void GetItemsRecursively(const wxTreeItemId& idParent,
-                             wxTreeItemIdValue cookie = nullptr);
+                             wxTreeItemIdValue cookie = 0);
 
     // This function behaves differently depending on the value of size:
     //  - If it's -1, it turns off the use of images entirely.
@@ -113,7 +114,7 @@ public:
     void CreateImages(int size);
 
     void CreateButtonsImageList(int size = 11);
-    void CreateStateImages();
+    void CreateStateImageList(bool del = false);
 
     void AddTestItemsToTree(size_t numChildren, size_t depth);
 
@@ -137,11 +138,11 @@ public:
     {
         const size_t count = GetStateImageList()->GetImageCount();
         int state = count > 0 ? count - 1 : wxTREE_ITEMSTATE_NONE;
-        DoResetBrokenStateImages(GetRootItem(), nullptr, state);
+        DoResetBrokenStateImages(GetRootItem(), 0, state);
     }
 
 protected:
-    virtual int OnCompareItems(const wxTreeItemId& i1, const wxTreeItemId& i2) override;
+    virtual int OnCompareItems(const wxTreeItemId& i1, const wxTreeItemId& i2) wxOVERRIDE;
 
     // is this the test item which we use in several event handlers?
     bool IsTestItem(const wxTreeItemId& item)
@@ -181,7 +182,7 @@ class MyFrame: public wxFrame
 {
 public:
     // ctor and dtor
-    MyFrame();
+    MyFrame(const wxString& title, int x, int y, int w, int h);
     virtual ~MyFrame();
 
     // menu callbacks

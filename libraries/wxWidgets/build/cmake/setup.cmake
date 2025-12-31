@@ -144,6 +144,56 @@ if(NOT MSVC)
     endif()
 endif()
 
+wx_check_cxx_source_compiles("
+    std::string foo, bar;
+    foo.compare(bar);
+    foo.compare(1, 1, bar);
+    foo.compare(1, 1, bar, 1, 1);
+    foo.compare(\"\");
+    foo.compare(1, 1, \"\");
+    foo.compare(1, 1, \"\", 2);"
+    HAVE_STD_STRING_COMPARE
+    string
+    )
+
+wx_check_cxx_source_compiles(
+    "std::wstring s;"
+    HAVE_STD_WSTRING
+    string
+    )
+
+wx_check_cxx_source_compiles("
+    std::hash_map<double*, char*, std::hash<double*>, std::equal_to<double*> > test1;
+    std::hash_set<char*, std::hash<char*>, std::equal_to<char*> > test2;"
+    HAVE_HASH_MAP
+    hash_map hash_set
+    )
+set(HAVE_STD_HASH_MAP ${HAVE_HASH_MAP})
+
+wx_check_cxx_source_compiles("
+    __gnu_cxx::hash_map<double*, char*, __gnu_cxx::hash<double*>, std::equal_to<double*> > test1;
+    __gnu_cxx::hash_set<char*, __gnu_cxx::hash<char*>, std::equal_to<char*> > test2;"
+    HAVE_EXT_HASH_MAP
+    ext/hash_map ext/hash_set
+    )
+set(HAVE_GNU_CXX_HASH_MAP ${HAVE_EXT_HASH_MAP})
+
+wx_check_cxx_source_compiles("
+    std::unordered_map<double*, char*> test1;
+    std::unordered_set<char*> test2;"
+    HAVE_STD_UNORDERED_MAP
+    unordered_map unordered_set
+    )
+set(HAVE_STD_UNORDERED_SET ${HAVE_STD_UNORDERED_MAP})
+
+wx_check_cxx_source_compiles("
+    std::tr1::unordered_map<double*, char*> test1;
+    std::tr1::unordered_set<char*> test2;"
+    HAVE_TR1_UNORDERED_MAP
+    tr1/unordered_map tr1/unordered_set
+    )
+set(HAVE_TR1_UNORDERED_SET ${HAVE_TR1_UNORDERED_MAP})
+
 # Check for availability of GCC's atomic operations builtins.
 wx_check_c_source_compiles("
     unsigned int value=0;
@@ -211,6 +261,23 @@ if(UNIX)
         endif()
     endif()
 
+    if(wxUSE_ON_FATAL_EXCEPTION)
+        wx_check_cxx_source_compiles(
+            "return 0; }
+            extern void testSigHandler(int) { };
+            int foo() {
+            struct sigaction sa;
+            sa.sa_handler = testSigHandler;"
+            wxTYPE_SA_HANDLER_IS_INT
+            signal.h
+            )
+        if(wxTYPE_SA_HANDLER_IS_INT)
+            set(wxTYPE_SA_HANDLER int)
+        else()
+            set(wxTYPE_SA_HANDLER void)
+        endif()
+    endif()
+
     # backtrace() and backtrace_symbols() for wxStackWalker
     if(wxUSE_STACKWALKER)
         wx_check_cxx_source_compiles("
@@ -238,23 +305,6 @@ if(UNIX)
     # Linux and *BSD and statvfs() under Solaris and NetBSD
     wx_check_c_source_compiles("
         return 0; }
-        #if defined(__BSD__)
-        #include <sys/param.h>
-        #include <sys/mount.h>
-        #else
-        #include <sys/vfs.h>
-        #endif
-
-        int foo() {
-        long l;
-        struct statfs fs;
-        statfs(\"/\", &fs);
-        l = fs.f_bsize;
-        l += fs.f_blocks;
-        l += fs.f_bavail;"
-        HAVE_STATFS)
-    wx_check_c_source_compiles("
-        return 0; }
         #include <sys/statvfs.h>
 
         int foo() {
@@ -266,10 +316,9 @@ if(UNIX)
         l += fs.f_bavail;"
         HAVE_STATVFS)
     if(HAVE_STATVFS)
-      set(WX_STATFS_T "struct statvfs")
-    elseif(HAVE_STATFS)
-      set(WX_STATFS_T "struct statfs")
-      wx_check_cxx_source_compiles("
+        set(WX_STATFS_T "struct statvfs")
+    else()
+        wx_check_c_source_compiles("
             return 0; }
             #if defined(__BSD__)
             #include <sys/param.h>
@@ -279,9 +328,29 @@ if(UNIX)
             #endif
 
             int foo() {
+            long l;
             struct statfs fs;
-            statfs(\"/\", &fs);"
-        HAVE_STATFS_DECL)
+            statfs(\"/\", &fs);
+            l = fs.f_bsize;
+            l += fs.f_blocks;
+            l += fs.f_bavail;"
+            HAVE_STATFS)
+        if(HAVE_STATFS)
+            set(WX_STATFS_T "struct statfs")
+            wx_check_cxx_source_compiles("
+                return 0; }
+                #if defined(__BSD__)
+                #include <sys/param.h>
+                #include <sys/mount.h>
+                #else
+                #include <sys/vfs.h>
+                #endif
+
+                int foo() {
+                struct statfs fs;
+                statfs(\"/\", &fs);"
+                HAVE_STATFS_DECL)
+        endif()
     endif()
 
     if(NOT HAVE_STATFS AND NOT HAVE_STATVFS)
@@ -440,10 +509,19 @@ if(CMAKE_USE_PTHREADS_INIT)
             message(WARNING "wxMutex won't be recursive on this platform")
         endif()
     endif()
-    wx_check_cxx_source_compiles(
-        "void foo(abi::__forced_unwind&);"
-        HAVE_ABI_FORCEDUNWIND
-        cxxabi.h)
+    if(wxUSE_COMPILER_TLS)
+        # test for compiler thread-specific variables support
+        wx_check_c_source_compiles("
+            static __thread int n = 0;
+            static __thread int *p = 0;"
+            HAVE___THREAD_KEYWORD
+            pthread.h
+            )
+        wx_check_cxx_source_compiles(
+            "void foo(abi::__forced_unwind&);"
+            HAVE_ABI_FORCEDUNWIND
+            cxxabi.h)
+    endif()
     cmake_pop_check_state()
 endif() # CMAKE_USE_PTHREADS_INIT
 
@@ -532,7 +610,15 @@ if(MSVC)
     check_symbol_exists(vsscanf stdio.h HAVE_VSSCANF)
 endif()
 
+# at least under IRIX with mipsPro the C99 round() function is available when
+# building using the C compiler but not when using C++ one
+check_cxx_symbol_exists(round math.h HAVE_ROUND)
+
 # Check includes
+if(NOT MSVC_VERSION LESS 1600)
+    check_include_file_cxx(tr1/type_traits HAVE_TR1_TYPE_TRAITS)
+    check_include_file_cxx(type_traits HAVE_TYPE_TRAITS)
+endif()
 check_include_file(fcntl.h HAVE_FCNTL_H)
 check_include_file(langinfo.h HAVE_LANGINFO_H)
 check_include_file(sched.h HAVE_SCHED_H)
@@ -565,7 +651,6 @@ check_symbol_exists(dlopen dlfcn.h HAVE_DLOPEN)
 cmake_pop_check_state()
 if(HAVE_DLOPEN)
     check_symbol_exists(dladdr dlfcn.h HAVE_DLADDR)
-    check_symbol_exists(dl_iterate_phdr link.h HAVE_DL_ITERATE_PHDR)
 endif()
 
 if(APPLE)
@@ -587,13 +672,20 @@ if(wxUSE_FSWATCHER)
 endif()
 
 if(wxUSE_XLOCALE)
+    list(APPEND xlocale_headers locale.h stdlib.h)
     check_include_file(xlocale.h HAVE_XLOCALE_H)
-    set(CMAKE_EXTRA_INCLUDE_FILES locale.h)
     if(HAVE_XLOCALE_H)
-        list(APPEND CMAKE_EXTRA_INCLUDE_FILES xlocale.h)
+        list(APPEND xlocale_headers xlocale.h)
     endif()
-    check_type_size(locale_t LOCALE_T)
-    set(CMAKE_EXTRA_INCLUDE_FILES)
+    wx_check_c_source_compiles("
+        locale_t t;
+        strtod_l(NULL, NULL, t);
+        strtol_l(NULL, NULL, 0, t);
+        strtoul_l(NULL, NULL, 0, t);
+"
+        HAVE_LOCALE_T
+        ${xlocale_headers}
+        )
 endif()
 
 # Check sizes of various types
@@ -612,14 +704,6 @@ check_type_size("long long" SIZEOF_LONG_LONG)
 check_type_size(ssize_t SSIZE_T)
 
 test_big_endian(WORDS_BIGENDIAN)
-
-# For generators using build type, ensure that wxHAVE_CEF_DEBUG matches it.
-if(wxUSE_WEBVIEW_CHROMIUM AND DEFINED CMAKE_BUILD_TYPE)
-    string(TOUPPER ${CMAKE_BUILD_TYPE} build_type)
-    if(${build_type} STREQUAL DEBUG)
-        set(wxHAVE_CEF_DEBUG ON)
-    endif()
-endif()
 
 configure_file(build/cmake/setup.h.in ${wxSETUP_HEADER_FILE})
 if(DEFINED wxSETUP_HEADER_FILE_DEBUG)

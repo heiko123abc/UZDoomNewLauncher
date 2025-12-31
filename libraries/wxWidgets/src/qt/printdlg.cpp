@@ -8,8 +8,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_PRINTING_ARCHITECTURE
-
 #include "wx/qt/printdlg.h"
 
 wxQtPrintNativeData::wxQtPrintNativeData()
@@ -58,7 +56,7 @@ wxPrintData& wxQtPrintDialog::GetPrintData()
 
 wxDC *wxQtPrintDialog::GetPrintDC()
 {
-    return nullptr;
+    return NULL;
 }
 
 //##############################################################################
@@ -83,4 +81,3 @@ wxPageSetupDialogData& wxQtPageSetupDialog::GetPageSetupDialogData()
     return s_data;
 }
 
-#endif // wxUSE_PRINTING_ARCHITECTURE

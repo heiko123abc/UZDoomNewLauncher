@@ -2,6 +2,7 @@
 // Name:        src/generic/gridctrl.cpp
 // Purpose:     wxGrid controls
 // Author:      Paul Gammans, Roger Gammans
+// Modified by:
 // Created:     11/04/2001
 // Copyright:   (c) The Computer Surgery (paul@compsurg.co.uk)
 // Licence:     wxWindows licence
@@ -17,6 +18,7 @@
 
 #ifndef WX_PRECOMP
     #include "wx/textctrl.h"
+    #include "wx/dc.h"
     #include "wx/combobox.h"
     #include "wx/settings.h"
     #include "wx/log.h"
@@ -47,7 +49,7 @@ void wxGridCellRenderer::Draw(wxGrid& grid,
     wxColour clr;
     if ( grid.IsThisEnabled() )
     {
-        if ( !grid.UsesOverlaySelection() && isSelected )
+        if ( isSelected )
         {
             if ( grid.HasFocus() )
                 clr = grid.GetSelectionBackground();
@@ -81,7 +83,7 @@ void wxGridCellRenderer::SetTextColoursAndFont(const wxGrid& grid,
     // different coloured text when the grid is disabled
     if ( grid.IsThisEnabled() )
     {
-        if ( !grid.UsesOverlaySelection() && isSelected )
+        if ( isSelected )
         {
             wxColour clr;
             if ( grid.HasFocus() )
@@ -390,7 +392,7 @@ wxGridCellAutoWrapStringRenderer::Draw(wxGrid& grid,
 
 wxArrayString
 wxGridCellAutoWrapStringRenderer::GetTextLines(wxGrid& grid,
-                                               wxReadOnlyDC& dc,
+                                               wxDC& dc,
                                                const wxGridCellAttr& attr,
                                                const wxRect& rect,
                                                int row, int col)
@@ -429,7 +431,7 @@ wxGridCellAutoWrapStringRenderer::GetTextLines(wxGrid& grid,
 }
 
 void
-wxGridCellAutoWrapStringRenderer::BreakLine(wxReadOnlyDC& dc,
+wxGridCellAutoWrapStringRenderer::BreakLine(wxDC& dc,
                                             const wxString& logicalLine,
                                             wxCoord maxWidth,
                                             wxArrayString& lines)
@@ -482,7 +484,7 @@ wxGridCellAutoWrapStringRenderer::BreakLine(wxReadOnlyDC& dc,
 
 
 wxCoord
-wxGridCellAutoWrapStringRenderer::BreakWord(wxReadOnlyDC& dc,
+wxGridCellAutoWrapStringRenderer::BreakWord(wxDC& dc,
                                             const wxString& word,
                                             wxCoord maxWidth,
                                             wxArrayString& lines,
@@ -601,7 +603,7 @@ wxGridCellAutoWrapStringRenderer::GetBestWidth(wxGrid& grid,
 // ----------------------------------------------------------------------------
 
 wxSize wxGridCellStringRenderer::DoGetBestSize(const wxGridCellAttr& attr,
-                                               wxReadOnlyDC& dc,
+                                               wxDC& dc,
                                                const wxString& text)
 {
     dc.SetFont(attr.GetFont());
@@ -825,7 +827,7 @@ wxString wxGridCellFloatRenderer::GetString(const wxGrid& grid, int row, int col
 
     if ( hasDouble )
     {
-        if ( m_format.empty() )
+        if ( !m_format )
         {
             if ( m_width == -1 )
             {
@@ -894,7 +896,7 @@ wxSize wxGridCellFloatRenderer::GetBestSize(wxGrid& grid,
 
 void wxGridCellFloatRenderer::SetParameters(const wxString& params)
 {
-    if ( params.empty() )
+    if ( !params )
     {
         // reset to defaults
         SetWidth(-1);

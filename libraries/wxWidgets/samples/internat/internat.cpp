@@ -2,6 +2,7 @@
 // Name:        internat.cpp
 // Purpose:     Demonstrates internationalisation (i18n) support
 // Author:      Vadim Zeitlin/Julian Smart
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -28,7 +29,6 @@
 #endif
 
 #include "wx/calctrl.h"
-#include "wx/datectrl.h"
 #include "wx/intl.h"
 #include "wx/file.h"
 #include "wx/grid.h"
@@ -37,7 +37,6 @@
 #include "wx/numformatter.h"
 #include "wx/platinfo.h"
 #include "wx/spinctrl.h"
-#include "wx/timectrl.h"
 #include "wx/translation.h"
 #include "wx/uilocale.h"
 
@@ -62,9 +61,9 @@ class MyApp: public wxApp
 public:
     MyApp() { m_setLocale = Locale_Ask; }
 
-    virtual void OnInitCmdLine(wxCmdLineParser& parser) override;
-    virtual bool OnCmdLineParsed(wxCmdLineParser& parser) override;
-    virtual bool OnInit() override;
+    virtual void OnInitCmdLine(wxCmdLineParser& parser) wxOVERRIDE;
+    virtual bool OnCmdLineParsed(wxCmdLineParser& parser) wxOVERRIDE;
+    virtual bool OnInit() wxOVERRIDE;
 
 protected:
     // Specifies whether we should use the current locale or not. By default we
@@ -110,7 +109,7 @@ public:
 // ID for the menu commands
 enum
 {
-    INTERNAT_TEST = wxID_HIGHEST,
+    INTERNAT_TEST = wxID_HIGHEST + 1,
     INTERNAT_PLAY,
     INTERNAT_TEST_1,
     INTERNAT_TEST_2,
@@ -285,7 +284,7 @@ bool MyApp::OnInit()
 
 // main frame constructor
 MyFrame::MyFrame()
-       : wxFrame(nullptr,
+       : wxFrame(NULL,
                  wxID_ANY,
                  _("International wxWidgets App"))
 {
@@ -311,6 +310,8 @@ MyFrame::MyFrame()
     test_menu->Append(INTERNAT_TEST_MSGBOX, _("&Message box test"),
                       _("Tests message box buttons labels translation"));
 
+    // Note that all these strings are currently "translated" only in French
+    // catalog, so you need to use French locale to see them in action.
     wxMenu *macro_menu = new wxMenu;
     macro_menu->Append(INTERNAT_MACRO_1, _("item"));
     macro_menu->Append(INTERNAT_MACRO_2, wxGETTEXT_IN_CONTEXT("context_1", "item"));
@@ -358,7 +359,7 @@ MyFrame::MyFrame()
                         (
                          _("Current UI locale: %s; C locale: %s"),
                          wxUILocale::GetCurrent().GetName(),
-                         setlocale(LC_ALL, nullptr)
+                         setlocale(LC_ALL, NULL)
                         )
                       ),
                   wxSizerFlags().Center().Border());
@@ -387,47 +388,20 @@ MyFrame::MyFrame()
                       ),
                   wxSizerFlags().Center().Border());
 
-    topSizer->Add(new wxStaticText
-                      (
-                        panel,
-                        wxID_ANY,
-                        wxString::Format
-                        (
-                          _("Preferred UI languages: [%s]"),
-                          wxJoin(wxUILocale::GetPreferredUILanguages(), ',')
-                        )
-                      ),
-                  wxSizerFlags().Center().Border());
-
     // create some controls affected by the locale
-
-    const int border = wxSizerFlags::GetDefaultBorder();
-    auto* const sizerInput = new wxFlexGridSizer(2, wxSize(border, border));
-    sizerInput->AddGrowableCol(1);
 
     // this demonstrates RTL layout mirroring for Arabic locales and using
     // locale-specific decimal separator in wxSpinCtrlDouble.
-    sizerInput->Add(new wxStaticText(panel, wxID_ANY, _("Numeric input:")),
-                    wxSizerFlags().CenterVertical().Right());
+    wxSizer *sizer = new wxBoxSizer(wxHORIZONTAL);
+    sizer->Add(new wxStaticText(panel, wxID_ANY, _("Numeric input:")),
+               wxSizerFlags().Center().Border());
 
     wxSpinCtrlDouble* const spin = new wxSpinCtrlDouble(panel, wxID_ANY);
     spin->SetDigits(2);
     spin->SetValue(12.34);
-    sizerInput->Add(spin, wxSizerFlags().CenterVertical().Expand());
+    sizer->Add(spin, wxSizerFlags().Center().Border());
 
-    // this one demonstrates the locale-specific date format
-    sizerInput->Add(new wxStaticText(panel, wxID_ANY, _("Date input:")),
-                    wxSizerFlags().CenterVertical().Right());
-    sizerInput->Add(new wxDatePickerCtrl(panel, wxID_ANY),
-                    wxSizerFlags().CenterVertical().Expand());
-
-    // and this one does the same for time format
-    sizerInput->Add(new wxStaticText(panel, wxID_ANY, _("Time input:")),
-                    wxSizerFlags().CenterVertical().Right());
-    sizerInput->Add(new wxTimePickerCtrl(panel, wxID_ANY),
-                    wxSizerFlags().CenterVertical().Expand());
-
-    topSizer->Add(sizerInput, wxSizerFlags().Center());
+    topSizer->Add(sizer, wxSizerFlags().Center());
 
     // show that week days and months names are translated too
     topSizer->Add(new wxCalendarCtrl(panel, wxID_ANY),
@@ -441,8 +415,8 @@ MyFrame::MyFrame()
     grid->HideRowLabels();
 
     grid->SetColLabelValue(0, _("Number"));
-    grid->SetColFormatFloat(0, -1 /* width */, 5 /* we only use 5 digits below */);
-    grid->SetCellValue(0, 0, wxNumberFormatter::ToString(3.14159, -1));
+    grid->SetColFormatFloat(0);
+    grid->SetCellValue(0, 0, wxNumberFormatter::ToString(3.14159265, -1));
 
     grid->SetColLabelValue(1, _("Date"));
     grid->SetColFormatDate(1);
@@ -548,10 +522,17 @@ void MyFrame::OnPlay(wxCommandEvent& WXUNUSED(event))
     }
     else
     {
-        // This is a more verbose way to write _().
-        // (Note that you will need to pass -kwxGetTranslation to xgettext
-        //  for it to recognize this function.)
-        str = wxGetTranslation("Bad luck! try again...");
+        // this is a more implicit way to write _() but note that if you use it
+        // you must ensure that the strings get extracted in the message
+        // catalog as by default xgettext won't do it; it only knows of _(),
+        // not of wxTRANSLATE(). As internat's readme.txt says you should thus
+        // call xgettext with -kwxTRANSLATE.
+        str = wxGetTranslation(wxTRANSLATE("Bad luck! try again..."));
+
+        // note also that if we want 'str' to contain a localized string
+        // we need to use wxGetTranslation explicitly as wxTRANSLATE just
+        // tells xgettext to extract the string but has no effect on the
+        // runtime of the program!
     }
 
     wxMessageBox(str, _("Result"), wxOK | wxICON_INFORMATION);
@@ -590,9 +571,8 @@ void MyFrame::OnTestLocaleAvail(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnOpen(wxCommandEvent& WXUNUSED(event))
 {
-    // open a bogus file -- the error message should be also either
-    // partially or fully translated if you've got wxstd.mo somewhere
-    // and/or your operating system provides localized error messages.
+    // open a bogus file -- the error message should be also translated if
+    // you've got wxstd.mo somewhere in the search path (see MyApp::OnInit)
     wxFile file("NOTEXIST.ING");
 }
 

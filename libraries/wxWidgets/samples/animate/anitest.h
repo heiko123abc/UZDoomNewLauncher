@@ -2,6 +2,7 @@
 // Name:        anitest.cpp
 // Purpose:     anitest sample
 // Author:      Julian Smart
+// Modified by:
 // Created:     02/07/2001
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -13,7 +14,7 @@
 class MyApp : public wxApp
 {
 public:
-    bool OnInit() override;
+    bool OnInit() wxOVERRIDE;
 };
 
 // Define a new frame
@@ -21,7 +22,9 @@ class MyFrame : public wxFrame
 {
 public:
 
-    MyFrame(wxWindow *parent, const wxWindowID id, const wxString& title);
+    MyFrame(wxWindow *parent, const wxWindowID id, const wxString& title,
+            const wxPoint& pos, const wxSize& size, const long style);
+    ~MyFrame();
 
     void OnAbout(wxCommandEvent& event);
     void OnQuit(wxCommandEvent& event);

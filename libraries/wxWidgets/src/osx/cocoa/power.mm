@@ -24,8 +24,10 @@
 // wxPowerResource
 // ----------------------------------------------------------------------------
 
-static wxAtomicInt g_powerResourceSystemRefCount = 0;
-static NSObject* g_processInfoActivity = nil;
+wxAtomicInt g_powerResourceSystemRefCount = 0;
+
+IOPMAssertionID g_pmAssertionID = 0;
+NSObject* g_processInfoActivity = nil;
 
 bool UpdatePowerResourceUsage(wxPowerResourceKind kind, const wxString& reason)
 {
@@ -66,17 +68,8 @@ bool UpdatePowerResourceUsage(wxPowerResourceKind kind, const wxString& reason)
     return true;
 }
 
-bool
-wxPowerResource::Acquire(wxPowerResourceKind kind,
-                         const wxString& reason,
-                         wxPowerBlockKind blockKind)
+bool wxPowerResource::Acquire(wxPowerResourceKind kind, const wxString& reason)
 {
-    if ( blockKind == wxPOWER_DELAY )
-    {
-        // We don't support this mode under macOS because it's not needed there.
-        return true;
-    }
-
     wxAtomicInc(g_powerResourceSystemRefCount);
 
     bool success = UpdatePowerResourceUsage(kind, reason);

@@ -165,7 +165,7 @@ def processFile(projectFile):
 
     strOut = processContent()
 
-    fout = open(projectFile, "w", newline="\n")
+    fout = open(projectFile, "w")
     fout.write(strOut)
     fout.close()
 

@@ -1,61 +1,50 @@
-July 21, 2025 -- The wxWidgets team is pleased to announce the first new
-development release of our open source framework for the development of native
+December 12, 2015 -- The wxWidgets team is pleased to announce a new
+stable release of our open source framework for the development of native
 cross-platform applications in C++.
 
-wxWidgets 3.3.1 is the second release in the 3.3.x development series coming
-soon after 3.3.0 and is mostly a bug fix release, correcting some regressions
-found in 3.3.0. The new version is available now from
+wxWidgets 3.2.9 is part of the API and ABI-stable 3.2.x release series and is
+now available from
 
     https://www.wxwidgets.org/downloads/
 
 and
 
-    https://github.com/wxWidgets/wxWidgets/releases/v3.3.1
-
-The most important fixes since 3.3.0 include:
-
-- Restore Windows date/time pickers behaviour under non-English OS (#25511).
-- Fix crash on startup under macOS when using Farsi as system language (#25561).
-- Fix losing wxGenericListCtrl contents after AppendColumn() (#25519).
-- Fix crash when sorting wxDataViewCtrl in wxGTK in some circumstances (#25625).
-- Fix crash when using per-window menu in Windows MDI applications (#25522).
-- Restore inadvertently broken API compatibility in wxPropertyGrid (#25627).
-
-There were also a number of fixes to the new Windows dark mode support:
-
-- Fix crash with wxStaticBitmap inside wxNotebook in dark mode (#25499).
-- Fix disabled wxButton bitmaps appearance in dark mode (#25575).
-- Fix disabled wxStaticText appearance in dark mode (#25574).
-- Fix notebook background in dark high contrast themes (#25542).
-- Fix regression in wxDataViewCtrl border in light mode (#25532).
-- Fix selected toolbar buttons in dark mode (Stefan Ziegler, #25616).
-- Fix wxComboCtrl appearance in dark mode (#23766).
-- Fix wxTE_RICH wxTextCtrl appearance in dark mode (#25602).
-
-And, finally, this release also contains a small number of new features:
-
-- Allow setting "app id" under supported platforms (Windows/Wayland) (#25548).
-- Add persistence support for wxRadioButtons (#25530) and wxCheckBox (#25515).
-- Add support for PNG "Description" text chunk to wxImage (#25556).
-- wxNumberFormatter improvements (#25614, #25635).
-
-Please see the change log
-
-https://raw.githubusercontent.com/wxWidgets/wxWidgets/v3.3.1/docs/changes.txt
-
-for the list of the other important changes.
+    https://github.com/wxWidgets/wxWidgets/releases/v3.2.9
 
 
-This release is part of the "development" release series, but these development
-releases are suitable for production use: the only difference between them and
-"stable" releases is that neither ABI nor API stability is guaranteed in 3.3.x.
-However we strive to minimize API-incompatible changes even so and, in spite of
-a huge number of changes since the last stable version, this release remains
-almost fully API-compatible with wxWidgets 3.2 and updating the existing
-applications to use it should be straightforward. However please make sure to
-read the "INCOMPATIBLE CHANGES" section in the change log to be aware of the
-breaking changes in it.
+This release doesn't add any major new features, but contains some important
+fixes for bugs found in the previous 3.2.8 release:
 
+- Fix crash when using Farsi as system language under macOS (#25561).
+- Fix handling total window size with GNOME with X11 (#25348).
+- Fix memory leak when using wxOverlay (#24500).
+- Fix wxGLCanvas scale when using EGL/Wayland in high DPI (Popax21, #23733).
+- Fix missing wxEVT_CHAR for Ctrl-Letter in non-US layouts (#25384).
+- Fix selecting columns in wxGrid with mouse (Dietmar Schwertberger, #25884).
+
+The new release still contains a couple of enhancements, including:
+
+- Many improvements to CMake build system (#25448, #25749, #25998).
+- Support for building under macOS 26 Tahoe (#25798).
+- Fix wxStyledTextCtrl support in screen readers (Maarten Bent, #25963).
+- Respect HTML5 charset attribute in wxHTML (Kees van der Oord, #25546).
+- Add support for using EGL 1.4 (and not 1.5) in wxGLCanvas (#22325).
+
+Other changes include:
+
+- Fix memory leak in wxColour::Set() under macOS (#25569).
+- Fix memory leak when using wxOverlay in wxGTK (#24500).
+- Reduce wxStaticBitmap GDI resource usage in wxMSW (Alex Shvartzkop, #25698).
+- Significantly improve performance of drawing bitmaps in wxAUI (#23841).
+
+Please see the full change log for more details:
+
+https://raw.githubusercontent.com/wxWidgets/wxWidgets/v3.2.9/docs/changes.txt
+
+This release is API and ABI-compatible with the previous 3.2.x, meaning that
+the existing applications don't even need to be rebuilt to profit from all the
+fixes above if they use shared/dynamic libraries. And if they do need to be
+recompiled, this can be done without any changes to the code.
 
 We hope that you will enjoy using the new release!
 

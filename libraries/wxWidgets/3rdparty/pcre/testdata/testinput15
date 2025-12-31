@@ -6,49 +6,38 @@
 
 # (2) Other tests that must not be run with JIT.
 
-# These tests are first so that they don't inherit a large enough heap frame 
-# vector from a previous test.
-
-/(*LIMIT_HEAP=21)\[(a)]{60}/expand
-    \[a]{60}
-
-"(*LIMIT_HEAP=21)()((?))()()()()()()()()()()()()()()()()()()()()()()()(())()()()()()()()()()()()()()()()()()()()()()(())()()()()()()()()()()()()()"
-  xx
-
-# -----------------------------------------------------------------------
-
 /(a+)*zz/I
-  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazzbbbbbb\=find_limits_noheap
-  aaaaaaaaaaaaaz\=find_limits_noheap
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaazzbbbbbb\=find_limits
+  aaaaaaaaaaaaaz\=find_limits
 
 !((?:\s|//.*\\n|/[*](?:\\n|.)*?[*]/)*)!I
-   /* this is a C style comment */\=find_limits_noheap
+   /* this is a C style comment */\=find_limits
 
 /^(?>a)++/
-    aa\=find_limits_noheap
-    aaaaaaaaa\=find_limits_noheap
+    aa\=find_limits
+    aaaaaaaaa\=find_limits
 
 /(a)(?1)++/
-    aa\=find_limits_noheap
-    aaaaaaaaa\=find_limits_noheap
+    aa\=find_limits
+    aaaaaaaaa\=find_limits
 
 /a(?:.)*?a/ims
-    abbbbbbbbbbbbbbbbbbbbba\=find_limits_noheap
+    abbbbbbbbbbbbbbbbbbbbba\=find_limits
 
 /a(?:.(*THEN))*?a/ims
-    abbbbbbbbbbbbbbbbbbbbba\=find_limits_noheap
+    abbbbbbbbbbbbbbbbbbbbba\=find_limits
 
 /a(?:.(*THEN:ABC))*?a/ims
-    abbbbbbbbbbbbbbbbbbbbba\=find_limits_noheap
+    abbbbbbbbbbbbbbbbbbbbba\=find_limits
 
 /^(?>a+)(?>b+)(?>c+)(?>d+)(?>e+)/
-     aabbccddee\=find_limits_noheap
+     aabbccddee\=find_limits
 
 /^(?>(a+))(?>(b+))(?>(c+))(?>(d+))(?>(e+))/
-     aabbccddee\=find_limits_noheap
+     aabbccddee\=find_limits
 
 /^(?>(a+))(?>b+)(?>(c+))(?>d+)(?>(e+))/
-     aabbccddee\=find_limits_noheap
+     aabbccddee\=find_limits
 
 /(*LIMIT_MATCH=12bc)abc/
 
@@ -239,15 +228,11 @@
 /(|]+){2,2452}/
     (|]+){2,2452}
 
+/(*LIMIT_HEAP=21)\[(a)]{60}/expand
+    \[a]{60}
+
 /b(?<!ax)(?!cx)/allusedtext
     abc
     abcz
-
-# This test triggers the recursion limit in the interpreter, but completes in
-# JIT. It's in testinput2 with disable_recurse_loop_check to get it to work
-# in the interpreter.
-
-/(a(?1)z||(?1)++)$/
-    abcd
 
 # End of testinput15

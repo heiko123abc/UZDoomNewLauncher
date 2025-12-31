@@ -72,10 +72,11 @@ wxString wxTextBuffer::Translate(const wxString& text, wxTextFileType type)
     // unnecessary relocations
     result.Alloc(text.Len());
 
-    wxUniChar chLast = 0;
-    for ( wxUniChar ch : text )
+    wxChar chLast = 0;
+    for ( wxString::const_iterator i = text.begin(); i != text.end(); ++i )
     {
-        switch ( ch.GetValue() ) {
+        wxChar ch = *i;
+        switch ( ch ) {
             case wxT('\n'):
                 // Dos/Unix line termination
                 result += eol;
@@ -218,11 +219,11 @@ wxTextFileType wxTextBuffer::GuessType() const
 
     size_t n;
     for ( n = 0; n < nScan; n++ )     // the beginning
-        AnalyseLine(n)
+        AnalyseLine(n);
     for ( n = (nCount - nScan)/2; n < (nCount + nScan)/2; n++ )
-        AnalyseLine(n)
+        AnalyseLine(n);
     for ( n = nCount - nScan; n < nCount; n++ )
-        AnalyseLine(n)
+        AnalyseLine(n);
 
     #undef   AnalyseLine
 

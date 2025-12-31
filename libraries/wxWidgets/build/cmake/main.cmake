@@ -47,9 +47,7 @@ endif()
 
 if(WIN32_MSVC_NAMING)
     include(build/cmake/build_cfg.cmake)
-endif()
-
-if(NOT MSVC)
+else()
     # Write wx-config
     include(build/cmake/config.cmake)
 endif()
@@ -60,7 +58,14 @@ include(build/cmake/install.cmake)
 # Determine minimum required OS at runtime
 set(wxREQUIRED_OS_DESC "${CMAKE_SYSTEM_NAME} ${CMAKE_SYSTEM_PROCESSOR}")
 if(MSVC OR MINGW OR CYGWIN)
-    set(wxREQUIRED_OS_DESC "Windows 7 / Windows Server 2008")
+    # Determine based on used toolkit
+    if(MINGW OR CYGWIN OR (MSVC_VERSION LESS 1700) OR (CMAKE_VS_PLATFORM_TOOLSET MATCHES "_xp$") )
+        # Visual Studio < 2012 and MinGW always create XP compatible binaries
+        # XP Toolset is required since VS 2012
+        set(wxREQUIRED_OS_DESC "Windows XP / Windows Server 2003")
+    else()
+        set(wxREQUIRED_OS_DESC "Windows Vista / Windows Server 2008")
+    endif()
     if(wxPLATFORM_ARCH)
         wx_string_append(wxREQUIRED_OS_DESC " (${wxPLATFORM_ARCH} Edition)")
     endif()
@@ -73,6 +78,20 @@ endif()
 # Print configuration summary
 wx_print_thirdparty_library_summary()
 
+# Avoid printing out the message if we're being reconfigured and nothing has
+# changed since the previous run, so check if the current summary differs from
+# the cached value.
+set(wxSUMMARY_NOW
+    "${CMAKE_SYSTEM_NAME}-${wxVERSION}-${wxREQUIRED_OS_DESC}-"
+    "${wxBUILD_TOOLKIT}-${wxTOOLKIT_VERSION}-${wxTOOLKIT_EXTRA}-"
+    "${wxBUILD_MONOLITHIC}-${wxBUILD_SHARED}-${wxBUILD_COMPATIBILITY}-"
+)
+if("${wxSUMMARY_NOW}" STREQUAL "${wxSUMMARY}")
+  return()
+endif()
+
+set(wxSUMMARY ${wxSUMMARY_NOW} CACHE INTERNAL "internal summary of wxWidgets build options")
+
 if(wxTOOLKIT_EXTRA)
     string(REPLACE ";" ", " wxTOOLKIT_DESC "${wxTOOLKIT_EXTRA}")
     set(wxTOOLKIT_DESC "with support for: ${wxTOOLKIT_DESC}")
@@ -83,5 +102,6 @@ message(STATUS "Configured wxWidgets ${wxVERSION} for ${CMAKE_SYSTEM_NAME}
     Which GUI toolkit should wxWidgets use?            ${wxBUILD_TOOLKIT} ${wxTOOLKIT_VERSION} ${wxTOOLKIT_DESC}
     Should wxWidgets be compiled into single library?  ${wxBUILD_MONOLITHIC}
     Should wxWidgets be linked as a shared library?    ${wxBUILD_SHARED}
+    Should wxWidgets support Unicode?                  ${wxUSE_UNICODE}
     Which wxWidgets API compatibility should be used?  ${wxBUILD_COMPATIBILITY}"
     )

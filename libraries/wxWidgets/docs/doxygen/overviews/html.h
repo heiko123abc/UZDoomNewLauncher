@@ -578,7 +578,6 @@ you can use @c "text-align", @c "width", @c "vertical-align" and @c
 "background" with all elements and for @c SPAN elements a few other styles are
 additionally recognized:
 
-- @c background-color
 - @c color
 - @c font-family
 - @c font-size (only in point units)

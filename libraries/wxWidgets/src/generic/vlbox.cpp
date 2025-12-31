@@ -2,6 +2,7 @@
 // Name:        src/generic/vlbox.cpp
 // Purpose:     implementation of wxVListBox
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     31.05.03
 // Copyright:   (c) 2003 Vadim Zeitlin <vadim@wxwidgets.org>
 // Licence:     wxWindows licence
@@ -37,7 +38,7 @@
 // event tables
 // ----------------------------------------------------------------------------
 
-wxBEGIN_EVENT_TABLE(wxVListBox, wxVScrolledCanvas)
+wxBEGIN_EVENT_TABLE(wxVListBox, wxVScrolledWindow)
     EVT_PAINT(wxVListBox::OnPaint)
 
     EVT_KEY_DOWN(wxVListBox::OnKeyDown)
@@ -54,7 +55,7 @@ wxEND_EVENT_TABLE()
 // implementation
 // ============================================================================
 
-wxIMPLEMENT_ABSTRACT_CLASS(wxVListBox, wxVScrolledCanvas);
+wxIMPLEMENT_ABSTRACT_CLASS(wxVListBox, wxVScrolledWindow);
 const char wxVListBoxNameStr[] = "wxVListBox";
 
 // ----------------------------------------------------------------------------
@@ -65,7 +66,7 @@ void wxVListBox::Init()
 {
     m_current =
     m_anchor = wxNOT_FOUND;
-    m_selStore = nullptr;
+    m_selStore = NULL;
 }
 
 bool wxVListBox::Create(wxWindow *parent,
@@ -76,7 +77,7 @@ bool wxVListBox::Create(wxWindow *parent,
                         const wxString& name)
 {
     style |= wxWANTS_CHARS | wxFULL_REPAINT_ON_RESIZE;
-    if ( !wxVScrolledCanvas::Create(parent, id, pos, size, style, name) )
+    if ( !wxVScrolledWindow::Create(parent, id, pos, size, style, name) )
         return false;
 
     if ( style & wxLB_MULTIPLE )
@@ -632,19 +633,9 @@ void wxVListBox::OnKeyDown(wxKeyEvent& event)
 
         case WXK_PAGEDOWN:
         case WXK_NUMPAD_PAGEDOWN:
-        {
-            size_t oldBegin = GetVisibleBegin();
             PageDown();
-            if (GetVisibleBegin() > oldBegin)
-            {
-                current = GetVisibleBegin();
-            }
-            else
-            {
-                current = GetRowCount() - 1;
-            }
+            current = GetVisibleBegin();
             break;
-        }
 
         case WXK_PAGEUP:
         case WXK_NUMPAD_PAGEUP:
@@ -742,55 +733,6 @@ wxVisualAttributes
 wxVListBox::GetClassDefaultAttributes(wxWindowVariant variant)
 {
     return wxListBox::GetClassDefaultAttributes(variant);
-}
-
-// ============================================================================
-// implementation
-// ============================================================================
-
-wxIMPLEMENT_DYNAMIC_CLASS(wxXRCPreviewVListBox, wxVListBox);
-const char wxXRCPreviewVListBoxNameStr[] = "wxXRCPreviewVListBox";
-
-bool wxXRCPreviewVListBox::Create(wxWindow *parent,
-            wxWindowID id /*= wxID_ANY*/,
-            const wxPoint& pos /*= wxDefaultPosition*/,
-            const wxSize& size /*= wxDefaultSize*/,
-            long style /*= 0*/,
-            const wxString& name /*= wxASCII_STR(wxVListBoxNameStr)*/)
-{
-    bool retval = wxVListBox::Create(parent, id, pos, size, style, name);
-    if (retval)
-    {
-        SetItemCount(std::numeric_limits<int>::max());
-    }
-    return retval;
-}
-
-// avoid defaulting to tiny window
-wxSize wxXRCPreviewVListBox::DoGetBestClientSize() const
-{
-    // safe to const_cast since we're just using GetTextExtent()
-    wxInfoDC dc(const_cast<wxXRCPreviewVListBox*>(this));
-    wxSize item99Size = dc.GetTextExtent(GetItem(99));
-    return wxSize(item99Size.x + wxSystemSettings::GetMetric(wxSYS_VSCROLL_X, this),
-                    5 * item99Size.y);
-}
-
-void wxXRCPreviewVListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
-{
-    dc.DrawText(GetItem(n), rect.GetLeftTop());
-}
-
-wxCoord wxXRCPreviewVListBox::OnMeasureItem(size_t n) const
-{
-    // safe to const_cast since we're just using GetTextExtent()
-    wxInfoDC dc(const_cast<wxXRCPreviewVListBox*>(this));
-    return dc.GetTextExtent(GetItem(n)).y;
-}
-
-wxString wxXRCPreviewVListBox::GetItem(size_t n) const
-{
-    return wxString::Format("Item %zu", n);
 }
 
 #endif

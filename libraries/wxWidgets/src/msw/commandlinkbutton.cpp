@@ -45,7 +45,7 @@ namespace
 
 inline bool HasNativeCommandLinkButton()
 {
-    return wxApp::GetComCtl32Version() >= 610;
+    return wxGetWinVersion() >= wxWinVersion_6;
 }
 
 } // anonymous namespace
@@ -145,7 +145,7 @@ wxSize wxCommandLinkButton::DoGetBestSize() const
 
         wxCommandLinkButton *thisButton =
             const_cast<wxCommandLinkButton *>(this);
-        wxInfoDC dc(thisButton);
+        wxClientDC dc(thisButton);
 
         wxFont noteFont = dc.GetFont();
 

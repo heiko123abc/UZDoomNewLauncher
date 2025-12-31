@@ -25,29 +25,11 @@
 #include "wx/filepicker.h"
 #include "wx/tooltip.h"
 
-#include "wx/generic/filepickerg.h"
-
 #include "wx/gtk/private.h"
 
 // ============================================================================
 // implementation
 // ============================================================================
-
-/*
-    The complication here is that we have to fall back on the generic
-    implementation for the flags not supported by the native control, but we
-    can't inherit from the generic classes as they inherit from wxButton but
-    the native widgets used here are not buttons in the GTK sense (i.e.
-    GtkFileChooserButton doesn't inherit from GtkButton).
-
-    So we use composition instead of inheritance, with the GTK control either
-    being a native widget or a generic window containing the generic control,
-    resulting in two exclusive modes:
-
-    1. m_dialog is non-null and m_genericButton is null: we use the native GTK
-       control.
-    2. m_dialog is null and m_genericButton is non-null: we use the generic one.
- */
 
 //-----------------------------------------------------------------------------
 // wxFileButton
@@ -81,26 +63,11 @@ bool wxFileButton::Create( wxWindow *parent, wxWindowID id,
         // NB: unlike generic implementation, native GTK implementation needs to create
         //     the filedialog here as it needs to use gtk_file_chooser_button_new_with_dialog()
         SetWindowStyle(style);
-
         m_path = path;
-
-        // Determine the initial directory for the dialog: it comes either from the
-        // default path, if it has it, or from the separately specified initial
-        // directory that can be set even if the path is e.g. empty.
-        wxFileName fn(m_path);
-        wxString initialDir = fn.GetPath();
-        if ( initialDir.empty() )
-            initialDir = m_initialDir;
-
-        m_dialog = new wxFileDialog
-                   (
-                        nullptr,
-                        message,
-                        initialDir,
-                        fn.GetFullName(),
-                        wildcard,
-                        wxGenericFileButton::GetDialogStyle(style)
-                   );
+        m_message = message;
+        m_wildcard = wildcard;
+        if ((m_dialog = CreateDialog()) == NULL)
+            return false;
 
         // little trick used to avoid problems when there are other GTK windows 'grabbed':
         // GtkFileChooserDialog won't be responsive to user events if there is another
@@ -111,8 +78,8 @@ bool wxFileButton::Create( wxWindow *parent, wxWindowID id,
         // Unfortunately there's no way to hook in the 'clicked' event of the GtkFileChooserButton,
         // thus we add grab on m_dialog->m_widget when it's shown and remove it when it's
         // hidden simply using its "show" and "hide" events - clean & simple :)
-        g_signal_connect(m_dialog->m_widget, "show", G_CALLBACK(gtk_grab_add), nullptr);
-        g_signal_connect(m_dialog->m_widget, "hide", G_CALLBACK(gtk_grab_remove), nullptr);
+        g_signal_connect(m_dialog->m_widget, "show", G_CALLBACK(gtk_grab_add), NULL);
+        g_signal_connect(m_dialog->m_widget, "hide", G_CALLBACK(gtk_grab_remove), NULL);
 
         //       use as label the currently selected file
         m_widget = gtk_file_chooser_button_new_with_dialog( m_dialog->m_widget );
@@ -128,24 +95,9 @@ bool wxFileButton::Create( wxWindow *parent, wxWindowID id,
         PostCreation(size);
         SetInitialSize(size);
     }
-    else // Use generic implementation.
-    {
-        if ( !wxControl::Create(parent, id, pos, size, wxBORDER_NONE, validator, name) )
-            return false;
-
-        m_genericButton = new wxGenericFileButton
-                              (
-                                this, wxID_ANY, label, path, message, wildcard,
-                                {}, size, style
-                              );
-
-        Bind(wxEVT_SIZE, [this](wxSizeEvent& event)
-        {
-            m_genericButton->SetSize(wxRect{event.GetSize()});
-            event.Skip();
-        });
-    }
-
+    else
+        return wxGenericFileButton::Create(parent, id, label, path, message, wildcard,
+                                           pos, size, style, validator, name);
     return true;
 }
 
@@ -171,7 +123,7 @@ void wxFileButton::OnDialogOK(wxCommandEvent& ev)
     if (ev.GetId() == wxID_OK)
     {
         // ...update our path
-        m_path = m_dialog->GetPath();
+        UpdatePathFromDialog(m_dialog);
 
         // ...and fire an event
         wxFileDirPickerEvent event(wxEVT_FILEPICKER_CHANGED, this, GetId(), m_path);
@@ -179,36 +131,18 @@ void wxFileButton::OnDialogOK(wxCommandEvent& ev)
     }
 }
 
-wxString wxFileButton::GetPath() const
-{
-    if ( m_genericButton )
-        return m_genericButton->GetPath();
-
-    return m_path;
-}
-
 void wxFileButton::SetPath(const wxString &str)
 {
-    if ( m_genericButton )
-    {
-        m_genericButton->SetPath(str);
-        return;
-    }
-
     m_path = str;
 
     if (GTK_IS_FILE_CHOOSER(m_widget))
         gtk_file_chooser_set_filename((GtkFileChooser*)m_widget, str.utf8_str());
+    else if (m_dialog)
+        UpdateDialogPath(m_dialog);
 }
 
 void wxFileButton::SetInitialDirectory(const wxString& dir)
 {
-    if ( m_genericButton )
-    {
-        m_genericButton->SetInitialDirectory(dir);
-        return;
-    }
-
     if (m_dialog)
     {
         // Only change the directory if the default file name doesn't have any
@@ -216,11 +150,16 @@ void wxFileButton::SetInitialDirectory(const wxString& dir)
         if ( m_path.find_first_of(wxFileName::GetPathSeparators()) ==
                 wxString::npos )
         {
-            m_dialog->SetDirectory(dir);
+            static_cast<wxFileDialog*>(m_dialog)->SetDirectory(dir);
         }
     }
+    else
+        wxGenericFileButton::SetInitialDirectory(dir);
 }
 
+void wxFileButton::DoApplyWidgetStyle(GtkRcStyle*)
+{
+}
 #endif // wxUSE_FILEPICKERCTRL
 
 #if wxUSE_DIRPICKERCTRL
@@ -239,9 +178,7 @@ static void file_set(GtkFileChooser* widget, wxDirButton* p)
     // NB: it's important to use gtk_file_chooser_get_filename instead of
     //     gtk_file_chooser_get_current_folder (see GTK docs) !
     wxGtkString filename(gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(widget)));
-
-    // Just update m_path here.
-    p->wxFileDirPickerWidgetBase::SetPath(wxString::FromUTF8(filename));
+    p->GTKUpdatePath(filename);
 
     // since GtkFileChooserButton when used to pick directories also uses a combobox,
     // maybe that the current folder has been changed but not through the GtkFileChooserDialog
@@ -270,12 +207,14 @@ static void file_set(GtkFileChooser* widget, wxDirButton* p)
 extern "C" {
 static void selection_changed(GtkFileChooser* chooser, wxDirButton* win)
 {
-    wxGtkString filename(gtk_file_chooser_get_filename(chooser));
+    char* filename = gtk_file_chooser_get_filename(chooser);
 
     if (wxString::FromUTF8(filename) == win->GetPath())
         win->m_bIgnoreNextChange = false;
     else if (!win->m_bIgnoreNextChange)
         file_set(chooser, win);
+
+    g_free(filename);
 }
 }
 
@@ -287,7 +226,7 @@ wxIMPLEMENT_DYNAMIC_CLASS(wxDirButton, wxButton);
 
 bool wxDirButton::Create( wxWindow *parent, wxWindowID id,
                         const wxString &label, const wxString &path,
-                        const wxString &message,
+                        const wxString &message, const wxString &wildcard,
                         const wxPoint &pos, const wxSize &size,
                         long style, const wxValidator& validator,
                         const wxString &name )
@@ -307,18 +246,10 @@ bool wxDirButton::Create( wxWindow *parent, wxWindowID id,
 
         // create the dialog associated with this button
         SetWindowStyle(style);
-
-        m_path = path;
-
-        // GtkFileChooserButton does not support GTK_FILE_CHOOSER_CREATE_FOLDER
-        // thus we must ensure that the wxDD_DIR_MUST_EXIST style was given
-        m_dialog = new wxDirDialog
-                       (
-                            nullptr,
-                            message,
-                            m_path.empty() ? m_initialDir : m_path,
-                            wxGenericDirButton::GetDialogStyle(style | wxDIRP_DIR_MUST_EXIST)
-                       );
+        m_message = message;
+        m_wildcard = wildcard;
+        if ((m_dialog = CreateDialog()) == NULL)
+            return false;
 
         // little trick used to avoid problems when there are other GTK windows 'grabbed':
         // GtkFileChooserDialog won't be responsive to user events if there is another
@@ -329,8 +260,8 @@ bool wxDirButton::Create( wxWindow *parent, wxWindowID id,
         // Unfortunately there's no way to hook in the 'clicked' event of the GtkFileChooserButton,
         // thus we add grab on m_dialog->m_widget when it's shown and remove it when it's
         // hidden simply using its "show" and "hide" events - clean & simple :)
-        g_signal_connect(m_dialog->m_widget, "show", G_CALLBACK(gtk_grab_add), nullptr);
-        g_signal_connect(m_dialog->m_widget, "hide", G_CALLBACK(gtk_grab_remove), nullptr);
+        g_signal_connect(m_dialog->m_widget, "show", G_CALLBACK(gtk_grab_add), NULL);
+        g_signal_connect(m_dialog->m_widget, "hide", G_CALLBACK(gtk_grab_remove), NULL);
 
 
         // NOTE: we deliberately ignore the given label as GtkFileChooserButton
@@ -340,7 +271,7 @@ bool wxDirButton::Create( wxWindow *parent, wxWindowID id,
         SetPath(path);
 
 #ifdef __WXGTK3__
-        if (gtk_check_version(3,8,0) == nullptr)
+        if (gtk_check_version(3,8,0) == NULL)
             g_signal_connect(m_widget, "file_set", G_CALLBACK(file_set), this);
         else
 #endif
@@ -356,24 +287,9 @@ bool wxDirButton::Create( wxWindow *parent, wxWindowID id,
         PostCreation(size);
         SetInitialSize(size);
     }
-    else // Use generic implementation.
-    {
-        if ( !wxControl::Create(parent, id, pos, size, wxBORDER_NONE, validator, name) )
-            return false;
-
-        m_genericButton = new wxGenericDirButton
-                              (
-                                this, wxID_ANY, label, path, message,
-                                {}, size, style
-                              );
-
-        Bind(wxEVT_SIZE, [this](wxSizeEvent& event)
-        {
-            m_genericButton->SetSize(wxRect{event.GetSize()});
-            event.Skip();
-        });
-    }
-
+    else
+        return wxGenericDirButton::Create(parent, id, label, path, message, wildcard,
+                                          pos, size, style, validator, name);
     return true;
 }
 
@@ -387,22 +303,12 @@ wxDirButton::~wxDirButton()
     }
 }
 
-wxString wxDirButton::GetPath() const
+void wxDirButton::GTKUpdatePath(const char *gtkpath)
 {
-    if ( m_genericButton )
-        return m_genericButton->GetPath();
-
-    return m_path;
+    m_path = wxString::FromUTF8(gtkpath);
 }
-
 void wxDirButton::SetPath(const wxString& str)
 {
-    if ( m_genericButton )
-    {
-        m_genericButton->SetPath(str);
-        return;
-    }
-
     if ( m_path == str )
         return;
 
@@ -412,21 +318,22 @@ void wxDirButton::SetPath(const wxString& str)
 
     if (GTK_IS_FILE_CHOOSER(m_widget))
         gtk_file_chooser_set_filename((GtkFileChooser*)m_widget, str.utf8_str());
+    else if (m_dialog)
+        UpdateDialogPath(m_dialog);
 }
 
 void wxDirButton::SetInitialDirectory(const wxString& dir)
 {
-    if ( m_genericButton )
-    {
-        m_genericButton->SetInitialDirectory(dir);
-        return;
-    }
-
     if (m_dialog)
     {
         if (m_path.empty())
-            m_dialog->SetPath(dir);
+            static_cast<wxDirDialog*>(m_dialog)->SetPath(dir);
     }
+    else
+        wxGenericDirButton::SetInitialDirectory(dir);
 }
 
+void wxDirButton::DoApplyWidgetStyle(GtkRcStyle*)
+{
+}
 #endif // wxUSE_DIRPICKERCTRL

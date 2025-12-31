@@ -24,19 +24,19 @@ class wxWebResponseWinHTTP : public wxWebResponseImpl
 public:
     wxWebResponseWinHTTP(wxWebRequestWinHTTP& request);
 
-    wxFileOffset GetContentLength() const override { return m_contentLength; }
+    wxFileOffset GetContentLength() const wxOVERRIDE { return m_contentLength; }
 
-    wxString GetURL() const override;
+    wxString GetURL() const wxOVERRIDE;
 
-    wxString GetHeader(const wxString& name) const override;
+    wxString GetHeader(const wxString& name) const wxOVERRIDE;
 
-    std::vector<wxString> GetAllHeaderValues(const wxString& name) const override;
+    int GetStatus() const wxOVERRIDE;
 
-    int GetStatus() const override;
+    wxString GetStatusText() const wxOVERRIDE;
 
-    wxString GetStatusText() const override;
+    bool ReadData();
 
-    bool ReadData(DWORD* bytesRead = nullptr);
+    bool ReportAvailableData(DWORD dataLen);
 
 private:
     HINTERNET m_requestHandle;
@@ -53,9 +53,7 @@ public:
 
     bool Init();
 
-    wxWebRequest::Result DoSetCredentials(const wxWebCredentials& cred);
-
-    void SetCredentials(const wxWebCredentials& cred) override;
+    void SetCredentials(const wxWebCredentials& cred) wxOVERRIDE;
 
 private:
     wxWebRequestWinHTTP& m_request;
@@ -68,109 +66,62 @@ private:
 class wxWebRequestWinHTTP : public wxWebRequestImpl
 {
 public:
-    // Ctor for asynchronous requests.
     wxWebRequestWinHTTP(wxWebSession& session,
                         wxWebSessionWinHTTP& sessionImpl,
                         wxEvtHandler* handler,
                         const wxString& url,
                         int id);
 
-    // Ctor for synchronous requests.
-    wxWebRequestWinHTTP(wxWebSessionWinHTTP& sessionImpl,
-                        const wxString& url);
-
     ~wxWebRequestWinHTTP();
 
-    wxWebRequest::Result Execute() override;
+    void Start() wxOVERRIDE;
 
-    void Start() override;
-
-    wxWebResponseImplPtr GetResponse() const override
+    wxWebResponseImplPtr GetResponse() const wxOVERRIDE
         { return m_response; }
 
-    wxWebAuthChallengeImplPtr GetAuthChallenge() const override
+    wxWebAuthChallengeImplPtr GetAuthChallenge() const wxOVERRIDE
         { return m_authChallenge; }
 
-    wxFileOffset GetBytesSent() const override { return m_dataWritten; }
+    wxFileOffset GetBytesSent() const wxOVERRIDE { return m_dataWritten; }
 
-    wxFileOffset GetBytesExpectedToSend() const override { return m_dataSize; }
+    wxFileOffset GetBytesExpectedToSend() const wxOVERRIDE { return m_dataSize; }
 
     void HandleCallback(DWORD dwInternetStatus, LPVOID lpvStatusInformation,
         DWORD dwStatusInformationLength);
 
     HINTERNET GetHandle() const { return m_request; }
 
-    wxWebRequestHandle GetNativeHandle() const override
+    wxWebRequestHandle GetNativeHandle() const wxOVERRIDE
     {
         return (wxWebRequestHandle)GetHandle();
     }
 
 private:
-    void DoCancel() override;
-
-    // Initialize m_connect and m_request. This is always synchronous.
-    wxNODISCARD Result DoPrepareRequest();
-
-    // Write next chunk of data to the request.
-    //
-    // Precondition: m_dataWritten < m_dataSize.
-    //
-    // Fills the output parameter with the number of bytes written in
-    // synchronous mode. In asynchronous mode, the number of bytes written is
-    // returned later and this argument must be null.
-    wxNODISCARD Result DoWriteData(DWORD* bytesWritten = nullptr);
-
+    void DoCancel() wxOVERRIDE;
 
     wxWebSessionWinHTTP& m_sessionImpl;
     wxString m_url;
-    HINTERNET m_connect = nullptr;
-    HINTERNET m_request = nullptr;
+    HINTERNET m_connect;
+    HINTERNET m_request;
     wxObjectDataPtr<wxWebResponseWinHTTP> m_response;
     wxObjectDataPtr<wxWebAuthChallengeWinHTTP> m_authChallenge;
     wxMemoryBuffer m_dataWriteBuffer;
-    wxFileOffset m_dataWritten = 0;
+    wxFileOffset m_dataWritten;
 
-    // Store authentication information from the URL, if any, as well as a flag
-    // which is reset after the first attempt to use it, so that we don't try
-    // to do it an infinite loop.
-    wxWebCredentials m_credentialsFromURL;
-    bool m_tryCredentialsFromURL = false;
+    void SendRequest();
 
-    // Proxy credentials (if any) are stored in the session, but we need store
-    // the same flag for them as for the server credentials here.
-    bool m_tryProxyCredentials = false;
-
-
-    wxNODISCARD Result SendRequest();
-
-    // Write data, if any, and call CreateResponse() if there is nothing left
-    // to write.
     void WriteData();
 
-    wxNODISCARD Result CreateResponse();
+    void CreateResponse();
 
-    wxNODISCARD Result InitAuthIfNeeded();
-
-    // Return error result with the error message built from the name of the
-    // operation and WinHTTP error code.
-    wxNODISCARD Result Fail(const wxString& operation, DWORD errorCode);
-
-    // Call Fail() with the error message built from the given operation
-    // description and the last error code.
-    wxNODISCARD Result FailWithLastError(const wxString& operation)
-    {
-        return Fail(operation, ::GetLastError());
-    }
-
-    // These functions can only be used for asynchronous requests.
-    void SetFailed(const wxString& operation, DWORD errorCode)
-    {
-        return HandleResult(Fail(operation, errorCode));
-    }
+    // Set the state to State_Failed with the error string including the
+    // provided description of the operation and the error message for this
+    // error code.
+    void SetFailed(const wxString& operation, DWORD errorCode);
 
     void SetFailedWithLastError(const wxString& operation)
     {
-        return HandleResult(FailWithLastError(operation));
+        SetFailed(operation, ::GetLastError());
     }
 
     friend class wxWebAuthChallengeWinHTTP;
@@ -181,7 +132,7 @@ private:
 class wxWebSessionWinHTTP : public wxWebSessionImpl
 {
 public:
-    explicit wxWebSessionWinHTTP(Mode mode);
+    wxWebSessionWinHTTP();
 
     ~wxWebSessionWinHTTP();
 
@@ -191,41 +142,21 @@ public:
     CreateRequest(wxWebSession& session,
                   wxEvtHandler* handler,
                   const wxString& url,
-                  int id) override;
+                  int id) wxOVERRIDE;
 
-    wxWebRequestImplPtr
-    CreateRequestSync(wxWebSessionSync& WXUNUSED(session),
-                      const wxString& WXUNUSED(url)) override;
-
-    wxVersionInfo GetLibraryVersionInfo() const override;
-
-    bool SetProxy(const wxWebProxy& proxy) override;
+    wxVersionInfo GetLibraryVersionInfo() wxOVERRIDE;
 
     HINTERNET GetHandle() const { return m_handle; }
 
-    wxWebSessionHandle GetNativeHandle() const override
+    wxWebSessionHandle GetNativeHandle() const wxOVERRIDE
     {
         return (wxWebSessionHandle)GetHandle();
     }
 
-    // Used by wxWebRequestWinHTTP to get the proxy credentials.
-    bool HasProxyCredentials() const
-    {
-        return !m_proxyCredentials.GetUser().empty();
-    }
-
-    const wxWebCredentials& GetProxyCredentials() const
-    {
-        return m_proxyCredentials;
-    }
-
 private:
-    HINTERNET m_handle = nullptr;
+    HINTERNET m_handle;
 
     bool Open();
-
-    wxWebCredentials m_proxyCredentials;
-    wxString m_proxyURLWithoutCredentials;
 
     wxDECLARE_NO_COPY_CLASS(wxWebSessionWinHTTP);
 };
@@ -233,17 +164,12 @@ private:
 class wxWebSessionFactoryWinHTTP : public wxWebSessionFactory
 {
 public:
-    wxWebSessionImpl* Create() override
+    wxWebSessionImpl* Create() wxOVERRIDE
     {
-        return new wxWebSessionWinHTTP(wxWebSessionImpl::Mode::Async);
+        return new wxWebSessionWinHTTP();
     }
 
-    wxWebSessionImpl* CreateSync() override
-    {
-        return new wxWebSessionWinHTTP(wxWebSessionImpl::Mode::Sync);
-    }
-
-    bool Initialize() override
+    bool Initialize() wxOVERRIDE
     {
         return wxWebSessionWinHTTP::Initialize();
     }

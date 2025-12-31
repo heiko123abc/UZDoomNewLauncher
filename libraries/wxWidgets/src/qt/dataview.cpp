@@ -20,7 +20,6 @@ wxDataViewColumn::wxDataViewColumn( const wxString &title, wxDataViewRenderer *r
                   int flags )
     : wxDataViewColumnBase( renderer, model_column )
 {
-    m_renderer->SetOwner( this );
 }
 
 wxDataViewColumn::wxDataViewColumn( const wxBitmapBundle &bitmap, wxDataViewRenderer *renderer,
@@ -29,7 +28,6 @@ wxDataViewColumn::wxDataViewColumn( const wxBitmapBundle &bitmap, wxDataViewRend
                   int flags )
     : wxDataViewColumnBase( bitmap, renderer, model_column )
 {
-    m_renderer->SetOwner( this );
 }
 
 void wxDataViewColumn::SetTitle( const wxString &title )
@@ -142,6 +140,10 @@ int wxDataViewColumn::GetFlags() const
 //##############################################################################
 
 
+wxDataViewCtrl::wxDataViewCtrl()
+{
+}
+
 wxDataViewCtrl::wxDataViewCtrl( wxWindow *parent, wxWindowID id,
        const wxPoint& pos,
        const wxSize& size, long style,
@@ -190,7 +192,7 @@ unsigned wxDataViewCtrl::GetColumnCount() const
 
 wxDataViewColumn* wxDataViewCtrl::GetColumn( unsigned int pos ) const
 {
-    return nullptr;
+    return NULL;
 }
 
 bool wxDataViewCtrl::DeleteColumn( wxDataViewColumn *column )
@@ -210,7 +212,7 @@ int wxDataViewCtrl::GetColumnPosition( const wxDataViewColumn *column ) const
 
 wxDataViewColumn *wxDataViewCtrl::GetSortingColumn() const
 {
-    return nullptr;
+    return NULL;
 }
 
 wxDataViewItem wxDataViewCtrl::GetSelection() const

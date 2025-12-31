@@ -14,7 +14,6 @@
 #include "wx/scopedarray.h"
 #include "wx/window.h"
 
-#include "wx/qt/private/compat.h"
 #include "wx/qt/private/converter.h"
 
 #include <QtGui/QDrag>
@@ -96,11 +95,9 @@ QMimeData* CreateMimeData(wxDataObject* dataObject)
 }
 
 void SetDragCursor(QDrag& drag,
-                   const wxCursorBundle& cursors,
+                   const wxCursor& cursor,
                    Qt::DropAction action)
 {
-    wxCursor cursor = cursors.GetCursorForMainWindow();
-
     if ( cursor.IsOk() )
         drag.setDragCursor(cursor.GetHandle().pixmap(), action);
 }
@@ -117,7 +114,7 @@ public:
 
     ~PendingMimeDataSetter()
     {
-        m_targetMimeData = nullptr;
+        m_targetMimeData = NULL;
     }
 
 private:
@@ -131,8 +128,8 @@ class wxDropTarget::Impl : public QObject
 public:
     explicit Impl(wxDropTarget* dropTarget)
         : m_dropTarget(dropTarget),
-          m_widget(nullptr),
-          m_pendingMimeData(nullptr)
+          m_widget(NULL),
+          m_pendingMimeData(NULL)
     {
     }
 
@@ -147,7 +144,7 @@ public:
 
         m_widget = widget;
 
-        if ( m_widget != nullptr )
+        if ( m_widget != NULL )
         {
             m_widget->setAcceptDrops(true);
             m_widget->installEventFilter(this);
@@ -156,17 +153,17 @@ public:
 
     void Disconnect()
     {
-        if ( m_widget != nullptr )
+        if ( m_widget != NULL )
         {
             m_widget->setAcceptDrops(false);
             m_widget->removeEventFilter(this);
-            m_widget = nullptr;
+            m_widget = NULL;
         }
     }
 
-    virtual bool eventFilter(QObject* watched, QEvent* event) override
+    virtual bool eventFilter(QObject* watched, QEvent* event) wxOVERRIDE
     {
-        if ( m_dropTarget != nullptr )
+        if ( m_dropTarget != NULL )
         {
             switch ( event->type() )
             {
@@ -208,7 +205,7 @@ public:
 
         event->accept();
 
-        const QPoint where = wxQtGetEventPosition(e);
+        const QPoint where = e->pos();
         const wxDragResult proposedResult =
             DropActionToDragResult(e->proposedAction());
         const wxDragResult result = m_dropTarget->OnEnter(where.x(),
@@ -232,7 +229,7 @@ public:
 
         const PendingMimeDataSetter setter(m_pendingMimeData, e->mimeData());
 
-        const QPoint where = wxQtGetEventPosition(e);
+        const QPoint where = e->pos();
         const wxDragResult proposedResult =
             DropActionToDragResult(e->proposedAction());
         const wxDragResult result = m_dropTarget->OnDragOver(where.x(),
@@ -250,7 +247,7 @@ public:
 
         const PendingMimeDataSetter setter(m_pendingMimeData, e->mimeData());
 
-        const QPoint where = wxQtGetEventPosition(e);
+        const QPoint where = e->pos();
         if ( m_dropTarget->OnDrop(where.x(), where.y()) )
         {
             m_dropTarget->OnData(where.x(),
@@ -316,7 +313,7 @@ bool wxDropTarget::GetData()
 wxDataFormat wxDropTarget::GetMatchingPair()
 {
     const QMimeData* mimeData = m_pImpl->GetMimeData();
-    if ( mimeData == nullptr || m_dataObject == nullptr )
+    if ( mimeData == NULL || m_dataObject == NULL )
         return wxFormatInvalid;
 
     const QStringList formats = mimeData->formats();
@@ -345,9 +342,9 @@ void wxDropTarget::Disconnect()
 //###########################################################################
 
 wxDropSource::wxDropSource(wxWindow *win,
-              const wxCursorBundle& copy,
-              const wxCursorBundle& move,
-              const wxCursorBundle& none)
+              const wxCursor &copy,
+              const wxCursor &move,
+              const wxCursor &none)
     : wxDropSourceBase(copy, move, none),
       m_parentWindow(win)
 {
@@ -355,21 +352,22 @@ wxDropSource::wxDropSource(wxWindow *win,
 
 wxDropSource::wxDropSource(wxDataObject& data,
               wxWindow *win,
-              const wxCursorBundle& copy,
-              const wxCursorBundle& move,
-              const wxCursorBundle& none)
-    : wxDropSource(win, copy, move, none)
+              const wxCursor &copy,
+              const wxCursor &move,
+              const wxCursor &none)
+    : wxDropSourceBase(copy, move, none),
+      m_parentWindow(win)
 {
     SetData(data);
 }
 
 wxDragResult wxDropSource::DoDragDrop(int flags /*=wxDrag_CopyOnly*/)
 {
-    wxCHECK_MSG(m_data != nullptr, wxDragNone,
+    wxCHECK_MSG(m_data != NULL, wxDragNone,
                 wxT("No data in wxDropSource!"));
 
-    wxCHECK_MSG(m_parentWindow != nullptr, wxDragNone,
-                wxT("null parent window in wxDropSource!"));
+    wxCHECK_MSG(m_parentWindow != NULL, wxDragNone,
+                wxT("NULL parent window in wxDropSource!"));
 
     QDrag drag(m_parentWindow->GetHandle());
     drag.setMimeData(CreateMimeData(m_data));

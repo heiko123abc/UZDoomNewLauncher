@@ -2,6 +2,7 @@
 // Name:        src/msw/ole/dropsrc.cpp
 // Purpose:     implementation of wxIDropSource and wxDropSource
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     10.05.98
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -45,8 +46,8 @@ public:
   virtual ~wxIDropSource() { }
 
   // IDropSource
-  STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override;
-  STDMETHODIMP GiveFeedback(DWORD dwEffect) override;
+  STDMETHODIMP QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) wxOVERRIDE;
+  STDMETHODIMP GiveFeedback(DWORD dwEffect) wxOVERRIDE;
 
     DECLARE_IUNKNOWN_METHODS;
 
@@ -73,7 +74,7 @@ IMPLEMENT_IUNKNOWN_METHODS(wxIDropSource)
 
 wxIDropSource::wxIDropSource(wxDropSource *pDropSource)
 {
-  wxASSERT( pDropSource != nullptr );
+  wxASSERT( pDropSource != NULL );
 
   m_pDropSource = pDropSource;
   m_grfInitKeyState = 0;
@@ -142,23 +143,23 @@ void wxDropSource::Init()
     m_pIDropSource->AddRef();
 }
 
-wxDropSource::wxDropSource(wxWindow* win,
-                           const wxCursorBundle& cursorCopy,
-                           const wxCursorBundle& cursorMove,
-                           const wxCursorBundle& cursorStop)
-            : wxDropSourceBase(cursorCopy, cursorMove, cursorStop),
-              m_win(win)
+wxDropSource::wxDropSource(wxWindow* WXUNUSED(win),
+                           const wxCursor &cursorCopy,
+                           const wxCursor &cursorMove,
+                           const wxCursor &cursorStop)
+            : wxDropSourceBase(cursorCopy, cursorMove, cursorStop)
 {
     Init();
 }
 
 wxDropSource::wxDropSource(wxDataObject& data,
-                           wxWindow* win,
-                           const wxCursorBundle& cursorCopy,
-                           const wxCursorBundle& cursorMove,
-                           const wxCursorBundle& cursorStop)
-            : wxDropSource(win, cursorCopy, cursorMove, cursorStop)
+                           wxWindow* WXUNUSED(win),
+                           const wxCursor &cursorCopy,
+                           const wxCursor &cursorMove,
+                           const wxCursor &cursorStop)
+            : wxDropSourceBase(cursorCopy, cursorMove, cursorStop)
 {
+    Init();
     SetData(data);
 }
 
@@ -174,7 +175,7 @@ wxDropSource::~wxDropSource()
 // Notes   : you must call SetData() before if you had used def ctor
 wxDragResult wxDropSource::DoDragDrop(int flags)
 {
-  wxCHECK_MSG( m_data != nullptr, wxDragNone, wxT("No data in wxDropSource!") );
+  wxCHECK_MSG( m_data != NULL, wxDragNone, wxT("No data in wxDropSource!") );
 
   DWORD dwEffect;
   HRESULT hr = ::DoDragDrop(m_data->GetInterface(),
@@ -222,10 +223,10 @@ wxDragResult wxDropSource::DoDragDrop(int flags)
 // Notes   : here we just leave this stuff for default implementation
 bool wxDropSource::GiveFeedback(wxDragResult effect)
 {
-    m_feedbackCursor = GetCursorBundle(effect).GetCursorFor(m_win);
-    if ( m_feedbackCursor.IsOk() )
+    const wxCursor& cursor = GetCursor(effect);
+    if ( cursor.IsOk() )
     {
-        ::SetCursor((HCURSOR)m_feedbackCursor.GetHCURSOR());
+        ::SetCursor((HCURSOR)cursor.GetHCURSOR());
 
         return true;
     }

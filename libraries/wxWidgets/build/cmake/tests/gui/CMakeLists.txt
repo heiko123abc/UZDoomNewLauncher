@@ -21,7 +21,6 @@ set(TEST_GUI_SRC
     graphics/measuring.cpp
     graphics/affinematrix.cpp
     graphics/boundingbox.cpp
-    graphics/clipper.cpp
     graphics/clippingbox.cpp
     graphics/coords.cpp
     graphics/graphbitmap.cpp
@@ -48,7 +47,6 @@ set(TEST_GUI_SRC
     controls/htmllboxtest.cpp
     controls/hyperlinkctrltest.cpp
     controls/itemcontainertest.cpp
-    controls/infobar.cpp
     controls/label.cpp
     controls/listbasetest.cpp
     controls/listbooktest.cpp
@@ -60,7 +58,6 @@ set(TEST_GUI_SRC
     controls/ownerdrawncomboboxtest.cpp
     controls/pickerbasetest.cpp
     controls/pickertest.cpp
-    controls/propgridtest.cpp
     controls/radioboxtest.cpp
     controls/radiobuttontest.cpp
     controls/rearrangelisttest.cpp
@@ -92,7 +89,6 @@ set(TEST_GUI_SRC
     exec/exec.cpp
     font/fonttest.cpp
     image/image.cpp
-    image/imagwebp.cpp
     image/rawbmp.cpp
     html/htmlparser.cpp
     html/htmlwindow.cpp
@@ -149,19 +145,9 @@ set(TEST_GUI_DATA
     horse.tga
     horse.tif
     horse.xpm
-    horse.webp
     image/bitfields.bmp
-    image/bitfields-alpha.bmp
     image/8bpp-colorsused-large.bmp
     image/8bpp-colorsused-negative.bmp
-    image/32bpp_rgb.bmp
-    image/32bpp_rgb.ico
-    image/32bpp_rgb_a0.ico
-    image/badrle4.bmp
-    image/rgb16-3103.bmp
-    image/rgb32-7187.bmp
-    image/rgb32bf.bmp
-    image/rgba32.bmp
     image/rle4-delta-320x240.bmp
     image/rle8-delta-320x240-expected.bmp
     image/rle8-delta-320x240.bmp
@@ -208,26 +194,12 @@ set(TEST_GUI_DATA
     image/toucan_mono_255_255_255.png
     image/width-times-height-overflow.bmp
     image/width_height_32_bit_overflow.pgm
-    image/bad_truncated.gif
     intl/ja/internat.mo
     intl/ja/internat.po
     )
 
-set(TEST_GUI_RES_BUNDLE
-    horse.png
-    ../include/wx/msw/bullseye.cur
-    )
-
-# On macOS create an .app bundle so the resources can be added.
-# On other platforms, just use a console app with gui libraries.
-set(APP_TYPE)
-if(NOT APPLE)
-    set(APP_TYPE CONSOLE_GUI)
-endif()
-
-wx_add_test(test_gui ${APP_TYPE} ${TEST_GUI_SRC}
+wx_add_test(test_gui CONSOLE_GUI ${TEST_GUI_SRC}
     DATA ${TEST_GUI_DATA}
-    RES_BUNDLE ${TEST_GUI_RES_BUNDLE}
     )
 if(wxUSE_AUI)
     wx_exe_link_libraries(test_gui wxaui)
@@ -255,7 +227,4 @@ if(wxUSE_SOCKETS)
 endif()
 if(wxUSE_WEBVIEW)
     wx_exe_link_libraries(test_gui wxwebview)
-endif()
-if(wxUSE_PROPGRID)
-    wx_exe_link_libraries(test_gui wxpropgrid)
 endif()

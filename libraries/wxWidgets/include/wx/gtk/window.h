@@ -61,92 +61,88 @@ public:
     // implement base class (pure) virtual methods
     // -------------------------------------------
 
-    virtual void Raise() override;
-    virtual void Lower() override;
+    virtual void Raise() wxOVERRIDE;
+    virtual void Lower() wxOVERRIDE;
 
-    virtual bool Show( bool show = true ) override;
-    virtual bool IsShown() const override;
+    virtual bool Show( bool show = true ) wxOVERRIDE;
+    virtual bool IsShown() const wxOVERRIDE;
 
-    virtual bool IsRetained() const override;
+    virtual bool IsRetained() const wxOVERRIDE;
 
-    virtual void SetFocus() override;
+    virtual void SetFocus() wxOVERRIDE;
 
     // hint from wx to native GTK+ tab traversal code
-    virtual void SetCanFocus(bool canFocus) override;
+    virtual void SetCanFocus(bool canFocus) wxOVERRIDE;
 
-    virtual bool Reparent( wxWindowBase *newParent ) override;
+    virtual bool Reparent( wxWindowBase *newParent ) wxOVERRIDE;
 
-    virtual wxSize GetWindowBorderSize() const override;
+    virtual wxSize GetWindowBorderSize() const wxOVERRIDE;
 
-    virtual void WarpPointer(int x, int y) override;
+    virtual void WarpPointer(int x, int y) wxOVERRIDE;
 #ifdef __WXGTK3__
-    virtual bool EnableTouchEvents(int eventsMask) override;
+    virtual bool EnableTouchEvents(int eventsMask) wxOVERRIDE;
 #endif // __WXGTK3__
 
     virtual void Refresh( bool eraseBackground = true,
-                          const wxRect *rect = (const wxRect *) nullptr ) override;
-    virtual void Update() override;
-    virtual void ClearBackground() override;
+                          const wxRect *rect = (const wxRect *) NULL ) wxOVERRIDE;
+    virtual void Update() wxOVERRIDE;
+    virtual void ClearBackground() wxOVERRIDE;
 
-    virtual bool SetBackgroundColour( const wxColour &colour ) override;
-    virtual bool SetForegroundColour( const wxColour &colour ) override;
-    virtual bool SetFont( const wxFont &font ) override;
+    virtual bool SetBackgroundColour( const wxColour &colour ) wxOVERRIDE;
+    virtual bool SetForegroundColour( const wxColour &colour ) wxOVERRIDE;
+    virtual bool SetCursor( const wxCursor &cursor ) wxOVERRIDE;
+    virtual bool SetFont( const wxFont &font ) wxOVERRIDE;
 
-    virtual bool SetBackgroundStyle(wxBackgroundStyle style) override ;
-    virtual bool IsTransparentBackgroundSupported(wxString* reason = nullptr) const override;
+    virtual bool SetBackgroundStyle(wxBackgroundStyle style) wxOVERRIDE ;
+    virtual bool IsTransparentBackgroundSupported(wxString* reason = NULL) const wxOVERRIDE;
 
-    virtual int GetCharHeight() const override;
-    virtual int GetCharWidth() const override;
-    virtual double GetContentScaleFactor() const override;
-    virtual double GetDPIScaleFactor() const override;
+    virtual int GetCharHeight() const wxOVERRIDE;
+    virtual int GetCharWidth() const wxOVERRIDE;
+    virtual double GetContentScaleFactor() const wxOVERRIDE;
+    virtual double GetDPIScaleFactor() const wxOVERRIDE;
 
     virtual void SetScrollbar( int orient, int pos, int thumbVisible,
-                               int range, bool refresh = true ) override;
-    virtual void SetScrollPos( int orient, int pos, bool refresh = true ) override;
-    virtual int GetScrollPos( int orient ) const override;
-    virtual int GetScrollThumb( int orient ) const override;
-    virtual int GetScrollRange( int orient ) const override;
+                               int range, bool refresh = true ) wxOVERRIDE;
+    virtual void SetScrollPos( int orient, int pos, bool refresh = true ) wxOVERRIDE;
+    virtual int GetScrollPos( int orient ) const wxOVERRIDE;
+    virtual int GetScrollThumb( int orient ) const wxOVERRIDE;
+    virtual int GetScrollRange( int orient ) const wxOVERRIDE;
     virtual void ScrollWindow( int dx, int dy,
-                               const wxRect* rect = nullptr ) override;
-    virtual bool ScrollLines(int lines) override;
-    virtual bool ScrollPages(int pages) override;
+                               const wxRect* rect = NULL ) wxOVERRIDE;
+    virtual bool ScrollLines(int lines) wxOVERRIDE;
+    virtual bool ScrollPages(int pages) wxOVERRIDE;
 
 #if wxUSE_DRAG_AND_DROP
-    virtual void SetDropTarget( wxDropTarget *dropTarget ) override;
+    virtual void SetDropTarget( wxDropTarget *dropTarget ) wxOVERRIDE;
 #endif // wxUSE_DRAG_AND_DROP
 
-    virtual void AddChild( wxWindowBase *child ) override;
-    virtual void RemoveChild( wxWindowBase *child ) override;
+    virtual void AddChild( wxWindowBase *child ) wxOVERRIDE;
+    virtual void RemoveChild( wxWindowBase *child ) wxOVERRIDE;
 
-    virtual void SetLayoutDirection(wxLayoutDirection dir) override;
-    virtual wxLayoutDirection GetLayoutDirection() const override;
+    virtual void SetLayoutDirection(wxLayoutDirection dir) wxOVERRIDE;
+    virtual wxLayoutDirection GetLayoutDirection() const wxOVERRIDE;
     virtual wxCoord AdjustForLayoutDirection(wxCoord x,
                                              wxCoord width,
-                                             wxCoord widthTotal) const override;
+                                             wxCoord widthTotal) const wxOVERRIDE;
 
-    virtual bool DoIsExposed( int x, int y ) const override;
-    virtual bool DoIsExposed( int x, int y, int w, int h ) const override;
+    virtual bool DoIsExposed( int x, int y ) const wxOVERRIDE;
+    virtual bool DoIsExposed( int x, int y, int w, int h ) const wxOVERRIDE;
 
-    virtual void SetDoubleBuffered(bool on) override;
-    virtual bool IsDoubleBuffered() const override;
+    virtual void SetDoubleBuffered(bool on) wxOVERRIDE;
+    virtual bool IsDoubleBuffered() const wxOVERRIDE;
 
     // SetLabel(), which does nothing in wxWindow
-    virtual void SetLabel(const wxString& label) override { m_gtkLabel = label; }
-    virtual wxString GetLabel() const override            { return m_gtkLabel; }
+    virtual void SetLabel(const wxString& label) wxOVERRIDE { m_gtkLabel = label; }
+    virtual wxString GetLabel() const wxOVERRIDE            { return m_gtkLabel; }
 
     // implementation
     // --------------
 
-    virtual WXWidget GetHandle() const override { return m_widget; }
-
-#ifdef __WINDOWS__
-    // If on Windows, cut through the GtkWidget abstraction to get HWND.
-    WXHWND GTKGetWin32Handle() const;
-#endif
+    virtual WXWidget GetHandle() const wxOVERRIDE { return m_widget; }
 
     // many important things are done here, this function must be called
     // regularly
-    virtual void OnInternalIdle() override;
+    virtual void OnInternalIdle() wxOVERRIDE;
 
     // For compatibility across platforms (not in event table)
     void OnIdle(wxIdleEvent& WXUNUSED(event)) {}
@@ -172,12 +168,17 @@ public:
     // also, it is not clear which native widget is the top
     // widget where (most of) the input goes. even tooltips have
     // to be applied to all subwidgets.
-    virtual GtkWidget* GetConnectWidget() const;
+    virtual GtkWidget* GetConnectWidget();
     void ConnectWidget( GtkWidget *widget );
 
+    // Called from several event handlers, if it returns true or false, the
+    // same value should be immediately returned by the handler without doing
+    // anything else. If it returns -1, the handler should continue as usual
+    int GTKCallbackCommonPrologue(struct _GdkEventAny *event) const;
 
-    // Returns true if GTK callbacks are blocked due to a drag event being in
-    // progress.
+    // Simplified form of GTKCallbackCommonPrologue() which can be used from
+    // GTK callbacks without return value to check if the event should be
+    // ignored: if this returns true, the event shouldn't be handled
     bool GTKShouldIgnoreEvent() const;
 
 
@@ -233,7 +234,7 @@ protected:
     // Get the GdkWindows making part of this window: usually there will be
     // only one of them in which case it should be returned directly by this
     // function. If there is more than one GdkWindow (can be the case for
-    // composite widgets), return nullptr and fill in the provided array
+    // composite widgets), return NULL and fill in the provided array
     //
     // This is not pure virtual for backwards compatibility but almost
     // certainly must be overridden in any wxControl-derived class!
@@ -241,18 +242,6 @@ protected:
 
     // Check if the given window makes part of this widget
     bool GTKIsOwnWindow(GdkWindow *window) const;
-
-    // Return the GdkWindow associated with either m_wxwindow or m_widget.
-    //
-    // This may be different from GTKGetConnectWindow() for the native widgets
-    // using a different "connect widget".
-    //
-    // Unlike GTKGetDrawingWindow(), this function always returns something
-    // non-null for a mapped window.
-    GdkWindow* GTKGetMainWindow() const;
-
-    // Return the GdkWindow associated with GetConnectWidget().
-    GdkWindow* GTKGetConnectWindow() const;
 
 public:
     // Returns the default context which usually is anti-aliased
@@ -295,7 +284,7 @@ public:
     wxString             m_gtkLabel;
 
     // return true if the window is of a standard (i.e. not wxWidgets') class
-    bool IsOfStandardClass() const { return m_wxwindow == nullptr; }
+    bool IsOfStandardClass() const { return m_wxwindow == NULL; }
 
     // this widget will be queried for GTK's focus events
     GtkWidget           *m_focusWidget;
@@ -312,10 +301,10 @@ public:
     // this window are really needed but currently we do it unconditionally.
     //
     // For native widgets (i.e. those for which IsOfStandardClass() returns
-    // true) it is null.
+    // true) it is NULL.
     GtkIMContext* m_imContext;
 
-    // Pointer to the event being currently processed by the IME or nullptr if not
+    // Pointer to the event being currently processed by the IME or NULL if not
     // inside key handling.
     GdkEventKey* m_imKeyEvent;
 
@@ -363,25 +352,10 @@ public:
     // find the direction of the given scrollbar (must be one of ours)
     ScrollDir ScrollDirFromRange(GtkRange *range) const;
 
-    // Set the given cursor for the window.
-    void GTKSetCursor(const wxCursor& cursor);
-
-    // Apply the current cursor: called initially, after realizing the window,
-    // but may also called later after temporarily changing the cursor.
-    void GTKApplyCursor();
-
-    // Update the cursor for the window, taking into account the currently set
-    // global cursor, if any.
-    void GTKUpdateCursor();
-
-    // This overload can be used if we already know whether there is a globally
-    // set cursor overriding the normal one, it's just an optimization allowing
-    // to avoid checking for such cursor existence inside GTKUpdateCursor()
-    // itself.
-    void GTKUpdateCursor(GdkCursor* overrideCursor);
-
-    // Override the base class function to call GTKUpdateCursor() too.
-    virtual void WXUpdateCursor() override;
+    void GTKUpdateCursor(
+        bool isBusyOrGlobalCursor = false,
+        bool isRealize = false,
+        const wxCursor* overrideCursor = NULL);
 
     // extra (wxGTK-specific) flags
     bool                 m_noExpose:1;          // wxGLCanvas has its own redrawing
@@ -392,7 +366,7 @@ public:
                                                 // chain needs update
     bool                 m_mouseButtonDown:1;
     bool                 m_showOnIdle:1;        // postpone showing the window until idle
-    bool                 m_needCursorReset:1;   // true if cursor set by wxEVT_SET_CURSOR
+    bool m_needCursorReset:1;
 
     wxRegion             m_nativeUpdateRegion;  // not transformed for RTL
 
@@ -400,30 +374,30 @@ protected:
     // implement the base class pure virtuals
     virtual void DoGetTextExtent(const wxString& string,
                                  int *x, int *y,
-                                 int *descent = nullptr,
-                                 int *externalLeading = nullptr,
-                                 const wxFont *font = nullptr) const override;
-    virtual void DoClientToScreen( int *x, int *y ) const override;
-    virtual void DoScreenToClient( int *x, int *y ) const override;
-    virtual void DoGetPosition( int *x, int *y ) const override;
-    virtual void DoGetSize( int *width, int *height ) const override;
-    virtual void DoGetClientSize( int *width, int *height ) const override;
+                                 int *descent = NULL,
+                                 int *externalLeading = NULL,
+                                 const wxFont *font = NULL) const wxOVERRIDE;
+    virtual void DoClientToScreen( int *x, int *y ) const wxOVERRIDE;
+    virtual void DoScreenToClient( int *x, int *y ) const wxOVERRIDE;
+    virtual void DoGetPosition( int *x, int *y ) const wxOVERRIDE;
+    virtual void DoGetSize( int *width, int *height ) const wxOVERRIDE;
+    virtual void DoGetClientSize( int *width, int *height ) const wxOVERRIDE;
     virtual void DoSetSize(int x, int y,
                            int width, int height,
-                           int sizeFlags = wxSIZE_AUTO) override;
-    virtual void DoSetClientSize(int width, int height) override;
-    virtual void DoMoveWindow(int x, int y, int width, int height) override;
-    virtual void DoEnable(bool enable) override;
+                           int sizeFlags = wxSIZE_AUTO) wxOVERRIDE;
+    virtual void DoSetClientSize(int width, int height) wxOVERRIDE;
+    virtual void DoMoveWindow(int x, int y, int width, int height) wxOVERRIDE;
+    virtual void DoEnable(bool enable) wxOVERRIDE;
 
 #if wxUSE_MENUS_NATIVE
-    virtual bool DoPopupMenu( wxMenu *menu, int x, int y ) override;
+    virtual bool DoPopupMenu( wxMenu *menu, int x, int y ) wxOVERRIDE;
 #endif // wxUSE_MENUS_NATIVE
 
-    virtual void DoCaptureMouse() override;
-    virtual void DoReleaseMouse() override;
+    virtual void DoCaptureMouse() wxOVERRIDE;
+    virtual void DoReleaseMouse() wxOVERRIDE;
 
-    virtual void DoFreeze() override;
-    virtual void DoThaw() override;
+    virtual void DoFreeze() wxOVERRIDE;
+    virtual void DoThaw() wxOVERRIDE;
 
     void GTKConnectFreezeWidget(GtkWidget* widget);
     void GTKFreezeWidget(GtkWidget *w);
@@ -431,7 +405,7 @@ protected:
     void GTKDisconnect(void* instance);
 
 #if wxUSE_TOOLTIPS
-    virtual void DoSetToolTip( wxToolTip *tip ) override;
+    virtual void DoSetToolTip( wxToolTip *tip ) wxOVERRIDE;
 #endif // wxUSE_TOOLTIPS
 
     // Create a GtkScrolledWindow containing the given widget (usually
@@ -442,8 +416,8 @@ protected:
     // style.
     void GTKCreateScrolledWindowWith(GtkWidget* view);
 
-    virtual void DoMoveInTabOrder(wxWindow *win, WindowOrder move) override;
-    virtual bool DoNavigateIn(int flags) override;
+    virtual void DoMoveInTabOrder(wxWindow *win, WindowOrder move) wxOVERRIDE;
+    virtual bool DoNavigateIn(int flags) wxOVERRIDE;
 
 
     // Copies m_children tab order to GTK focus chain:
@@ -492,9 +466,8 @@ protected:
 
 private:
     void Init();
-    virtual void GTKRemoveBorder();
 
-    // return true if this window must have a non-null parent, false if it can
+    // return true if this window must have a non-NULL parent, false if it can
     // be created without parent (normally only top level windows but in wxGTK
     // there is also the exception of wxMenuBar)
     virtual bool GTKNeedsParent() const { return !IsTopLevel(); }
@@ -508,11 +481,6 @@ private:
     // are already at the end)
     bool DoScrollByUnits(ScrollDir dir, ScrollUnit unit, int units);
     virtual void AddChildGTK(wxWindowGTK* child);
-
-    // Set the given (possibly null) cursor for all GdkWindows of this window.
-    //
-    // Return all windows for which we changed the cursor (may be empty).
-    wxArrayGdkWindows GTKSetCursorForAllWindows(GdkCursor* cursor);
 
 #ifdef __WXGTK3__
     // paint context is stashed here so wxPaintDC can use it

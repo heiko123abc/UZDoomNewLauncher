@@ -13,8 +13,7 @@ class QLabel;
 class WXDLLIMPEXP_CORE wxStaticText : public wxStaticTextBase
 {
 public:
-    wxStaticText() = default;
-
+    wxStaticText();
     wxStaticText(wxWindow *parent,
                  wxWindowID id,
                  const wxString &label,
@@ -22,8 +21,6 @@ public:
                  const wxSize &size = wxDefaultSize,
                  long style = 0,
                  const wxString &name = wxASCII_STR(wxStaticTextNameStr) );
-
-    ~wxStaticText();
 
     bool Create(wxWindow *parent,
                 wxWindowID id,
@@ -33,15 +30,18 @@ public:
                 long style = 0,
                 const wxString &name = wxASCII_STR(wxStaticTextNameStr) );
 
-    virtual void SetLabel(const wxString& label) override;
+    virtual void SetLabel(const wxString& label) wxOVERRIDE;
 
-    QLabel* GetQLabel() const;
+    virtual QWidget *GetHandle() const wxOVERRIDE;
 
 protected:
-    virtual wxString WXGetVisibleLabel() const override;
-    virtual void WXSetVisibleLabel(const wxString& str) override;
+    virtual wxString WXGetVisibleLabel() const wxOVERRIDE;
+    virtual void WXSetVisibleLabel(const wxString& str) wxOVERRIDE;
 
-    wxDECLARE_DYNAMIC_CLASS(wxStaticText);
+private:
+    QLabel *m_qtLabel;
+
+    wxDECLARE_DYNAMIC_CLASS( wxStaticText );
 };
 
 #endif // _WX_QT_STATTEXT_H_

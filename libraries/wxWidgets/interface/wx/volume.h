@@ -53,10 +53,10 @@ enum wxFSIconType
     @class wxFSVolume
 
     wxFSVolume represents a volume (also known as 'drive') in a file system
-    under Windows or macOS.
+    under wxMSW.
 
-    wxWidgets ports other than wxMSW and wxOSX don't provide this class and
-    wxUSE_FSVOLUME is always 0 for them.
+    Unix ports of wxWidgets do not have the concept of volumes and thus do
+    not implement wxFSVolume.
 
     @onlyfor{wxmsw,wxosx}
 
@@ -75,7 +75,7 @@ public:
         Create the volume object with the given @a name (which should be one of
         those returned by GetVolumes()).
     */
-    explicit wxFSVolume(const wxString& name);
+    wxFSVolume(const wxString& name);
 
     /**
         Create the volume object with the given @a name (which should be one of

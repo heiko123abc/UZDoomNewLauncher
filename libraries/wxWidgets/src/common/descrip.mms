@@ -136,7 +136,6 @@ OBJECTS1=fs_inet.obj,\
 		imagtga.obj,\
 		imagtiff.obj,\
 		imagxpm.obj,\
-		imagwebp.obj,\
 		intl.obj,\
 		ipcbase.obj,\
 		layout.obj,\
@@ -144,6 +143,7 @@ OBJECTS1=fs_inet.obj,\
 		list.obj,\
 		log.obj,\
 		longlong.obj,\
+		memory.obj,\
 		menucmn.obj,\
 		mimecmn.obj,\
 		module.obj,\
@@ -175,6 +175,7 @@ OBJECTS1=fs_inet.obj,\
 		strconv.obj,\
 		stream.obj,\
 		string.obj,\
+		stringimpl.obj,\
 		stringops.obj,\
 		strvararg.obj,\
 		sysopt.obj
@@ -199,7 +200,6 @@ OBJECTS2=tbarbase.obj,srchcmn.obj,\
 		validate.obj,\
 		valtext.obj,\
 		variant.obj,\
-		webpdecoder.obj,\
 		wfstream.obj,\
 		wincmn.obj,\
 		wxcrt.obj,\
@@ -225,14 +225,14 @@ OBJECTS3=listctrlcmn.obj,socketiohandler.obj,fdiodispatcher.obj,\
 		spinbtncmn.obj,scrolbarcmn.obj,colourdata.obj,fontdata.obj,\
 		valnum.obj,numformatter.obj,markupparser.obj,\
 		affinematrix2d.obj,richtooltipcmn.obj,persist.obj,time.obj,\
-        textmeasurecmn.obj,modalhook.obj,\
+		textmeasurecmn.obj,modalhook.obj,threadinfo.obj,\
 		addremovectrl.obj,notifmsgcmn.obj,graphcmn.obj,dcsvg.obj,\
 		dcgraph.obj,secretstore.obj,uilocale.obj,bmpbndl.obj
 
 OBJECTS_MOTIF=radiocmn.obj,combocmn.obj
 
 OBJECTS_X11=accesscmn.obj,dndcmn.obj,dpycmn.obj,dseldlg.obj,\
-        dynload.obj,fddlgcmn.obj,fs_mem.obj,\
+	dynload.obj,effects.obj,fddlgcmn.obj,fs_mem.obj,\
 	gbsizer.obj,geometry.obj,matrix.obj,radiocmn.obj,\
 	taskbarcmn.obj,xti.obj,xtistrm.obj,xtixml.obj,\
 	combocmn.obj,cairo.obj
@@ -329,7 +329,6 @@ SOURCES = \
 		imagtga.cpp,\
 		imagtiff.cpp,\
 		imagxpm.cpp,\
-		imagwebp.cpp,\
 		intl.cpp,\
 		ipcbase.cpp,\
 		layout.cpp,\
@@ -338,6 +337,7 @@ SOURCES = \
 		listctrlcmn.cpp,\
 		log.cpp,\
 		longlong.cpp,\
+		memory.cpp,\
 		menucmn.cpp,\
 		mimecmn.cpp,\
 		module.cpp,\
@@ -376,6 +376,7 @@ SOURCES = \
 		strvararg.cpp,\
 		sysopt.cpp,\
 		string.cpp,\
+		stringimpl.cpp,\
 		stringops.cpp,\
 		tbarbase.cpp,\
 		textbuf.cpp,\
@@ -395,7 +396,6 @@ SOURCES = \
 		validate.cpp,\
 		valtext.cpp,\
 		variant.cpp,\
-		webpdecoder.cpp,\
 		wfstream.cpp,\
 		wincmn.cpp,\
 		wxcrt.cpp,\
@@ -411,6 +411,7 @@ SOURCES = \
 		dpycmn.cpp,\
 		dseldlg.cpp,\
 		dynload.cpp,\
+		effects.cpp,\
 		fddlgcmn.cpp,\
 		fs_mem.cpp,\
 		gbsizer.cpp,\
@@ -571,7 +572,6 @@ imagpnm.obj : imagpnm.cpp
 imagtga.obj : imagtga.cpp
 imagtiff.obj : imagtiff.cpp
 imagxpm.obj : imagxpm.cpp
-imagwebp.obj : imagwebp.cpp
 intl.obj : intl.cpp
 ipcbase.obj : ipcbase.cpp
 layout.obj : layout.cpp
@@ -579,6 +579,7 @@ lboxcmn.obj : lboxcmn.cpp
 list.obj : list.cpp
 log.obj : log.cpp
 longlong.obj : longlong.cpp
+memory.obj : memory.cpp
 menucmn.obj : menucmn.cpp
 mimecmn.obj : mimecmn.cpp
 module.obj : module.cpp
@@ -615,6 +616,7 @@ stream.obj : stream.cpp
 strvararg.obj : strvararg.cpp
 sysopt.obj : sysopt.cpp
 string.obj : string.cpp
+stringimpl.obj : stringimpl.cpp
 stringops.obj : stringops.cpp
 tbarbase.obj : tbarbase.cpp
 textbuf.obj : textbuf.cpp
@@ -633,7 +635,6 @@ valgen.obj : valgen.cpp
 validate.obj : validate.cpp
 valtext.obj : valtext.cpp
 variant.obj : variant.cpp
-webpdecoder.obj : webpdecoder.cpp
 wfstream.obj : wfstream.cpp
 wincmn.obj : wincmn.cpp
 wxcrt.obj : wxcrt.cpp
@@ -647,6 +648,7 @@ dndcmn.obj : dndcmn.cpp
 dpycmn.obj : dpycmn.cpp
 dseldlg.obj : dseldlg.cpp
 dynload.obj : dynload.cpp
+effects.obj : effects.cpp
 fddlgcmn.obj : fddlgcmn.cpp
 fs_mem.obj : fs_mem.cpp
 gbsizer.obj : gbsizer.cpp
@@ -724,6 +726,7 @@ persist.obj : persist.cpp
 time.obj : time.cpp
 textmeasurecmn.obj : textmeasurecmn.cpp
 modalhook.obj : modalhook.cpp
+threadinfo.obj : threadinfo.cpp
 addremovectrl.obj : addremovectrl.cpp
 notifmsgcmn.obj : notifmsgcmn.cpp
 graphcmn.obj : graphcmn.cpp

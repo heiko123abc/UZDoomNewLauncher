@@ -157,7 +157,7 @@ public:
     virtual void Uninstall_Callback(wxSocketImpl *socket,
                                     wxSocketNotify event = wxSOCKET_LOST) = 0;
 
-    virtual ~wxSocketManager() = default;
+    virtual ~wxSocketManager() { }
 
 private:
     // get the manager to use if we don't have it yet
@@ -203,6 +203,10 @@ public:
 
     wxSocketError GetError() const { return m_error; }
     bool IsOk() const { return m_error == wxSOCKET_NOERROR; }
+
+    // get the error code corresponding to the last operation
+    virtual wxSocketError GetLastError() const = 0;
+
 
     // creating/closing the socket
     // --------------------------
@@ -259,7 +263,7 @@ public:
     // flags defines what kind of conditions we're interested in, the return
     // value is composed of a (possibly empty) subset of the bits set in flags
     wxSocketEventFlags Select(wxSocketEventFlags flags,
-                              wxTimeVal_t *timeout = nullptr);
+                              wxTimeVal_t *timeout = NULL);
 
     // convenient wrapper calling Select() with our default timeout
     wxSocketEventFlags SelectWithTimeout(wxSocketEventFlags flags)
@@ -269,7 +273,7 @@ public:
 
     // just a wrapper for accept(): it is called to create a new wxSocketImpl
     // corresponding to a new server connection represented by the given
-    // wxSocketBase, returns nullptr on error (including immediately if there are
+    // wxSocketBase, returns NULL on error (including immediately if there are
     // no pending connections as our sockets are non-blocking)
     wxSocketImpl *Accept(wxSocketBase& wxsocket);
 
@@ -318,18 +322,10 @@ protected:
     // get the associated socket flags
     wxSocketFlags GetSocketFlags() const { return m_wxsocket->GetFlags(); }
 
-    // set m_error to the outcome of the last operation and return it
-    wxSocketError UpdateLastError() { m_error = GetLastError(); return m_error; }
-
     // true if we're a listening stream socket
     bool m_server;
 
 private:
-    // get the error code corresponding to the last operation
-    //
-    // this is private because it's only used by UpdateLastError()
-    virtual wxSocketError GetLastError() const = 0;
-
     // called by Close() if we have a valid m_fd
     virtual void DoClose() = 0;
 
@@ -369,7 +365,7 @@ private:
     int SendDgram(const void *buffer, int size);
 
 
-    // set in ctor and never changed except that it's reset to nullptr when the
+    // set in ctor and never changed except that it's reset to NULL when the
     // socket is shut down
     wxSocketBase *m_wxsocket;
 

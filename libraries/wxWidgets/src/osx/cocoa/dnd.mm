@@ -2,6 +2,7 @@
 // Name:        src/osx/cocoa/dnd.mm
 // Purpose:     wxDropTarget, wxDropSource implementations
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) 1998 Stefan Csomor
 // Licence:     wxWindows licence
@@ -38,7 +39,7 @@ wxOSXDataSinkItem::~wxOSXDataSinkItem()
 void wxOSXDataSinkItem::SetFilename(const wxString& filename)
 {
     wxCFRef<CFURLRef> url(wxOSXCreateURLFromFileSystemPath(filename));
-    wxCFRef<CFDataRef> data(CFURLCreateData(nullptr,url,kCFStringEncodingUTF8,true));
+    wxCFRef<CFDataRef> data(CFURLCreateData(NULL,url,kCFStringEncodingUTF8,true));
     DoSetData( kUTTypeFileURL, data);
 }
 
@@ -72,18 +73,18 @@ public:
 
     }
 
-    virtual void SetData(const wxDataFormat& format, const void *buf, size_t datasize) override
+    virtual void SetData(const wxDataFormat& format, const void *buf, size_t datasize)
     {
         SetData( format.GetFormatId(), buf, datasize);
     }
 
-    virtual void SetData(wxDataFormat::NativeFormat format, const void *buf, size_t datasize) override
+    virtual void SetData(wxDataFormat::NativeFormat format, const void *buf, size_t datasize)
     {
-        wxCFRef<CFDataRef> data(CFDataCreate( kCFAllocatorDefault, (const UInt8*)buf, datasize ));
+        wxCFRef<CFDataRef> data(CFDataCreate( kCFAllocatorDefault, (UInt8*)buf, datasize ));
         DoSetData(format, data);
     }
 
-    virtual void DoSetData(wxDataFormat::NativeFormat format, CFDataRef data) override
+    virtual void DoSetData(wxDataFormat::NativeFormat format, CFDataRef data)
     {
         [m_item setData:(NSData*) data forType:(NSString*) format];
     }
@@ -100,18 +101,18 @@ public:
     {
     }
 
-    virtual wxDataFormat::NativeFormat AvailableType(CFArrayRef types) const override
+    virtual wxDataFormat::NativeFormat AvailableType(CFArrayRef types) const
     {
         return (wxDataFormat::NativeFormat)[m_item availableTypeFromArray:(NSArray*)types];
     }
 
-    virtual bool GetData( const wxDataFormat& dataFormat, wxMemoryBuffer& target) override
+    virtual bool GetData( const wxDataFormat& dataFormat, wxMemoryBuffer& target)
     {
         return GetData(dataFormat.GetFormatId(), target);
     }
 
 
-    virtual bool GetData( wxDataFormat::NativeFormat type, wxMemoryBuffer& target) override
+    virtual bool GetData( wxDataFormat::NativeFormat type, wxMemoryBuffer& target)
     {
         bool success = false;
 
@@ -135,18 +136,18 @@ public:
         return success;
     }
 
-    virtual CFDataRef DoGetData(wxDataFormat::NativeFormat type) const override
+    virtual CFDataRef DoGetData(wxDataFormat::NativeFormat type) const
     {
         // before a file promise can be resolved, we must pass a paste location
         if ( UTTypeConformsTo((CFStringRef)type, kPasteboardTypeFileURLPromise ) )
         {
             wxString tempdir = wxFileName::GetTempDir() + wxFILE_SEP_PATH + "wxtemp.XXXXXX";
-            char* result = mkdtemp(const_cast<char*>(tempdir.fn_str().data()));
+            char* result = mkdtemp((char*)tempdir.fn_str().data());
 
-            wxCFRef<CFURLRef> dest(CFURLCreateFromFileSystemRepresentation(nullptr, (const UInt8*)result, strlen(result), true));
-            PasteboardRef pboardRef = nullptr;
+            wxCFRef<CFURLRef> dest(CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8*)result, strlen(result), true));
+            PasteboardRef pboardRef = NULL;
             PasteboardCreate((CFStringRef)[m_pasteboard name], &pboardRef);
-            if (pboardRef != nullptr) {
+            if (pboardRef != NULL) {
                 PasteboardSynchronize(pboardRef);
                 PasteboardSetPasteLocation(pboardRef, (CFURLRef)dest);
                 CFRelease(pboardRef);
@@ -188,7 +189,7 @@ void wxOSXPasteboard::DeleteSinkItems()
 void wxOSXPasteboard::Clear()
 {
     [m_pasteboard clearContents];
-    DeleteSinkItems();
+    DeleteSinkItems();    
 }
 
 void wxOSXPasteboard::Flush()
@@ -227,7 +228,7 @@ const wxOSXDataSourceItem* wxOSXPasteboard::GetItem(size_t pos) const
 {
     return new wxOSXPasteboardSourceItem([[m_pasteboard pasteboardItems] objectAtIndex: pos], m_pasteboard);
 }
-
+ 
 // data source methods
 
 wxOSXPasteboard* wxOSXPasteboard::GetGeneralClipboard()
@@ -243,7 +244,7 @@ size_t wxOSXPasteboard::GetItemCount() const
 
 #if wxUSE_DRAG_AND_DROP
 
-static wxDropSource* gCurrentSource = nullptr;
+wxDropSource* gCurrentSource = NULL;
 
 wxDragResult NSDragOperationToWxDragResult(NSDragOperation code)
 {
@@ -293,7 +294,7 @@ wxDragResult NSDragOperationToWxDragResult(NSDragOperation code)
     {
         dragFinished = NO;
         resultCode = NSDragOperationNone;
-        impl = nullptr;
+        impl = 0;
         m_dragFlags = wxDrag_CopyOnly;
     }
     return self;
@@ -409,9 +410,9 @@ wxDropTarget::wxDropTarget( wxDataObject *data )
 //-------------------------------------------------------------------------
 
 wxDropSource::wxDropSource(wxWindow *win,
-                           const wxCursorBundle& cursorCopy,
-                           const wxCursorBundle& cursorMove,
-                           const wxCursorBundle& cursorStop)
+                           const wxCursor &cursorCopy,
+                           const wxCursor &cursorMove,
+                           const wxCursor &cursorStop)
             : wxDropSourceBase(cursorCopy, cursorMove, cursorStop)
 {
     m_window = win;
@@ -419,12 +420,13 @@ wxDropSource::wxDropSource(wxWindow *win,
 
 wxDropSource::wxDropSource(wxDataObject& data,
                            wxWindow *win,
-                           const wxCursorBundle& cursorCopy,
-                           const wxCursorBundle& cursorMove,
-                           const wxCursorBundle& cursorStop)
-            : wxDropSource(win, cursorCopy, cursorMove, cursorStop)
+                           const wxCursor &cursorCopy,
+                           const wxCursor &cursorMove,
+                           const wxCursor &cursorStop)
+            : wxDropSourceBase(cursorCopy, cursorMove, cursorStop)
 {
     SetData( data );
+    m_window = win;
 }
 
 wxDropSource* wxDropSource::GetCurrentDropSource()
@@ -454,7 +456,7 @@ typedef NSString* NSPasteboardType;
 
 - (void) clearDataObject
 {
-    m_data = nullptr;
+    m_data = NULL;
 }
 - (nullable id)pasteboardPropertyListForType:(nonnull NSPasteboardType)type
 {
@@ -486,7 +488,7 @@ wxDragResult wxDropSource::DoDragDrop(int flags)
     wxASSERT_MSG( m_data, wxT("Drop source: no data") );
 
     wxDragResult result = wxDragNone;
-    if ((m_data == nullptr) || (m_data->GetFormatCount() == 0))
+    if ((m_data == NULL) || (m_data->GetFormatCount() == 0))
         return result;
 
     NSView* view = m_window->GetPeer()->GetWXWidget();
@@ -511,7 +513,7 @@ wxDragResult wxDropSource::DoDragDrop(int flags)
         [[[NSColor whiteColor] colorWithAlphaComponent:0.8] set];
         NSRectFill(fillRect);
         [[NSColor blackColor] set];
-        NSFrameRectWithWidthUsingOperation(fillRect, 1, NSCompositeDestinationOver);
+        NSFrameRectWithWidthUsingOperation(fillRect,1.0f,NSCompositeDestinationOver);
 
         [image unlockFocus];
 
@@ -537,12 +539,12 @@ wxDragResult wxDropSource::DoDragDrop(int flags)
 
         wxWindow* mouseUpTarget = wxWindow::GetCapture();
 
-        if ( mouseUpTarget == nullptr )
+        if ( mouseUpTarget == NULL )
         {
             mouseUpTarget = m_window;
         }
 
-        if ( mouseUpTarget != nullptr )
+        if ( mouseUpTarget != NULL )
         {
             const auto wxpeer = (wxWidgetCocoaImpl*)mouseUpTarget->GetPeer();
             for ( auto wxevent : wxpeer->TranslateMouseEvent(theEvent) )
@@ -557,7 +559,7 @@ wxDragResult wxDropSource::DoDragDrop(int flags)
             }
         }
 
-        gCurrentSource = nullptr;
+        gCurrentSource = NULL;
     }
 
 

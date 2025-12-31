@@ -173,15 +173,8 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 405B1A8410EF202100676938 /* wxcocoa.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 23268CF4AF7431C3BCEBAEC8;
+			remoteGlobalIDString = 678A2947139C36ED8845FA97;
 			remoteInfo = wxscintilla;
-		};
-		40D1876A24AB2214003D88CF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 405B1A8410EF202100676938 /* wxcocoa.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 65C4B1F34F273193BC76CEA2;
-			remoteInfo = wxlexilla;
 		};
 		40D1876224AB2214003D88CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -303,8 +296,7 @@
 				40D1875B24AB2214003D88CF /* libwxjpeg.a */,
 				40D1875D24AB2214003D88CF /* libwxpng.a */,
 				40D1875F24AB2214003D88CF /* libwxregex.a */,
-				40D1876124AB2214003D88CF /* libwxscintilla.a */,
-				40D1876B24AB2214003D88CF /* libwxlexilla.a */,
+				40D1876124AB2214003D88CF /* libwxscintilla..a */,
 				40D1876324AB2214003D88CF /* libwxtiff.a */,
 				40D1876524AB2214003D88CF /* libwxzlib.a */,
 				40D1876724AB2214003D88CF /* libwx_baseu_xml.dylib */,
@@ -535,18 +527,11 @@
 			remoteRef = 40D1875E24AB2214003D88CF /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		40D1876124AB2214003D88CF /* libwxscintilla.a */ = {
+		40D1876124AB2214003D88CF /* libwxscintilla..a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = libwxscintilla.a;
+			path = libwxscintilla..a;
 			remoteRef = 40D1876024AB2214003D88CF /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		40D1876B24AB2214003D88CF /* libwxlexilla.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libwxlexilla.a;
-			remoteRef = 40D1876A24AB2214003D88CF /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		40D1876324AB2214003D88CF /* libwxtiff.a */ = {

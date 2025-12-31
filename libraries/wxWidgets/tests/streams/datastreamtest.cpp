@@ -39,8 +39,12 @@ private:
         CPPUNIT_TEST( FloatRW );
         CPPUNIT_TEST( DoubleRW );
         CPPUNIT_TEST( StringRW );
+#if wxUSE_LONGLONG
         CPPUNIT_TEST( LongLongRW );
+#endif
+#if wxHAS_INT64
         CPPUNIT_TEST( Int64RW );
+#endif
         CPPUNIT_TEST( NaNRW );
         CPPUNIT_TEST( PseudoTest_UseBigEndian );
         CPPUNIT_TEST( FloatRW );
@@ -63,8 +67,12 @@ private:
     void FloatRW();
     void DoubleRW();
     void StringRW();
+#if wxUSE_LONGLONG
     void LongLongRW();
+#endif
+#if wxHAS_INT64
     void Int64RW();
+#endif
     void NaNRW();
 
     void PseudoTest_UseBigEndian() { ms_useBigEndianFormat = true; }
@@ -240,14 +248,17 @@ void DataStreamTestCase::StringRW()
     wxString s(wxT("Test1"));
     CPPUNIT_ASSERT_EQUAL( TestRW(s), s );
 
+#if wxUSE_UNICODE
     s.append(2, wxT('\0'));
     s.append(wxT("Test2"));
     CPPUNIT_ASSERT_EQUAL( TestRW(s), s );
+#endif // wxUSE_UNICODE
 
-    s = wxString::FromUTF8("ü");
+    s = wxString::FromUTF8("\xc3\xbc"); // U+00FC LATIN SMALL LETTER U WITH DIAERESIS
     CPPUNIT_ASSERT_EQUAL( TestRW(s), s );
 }
 
+#if wxUSE_LONGLONG
 void DataStreamTestCase::LongLongRW()
 {
     TestMultiRW<wxLongLong>::ValueArray ValuesLL;
@@ -269,7 +280,9 @@ void DataStreamTestCase::LongLongRW()
     CPPUNIT_ASSERT( TestMultiRW<wxLongLong>(ValuesLL, &wxDataOutputStream::WriteLL, &wxDataInputStream::ReadLL).IsOk() );
     CPPUNIT_ASSERT( TestMultiRW<wxULongLong>(ValuesULL, &wxDataOutputStream::WriteLL, &wxDataInputStream::ReadLL).IsOk() );
 }
+#endif
 
+#if wxHAS_INT64
 void DataStreamTestCase::Int64RW()
 {
     TestMultiRW<wxInt64>::ValueArray ValuesI64;
@@ -291,6 +304,7 @@ void DataStreamTestCase::Int64RW()
     CPPUNIT_ASSERT( TestMultiRW<wxInt64>(ValuesI64, &wxDataOutputStream::Write64, &wxDataInputStream::Read64).IsOk() );
     CPPUNIT_ASSERT( TestMultiRW<wxUint64>(ValuesUI64, &wxDataOutputStream::Write64, &wxDataInputStream::Read64).IsOk() );
 }
+#endif
 
 void DataStreamTestCase::NaNRW()
 {

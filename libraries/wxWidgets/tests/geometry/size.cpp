@@ -51,22 +51,3 @@ TEST_CASE("wxSize::Operators", "[size]")
 
     CHECK( wxSize(6, 9) / 1.5 == wxSize(4, 6) );
 }
-
-TEST_CASE("wxSize::Functions", "[size]")
-{
-    CHECK( wxSize(10, 10).IsAtLeast(wxDefaultSize) );
-    CHECK( wxSize(10, 10).IsAtLeast(wxSize()) );
-    CHECK( wxSize(10, 10).IsAtLeast(wxSize(10, 5)) );
-    CHECK( wxSize(10, 10).IsAtLeast(wxSize(10, 10)) );
-
-    CHECK_FALSE( wxSize(10, 10).IsAtLeast(wxSize(11, 10)) );
-    CHECK_FALSE( wxSize(10, 10).IsAtLeast(wxSize(10, 11)) );
-    CHECK_FALSE( wxSize(10, 10).IsAtLeast(wxSize(11, 11)) );
-    CHECK_FALSE( wxDefaultSize.IsAtLeast(wxSize()) );
-
-    CHECK( wxSize().IsEmpty() );
-    CHECK( wxSize(0, 1).IsEmpty() );
-    CHECK( wxSize(1, 0).IsEmpty() );
-    CHECK( wxDefaultSize.IsEmpty() );
-    CHECK_FALSE( wxSize(1, 1).IsEmpty() );
-}

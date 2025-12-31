@@ -11,27 +11,22 @@
 #include "wx/display.h"
 #include "wx/private/display.h"
 #include <QtWidgets/QApplication>
-#include <QtGui/QScreen>
+#include <QtWidgets/QDesktopWidget>
 #include "wx/qt/private/converter.h"
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
-    #include <QtWidgets/QDesktopWidget>
-#endif
 
 class wxDisplayImplQt : public wxDisplayImpl
 {
 public:
     wxDisplayImplQt( unsigned n );
 
-    virtual wxRect GetGeometry() const override;
-    virtual wxRect GetClientArea() const override;
-    virtual int GetDepth() const override;
-    virtual double GetScaleFactor() const override;
+    virtual wxRect GetGeometry() const wxOVERRIDE;
+    virtual wxRect GetClientArea() const wxOVERRIDE;
+    virtual int GetDepth() const wxOVERRIDE;
 
 #if wxUSE_DISPLAY
-    virtual wxArrayVideoModes GetModes(const wxVideoMode& mode) const override;
-    virtual wxVideoMode GetCurrentMode() const override;
-    virtual bool ChangeMode(const wxVideoMode& mode) override;
+    virtual wxArrayVideoModes GetModes(const wxVideoMode& mode) const wxOVERRIDE;
+    virtual wxVideoMode GetCurrentMode() const wxOVERRIDE;
+    virtual bool ChangeMode(const wxVideoMode& mode) wxOVERRIDE;
 #endif // wxUSE_DISPLAY
 };
 
@@ -42,22 +37,17 @@ wxDisplayImplQt::wxDisplayImplQt( unsigned n )
 
 wxRect wxDisplayImplQt::GetGeometry() const
 {
-    return wxQtConvertRect(QApplication::screens().value(GetIndex())->geometry());
+    return wxQtConvertRect( QApplication::desktop()->screenGeometry( GetIndex() ));
 }
 
 wxRect wxDisplayImplQt::GetClientArea() const
 {
-    return wxQtConvertRect(QApplication::screens().value(GetIndex())->availableGeometry());
+    return wxQtConvertRect( QApplication::desktop()->availableGeometry( GetIndex() ));
 }
 
 int wxDisplayImplQt::GetDepth() const
 {
-    return QApplication::screens().value(GetIndex())->depth();
-}
-
-double wxDisplayImplQt::GetScaleFactor() const
-{
-    return QApplication::screens().value(GetIndex())->devicePixelRatio();
+    return IsPrimary() ? QApplication::desktop()->depth() : 0;
 }
 
 #if wxUSE_DISPLAY
@@ -68,11 +58,9 @@ wxArrayVideoModes wxDisplayImplQt::GetModes(const wxVideoMode& WXUNUSED(mode)) c
 
 wxVideoMode wxDisplayImplQt::GetCurrentMode() const
 {
-    QScreen *screen = QApplication::screens().value(GetIndex());
-
-    int width = screen->size().width();
-    int height = screen->size().height();
-    int depth = screen->depth();
+    int width = QApplication::desktop()->width();
+    int height = QApplication::desktop()->height();
+    int depth = QApplication::desktop()->depth();
 
     return wxVideoMode( width, height, depth );
 }
@@ -91,9 +79,9 @@ bool wxDisplayImplQt::ChangeMode(const wxVideoMode& WXUNUSED(mode))
 class wxDisplayFactoryQt : public wxDisplayFactory
 {
 public:
-    virtual wxDisplayImpl *CreateDisplay(unsigned n) override;
-    virtual unsigned GetCount() override;
-    virtual int GetFromPoint(const wxPoint& pt) override;
+    virtual wxDisplayImpl *CreateDisplay(unsigned n) wxOVERRIDE;
+    virtual unsigned GetCount() wxOVERRIDE;
+    virtual int GetFromPoint(const wxPoint& pt) wxOVERRIDE;
 };
 
 wxDisplayImpl *wxDisplayFactoryQt::CreateDisplay(unsigned n)
@@ -103,16 +91,12 @@ wxDisplayImpl *wxDisplayFactoryQt::CreateDisplay(unsigned n)
 
 unsigned wxDisplayFactoryQt::GetCount()
 {
-    return QApplication::screens().size();
+    return QApplication::desktop()->screenCount();
 }
 
 int wxDisplayFactoryQt::GetFromPoint(const wxPoint& pt)
 {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
-    return QApplication::screens().indexOf(QApplication::screenAt(wxQtConvertPoint(pt)));
-#else
-    return QApplication::desktop()->screenNumber(wxQtConvertPoint(pt));
-#endif
+    return QApplication::desktop()->screenNumber( wxQtConvertPoint( pt ));
 }
 
 //##############################################################################
@@ -127,7 +111,7 @@ int wxDisplayFactoryQt::GetFromPoint(const wxPoint& pt)
 class wxDisplayFactorySingleQt : public wxDisplayFactorySingleQt
 {
 protected:
-    virtual wxDisplayImpl *CreateSingleDisplay() override
+    virtual wxDisplayImpl *CreateSingleDisplay() wxOVERRIDE
     {
         return new wxDisplayImplQt(0);
     }

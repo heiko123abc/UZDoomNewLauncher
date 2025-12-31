@@ -2,6 +2,7 @@
 // Name:        src/msw/filedlg.cpp
 // Purpose:     wxFileDialog
 // Author:      Julian Smart
+// Modified by:
 // Created:     01/02/97
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -38,6 +39,7 @@
 
 #include "wx/dynlib.h"
 #include "wx/filename.h"
+#include "wx/scopedptr.h"
 #include "wx/scopeguard.h"
 #include "wx/tokenzr.h"
 #include "wx/modalhook.h"
@@ -46,7 +48,6 @@
 #include "wx/msw/wrapcdlg.h"
 #include "wx/msw/private/dpiaware.h"
 #include "wx/msw/private/filedialog.h"
-#include "wx/msw/private/gethwnd.h"
 
 // Note: this must be done after including the header above, as this is where
 // wxUSE_IFILEOPENDIALOG is defined.
@@ -63,8 +64,6 @@
 
     #include "wx/msw/private/cotaskmemptr.h"
 #endif // wxUSE_IFILEOPENDIALOG
-
-#include <memory>
 
 // ----------------------------------------------------------------------------
 // constants
@@ -95,6 +94,8 @@ wxIMPLEMENT_CLASS(wxFileDialog, wxFileDialogBase);
 namespace
 {
 
+#if wxUSE_DYNLIB_CLASS
+
 typedef BOOL (WINAPI *GetProcessUserModeExceptionPolicy_t)(LPDWORD);
 typedef BOOL (WINAPI *SetProcessUserModeExceptionPolicy_t)(DWORD);
 
@@ -107,6 +108,8 @@ SetProcessUserModeExceptionPolicy_t gs_pfnSetProcessUserModeExceptionPolicy =
 DWORD gs_oldExceptionPolicyFlags = 0;
 
 bool gs_changedPolicy = false;
+
+#endif // #if wxUSE_DYNLIB_CLASS
 
 /*
     This function removes any remaining mouse messages from the input queue in
@@ -126,7 +129,7 @@ void DrainMouseMessages()
     // loop termination condition is inside it.
     for ( int i = 0; i < 1000; ++i )
     {
-        if ( !::PeekMessage(&msg, nullptr, WM_MOUSEFIRST, WM_MOUSELAST,
+        if ( !::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST,
                             PM_REMOVE | PM_QS_INPUT) )
         {
             // No more mouse messages left.
@@ -144,6 +147,7 @@ by using SetProcessUserModeExceptionPolicy.
 */
 void ChangeExceptionPolicy()
 {
+#if wxUSE_DYNLIB_CLASS
     gs_changedPolicy = false;
 
     wxLoadedDLL dllKernel32(wxT("kernel32.dll"));
@@ -167,15 +171,19 @@ void ChangeExceptionPolicy()
     {
         gs_changedPolicy = true;
     }
+
+#endif // wxUSE_DYNLIB_CLASS
 }
 
 void RestoreExceptionPolicy()
 {
+#if wxUSE_DYNLIB_CLASS
     if (gs_changedPolicy)
     {
         gs_changedPolicy = false;
         (void) gs_pfnSetProcessUserModeExceptionPolicy(gs_oldExceptionPolicyFlags);
     }
+#endif // wxUSE_DYNLIB_CLASS
 }
 
 #if wxUSE_IFILEOPENDIALOG
@@ -278,15 +286,28 @@ public:
     {
     }
 
-    virtual void Show(bool show) override
+    virtual void Show(bool show) wxOVERRIDE
     {
         DoUpdateState(CDCS_VISIBLE, show);
     }
 
-    virtual void Enable(bool enable) override
+    virtual void Enable(bool enable) wxOVERRIDE
     {
         DoUpdateState(CDCS_ENABLED, enable);
     }
+};
+
+class wxFileDialogCustomControlImplFDC
+    : public wxFileDialogImplFDC<wxFileDialogCustomControlImpl>
+{
+public:
+    // All custom controls are identified by their ID in this implementation.
+    wxFileDialogCustomControlImplFDC(IFileDialogCustomize* fdc, DWORD id)
+        : wxFileDialogImplFDC<wxFileDialogCustomControlImpl>(fdc, id)
+    {
+    }
+
+    wxDECLARE_NO_COPY_CLASS(wxFileDialogCustomControlImplFDC);
 };
 
 class wxFileDialogButtonImplFDC
@@ -298,7 +319,7 @@ public:
     {
     }
 
-    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) override
+    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) wxOVERRIDE
     {
         // We don't need to do anything special to get the events here.
         return true;
@@ -314,7 +335,7 @@ public:
     {
     }
 
-    virtual bool GetValue() override
+    virtual bool GetValue() wxOVERRIDE
     {
         BOOL checked = FALSE;
         HRESULT hr = m_fdc->GetCheckButtonState(m_id, &checked);
@@ -324,21 +345,20 @@ public:
         return checked != FALSE;
     }
 
-    virtual void SetValue(bool value) override
+    virtual void SetValue(bool value) wxOVERRIDE
     {
         HRESULT hr = m_fdc->SetCheckButtonState(m_id, value ? TRUE : FALSE);
         if ( FAILED(hr) )
             wxLogApiError(wxS("IFileDialogCustomize::SetCheckButtonState"), hr);
     }
 
-    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) override
+    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) wxOVERRIDE
     {
         // We don't need to do anything special to get the events here.
         return true;
     }
 };
 
-#if wxUSE_RADIOBTN
 class wxFileDialogRadioButtonImplFDC
     : public wxFileDialogImplFDC<wxFileDialogRadioButtonImpl>
 {
@@ -349,7 +369,7 @@ public:
     {
     }
 
-    virtual bool GetValue() override
+    virtual bool GetValue() wxOVERRIDE
     {
         DWORD selected = 0;
         HRESULT hr = m_fdc->GetSelectedControlItem(m_id, &selected);
@@ -359,7 +379,7 @@ public:
         return selected == m_item;
     }
 
-    virtual void SetValue(bool value) override
+    virtual void SetValue(bool value) wxOVERRIDE
     {
         // We can't implement it using the available API and this shouldn't be
         // ever needed anyhow.
@@ -370,7 +390,7 @@ public:
             wxLogApiError(wxS("IFileDialogCustomize::SetSelectedControlItem"), hr);
     }
 
-    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) override
+    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) wxOVERRIDE
     {
         // We don't need to do anything special to get the events here.
         return true;
@@ -379,7 +399,6 @@ public:
 private:
     const DWORD m_item;
 };
-#endif // wxUSE_RADIOBTN
 
 class wxFileDialogChoiceImplFDC
     : public wxFileDialogImplFDC<wxFileDialogChoiceImpl>
@@ -391,7 +410,7 @@ public:
     {
     }
 
-    virtual int GetSelection() override
+    virtual int GetSelection() wxOVERRIDE
     {
         DWORD selected = 0;
         HRESULT hr = m_fdc->GetSelectedControlItem(m_id, &selected);
@@ -408,7 +427,7 @@ public:
         return m_firstItem - selected;
     }
 
-    virtual void SetSelection(int n) override
+    virtual void SetSelection(int n) wxOVERRIDE
     {
         // As above, see m_firstItem comment.
         HRESULT hr = m_fdc->SetSelectedControlItem(m_id, m_firstItem - n);
@@ -416,7 +435,7 @@ public:
             wxLogApiError(wxS("IFileDialogCustomize::SetSelectedControlItem"), hr);
     }
 
-    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) override
+    virtual bool DoBind(wxEvtHandler* WXUNUSED(handler)) wxOVERRIDE
     {
         // We don't need to do anything special to get the events here.
         return true;
@@ -438,7 +457,7 @@ public:
     {
     }
 
-    virtual wxString GetValue() override
+    virtual wxString GetValue() wxOVERRIDE
     {
         wxCoTaskMemPtr<WCHAR> value;
         HRESULT hr = m_fdc->GetEditBoxText(m_id, &value);
@@ -448,7 +467,7 @@ public:
         return wxString(value);
     }
 
-    virtual void SetValue(const wxString& value) override
+    virtual void SetValue(const wxString& value) wxOVERRIDE
     {
         HRESULT hr = m_fdc->SetEditBoxText(m_id, value.wc_str());
         if ( FAILED(hr) )
@@ -465,7 +484,7 @@ public:
     {
     }
 
-    virtual void SetLabelText(const wxString& text) override
+    virtual void SetLabelText(const wxString& text) wxOVERRIDE
     {
         // Prevent ampersands from being misinterpreted as mnemonics.
         const wxString& label = wxControl::EscapeMnemonics(text);
@@ -513,14 +532,14 @@ public:
         // Currently there is 1-to-1 correspondence between IDs and the
         // controls we create, except that we start assigning IDs with 1.
         if ( id < 1 || id > m_controls.size() )
-            return nullptr;
+            return NULL;
 
         return m_controls[id - 1];
     }
 
 
     // Implement wxFileDialogCustomizeImpl pure virtual methods.
-    wxFileDialogButtonImpl* AddButton(const wxString& label) override
+    wxFileDialogButtonImpl* AddButton(const wxString& label) wxOVERRIDE
     {
         m_radioListId = 0;
 
@@ -528,13 +547,13 @@ public:
         if ( FAILED(hr) )
         {
             wxLogApiError(wxS("IFileDialogCustomize::AddPushButton"), hr);
-            return nullptr;
+            return NULL;
         }
 
         return new wxFileDialogButtonImplFDC(m_fdc, m_lastId);
     }
 
-    wxFileDialogCheckBoxImpl* AddCheckBox(const wxString& label) override
+    wxFileDialogCheckBoxImpl* AddCheckBox(const wxString& label) wxOVERRIDE
     {
         m_radioListId = 0;
 
@@ -542,14 +561,13 @@ public:
         if ( FAILED(hr) )
         {
             wxLogApiError(wxS("IFileDialogCustomize::AddCheckButton"), hr);
-            return nullptr;
+            return NULL;
         }
 
         return new wxFileDialogCheckBoxImplFDC(m_fdc, m_lastId);
     }
 
-#if wxUSE_RADIOBTN
-    wxFileDialogRadioButtonImpl* AddRadioButton(const wxString& label) override
+    wxFileDialogRadioButtonImpl* AddRadioButton(const wxString& label) wxOVERRIDE
     {
         HRESULT hr;
 
@@ -560,7 +578,7 @@ public:
             if ( FAILED(hr) )
             {
                 wxLogApiError(wxS("IFileDialogCustomize::AddRadioButtonList"), hr);
-                return nullptr;
+                return NULL;
             }
 
             m_radioListId = m_lastAuxId;
@@ -571,7 +589,7 @@ public:
         if ( FAILED(hr) )
         {
             wxLogApiError(wxS("IFileDialogCustomize::AddControlItem"), hr);
-            return nullptr;
+            return NULL;
         }
 
         wxFileDialogRadioButtonImplFDC* const
@@ -583,20 +601,19 @@ public:
 
         return impl;
     }
-#endif // wxUSE_RADIOBTN
 
-    wxFileDialogChoiceImpl* AddChoice(size_t n, const wxString* strings) override
+    wxFileDialogChoiceImpl* AddChoice(size_t n, const wxString* strings) wxOVERRIDE
     {
         HRESULT hr = m_fdc->AddComboBox(++m_lastId);
         if ( FAILED(hr) )
         {
             wxLogApiError(wxS("IFileDialogCustomize::AddComboBox"), hr);
-            return nullptr;
+            return NULL;
         }
 
         // We pass the ID of the first control that will be added to the
         // combobox as the ctor argument.
-        std::unique_ptr<wxFileDialogChoiceImplFDC>
+        wxScopedPtr<wxFileDialogChoiceImplFDC>
             impl(new wxFileDialogChoiceImplFDC(m_fdc, m_lastId, m_lastAuxId - 1));
 
         for ( size_t i = 0; i < n; ++i )
@@ -605,14 +622,14 @@ public:
             if ( FAILED(hr) )
             {
                 wxLogApiError(wxS("IFileDialogCustomize::AddControlItem"), hr);
-                return nullptr;
+                return NULL;
             }
         }
 
         return impl.release();
     }
 
-    wxFileDialogTextCtrlImpl* AddTextCtrl(const wxString& label) override
+    wxFileDialogTextCtrlImpl* AddTextCtrl(const wxString& label) wxOVERRIDE
     {
         m_radioListId = 0;
 
@@ -629,7 +646,7 @@ public:
         if ( FAILED(hr) )
         {
             wxLogApiError(wxS("IFileDialogCustomize::AddEditBox"), hr);
-            return nullptr;
+            return NULL;
         }
 
         if ( !label.empty() )
@@ -642,7 +659,7 @@ public:
         return new wxFileDialogTextCtrlImplFDC(m_fdc, m_lastId);
     }
 
-    wxFileDialogStaticTextImpl* AddStaticText(const wxString& label) override
+    wxFileDialogStaticTextImpl* AddStaticText(const wxString& label) wxOVERRIDE
     {
         m_radioListId = 0;
 
@@ -650,7 +667,7 @@ public:
         if ( FAILED(hr) )
         {
             wxLogApiError(wxS("IFileDialogCustomize::AddText"), hr);
-            return nullptr;
+            return NULL;
         }
 
         return new wxFileDialogStaticTextImplFDC(m_fdc, m_lastId);
@@ -738,7 +755,7 @@ public:
 
     // IUnknown
 
-    wxSTDMETHODIMP QueryInterface(REFIID iid, void** ppv) override
+    wxSTDMETHODIMP QueryInterface(REFIID iid, void** ppv)
     {
         if ( iid == IID_IUnknown || iid == IID_IFileDialogEvents )
         {
@@ -753,7 +770,7 @@ public:
         }
         else
         {
-            *ppv = nullptr;
+            *ppv = NULL;
 
             return E_NOINTERFACE;
         }
@@ -766,13 +783,13 @@ public:
     }
 
     // Dummy implementations because we're not really ref-counted.
-    STDMETHODIMP_(ULONG) AddRef() override { return 1; }
-    STDMETHODIMP_(ULONG) Release() override { return 1; }
+    STDMETHODIMP_(ULONG) AddRef() { return 1; }
+    STDMETHODIMP_(ULONG) Release() { return 1; }
 
 
     // IFileDialogEvents
 
-    wxSTDMETHODIMP OnFileOk(IFileDialog*) override
+    wxSTDMETHODIMP OnFileOk(IFileDialog*) wxOVERRIDE
     {
         // Note that we need to call this hook function from here as the
         // controls are destroyed later and getting their values wouldn't work
@@ -782,10 +799,10 @@ public:
         return S_OK;
     }
 
-    wxSTDMETHODIMP OnFolderChanging(IFileDialog*, IShellItem*) override { return E_NOTIMPL; }
-    wxSTDMETHODIMP OnFolderChange(IFileDialog*) override { return E_NOTIMPL; }
+    wxSTDMETHODIMP OnFolderChanging(IFileDialog*, IShellItem*) wxOVERRIDE { return E_NOTIMPL; }
+    wxSTDMETHODIMP OnFolderChange(IFileDialog*) wxOVERRIDE { return E_NOTIMPL; }
 
-    wxSTDMETHODIMP OnSelectionChange(IFileDialog* pfd) override
+    wxSTDMETHODIMP OnSelectionChange(IFileDialog* pfd) wxOVERRIDE
     {
         wxCOMPtr<IShellItem> item;
         HRESULT hr = pfd->GetCurrentSelection(&item);
@@ -802,9 +819,9 @@ public:
         return S_OK;
     }
 
-    wxSTDMETHODIMP OnShareViolation(IFileDialog*, IShellItem*, FDE_SHAREVIOLATION_RESPONSE*) override { return E_NOTIMPL; }
+    wxSTDMETHODIMP OnShareViolation(IFileDialog*, IShellItem*, FDE_SHAREVIOLATION_RESPONSE*) wxOVERRIDE { return E_NOTIMPL; }
 
-    wxSTDMETHODIMP OnTypeChange(IFileDialog* pfd) override
+    wxSTDMETHODIMP OnTypeChange(IFileDialog* pfd) wxOVERRIDE
     {
         // There is no special notification for the dialog initialization, but
         // this function is always called when it's shown, so use it for
@@ -829,7 +846,7 @@ public:
         return S_OK;
     }
 
-    wxSTDMETHODIMP OnOverwrite(IFileDialog*, IShellItem*, FDE_OVERWRITE_RESPONSE*) override { return E_NOTIMPL; }
+    wxSTDMETHODIMP OnOverwrite(IFileDialog*, IShellItem*, FDE_OVERWRITE_RESPONSE*) wxOVERRIDE { return E_NOTIMPL; }
 
 
     // IFileDialogControlEvents
@@ -837,7 +854,7 @@ public:
     wxSTDMETHODIMP
     OnItemSelected(IFileDialogCustomize*,
                    DWORD WXUNUSED(dwIDCtl),
-                   DWORD dwIDItem) override
+                   DWORD dwIDItem) wxOVERRIDE
     {
         // Note that we don't use dwIDCtl here because we use unique item IDs
         // for all controls.
@@ -855,7 +872,7 @@ public:
     }
 
     wxSTDMETHODIMP
-    OnButtonClicked(IFileDialogCustomize*, DWORD dwIDCtl) override
+    OnButtonClicked(IFileDialogCustomize*, DWORD dwIDCtl) wxOVERRIDE
     {
         if ( wxFileDialogCustomControl* const
                 control = m_customize.FindControl(dwIDCtl) )
@@ -872,7 +889,7 @@ public:
     wxSTDMETHODIMP
     OnCheckButtonToggled(IFileDialogCustomize*,
                          DWORD dwIDCtl,
-                         BOOL bChecked) override
+                         BOOL bChecked) wxOVERRIDE
     {
         if ( wxFileDialogCustomControl* const
                 control = m_customize.FindControl(dwIDCtl) )
@@ -889,7 +906,7 @@ public:
 
     wxSTDMETHODIMP
     OnControlActivating(IFileDialogCustomize*,
-                        DWORD WXUNUSED(dwIDCtl)) override
+                        DWORD WXUNUSED(dwIDCtl)) wxOVERRIDE
     {
         return S_OK;
     }
@@ -1009,6 +1026,8 @@ wxFileDialog::wxFileDialog(wxWindow *parent,
 
 {
     // NB: all style checks are done by wxFileDialogBase::Create
+
+    m_data = NULL;
 }
 
 wxFileDialog::~wxFileDialog()
@@ -1121,10 +1140,6 @@ void wxFileDialog::DoCentre(int dir)
 
 void wxFileDialog::MSWOnInitDone(WXHWND hDlg)
 {
-    // We can't position the dialog when using Qt, we'd need a working
-    // equivalent of TempHWNDSetter for it to allow us to set position of a
-    // window not created by Qt.
-#ifdef __WXMSW__
     if ( !m_data || !m_data->m_bMovedWindow )
     {
         // We only use this to position the dialog, so nothing to do.
@@ -1149,9 +1164,6 @@ void wxFileDialog::MSWOnInitDone(WXHWND hDlg)
     {
         SetPosition(gs_rectDialog.GetPosition());
     }
-#else // __WXQT__
-    wxUnusedVar(hDlg);
-#endif // __WXMSW__/__WXQT__
 }
 
 void wxFileDialog::MSWOnSelChange(const wxString& selectedFilename)
@@ -1184,7 +1196,7 @@ static bool DoShowCommFileDialog(OPENFILENAME *of, long style, DWORD *err)
 {
     // Extra controls do not handle per-monitor DPI, fall back to system DPI
     // so entire file-dialog is resized.
-    std::unique_ptr<wxMSWImpl::AutoSystemDpiAware> dpiAwareness;
+    wxScopedPtr<wxMSWImpl::AutoSystemDpiAware> dpiAwareness;
     if ( of->Flags & OFN_ENABLEHOOK )
         dpiAwareness.reset(new wxMSWImpl::AutoSystemDpiAware());
 
@@ -1232,24 +1244,10 @@ bool wxFileDialog::AddShortcut(const wxString& directory, int flags)
 
 int wxFileDialog::ShowModal()
 {
-    if ( wxMSWIsOnSecureScreen() )
-    {
-        // Opening a file dialog from secure desktop allows access to the host
-        // file system as administrator, which shouldn't be allowed.
-        wxMessageBox
-        (
-            _("Access to the file system is not allowed from secure desktop."),
-            _("Security warning"),
-            wxICON_ERROR
-        );
-
-        return wxID_CANCEL;
-    }
-
     WX_HOOK_MODAL_DIALOG();
 
     wxWindow* const parent = GetParentForModalDialog(m_parent, GetWindowStyle());
-    const WXHWND hWndParent = wxGetHWND(parent);
+    WXHWND hWndParent = parent ? GetHwndOf(parent) : NULL;
 
     wxWindowDisabler disableOthers(this, parent);
 
@@ -1268,10 +1266,23 @@ int wxFileDialog::ShowModal()
         canUseIFileDialog = false;
 
     /*
-        We also can't use it if we have a parent in some cases.
+        We also can't use it if we're in a multi-threaded COM apartment _and_
+        have a parent, as IFileDialog::Show() simply hangs in this case, see
+        #23578.
      */
-    if ( hWndParent && !wxMSWImpl::wxIFileDialog::CanBeUsedWithAnOwner() )
-        canUseIFileDialog = false;
+    if ( hWndParent )
+    {
+        // Call this function just to check in which apartment we are: it will
+        // return S_OK if COINIT_APARTMENTTHREADED had been used for the first
+        // COM initialization and an error if not.
+        const HRESULT hr = ::CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+        if ( hr == RPC_E_CHANGED_MODE )
+            canUseIFileDialog = false;
+
+        // This just undoes the call above, COM remains initialized.
+        ::CoUninitialize();
+    }
 
     if ( canUseIFileDialog )
     {
@@ -1369,7 +1380,7 @@ int wxFileDialog::ShowCommFileDialog(WXHWND hWndParent)
         // create the extra control in an empty dialog just to find its size: this
         // is not terribly efficient but we do need to know the size before
         // creating the native dialog and this seems to be the only way
-        wxDialog dlg(nullptr, wxID_ANY, wxString());
+        wxDialog dlg(NULL, wxID_ANY, wxString());
         const wxSize extraSize = CreateExtraControlWithParent(&dlg)->GetSize();
 
         // convert the size of the extra controls to the dialog units
@@ -1392,8 +1403,8 @@ int wxFileDialog::ShowCommFileDialog(WXHWND hWndParent)
     dir.reserve(len);
     for ( i = 0; i < len; i++ )
     {
-        wxUniChar ch = m_dir[i];
-        switch ( ch.GetValue() )
+        wxChar ch = m_dir[i];
+        switch ( ch )
         {
             case wxT('/'):
                 // convert to backslash
@@ -1403,7 +1414,7 @@ int wxFileDialog::ShowCommFileDialog(WXHWND hWndParent)
             case wxT('\\'):
                 while ( i < len - 1 )
                 {
-                    wxUniChar chNext = m_dir[i + 1];
+                    wxChar chNext = m_dir[i + 1];
                     if ( chNext != wxT('\\') && chNext != wxT('/') )
                         break;
 
@@ -1649,11 +1660,7 @@ int wxFileDialog::ShowIFileDialog(WXHWND hWndParent)
         wxString defExt =
             wildFilters[m_filterIndex].BeforeFirst(';').AfterFirst('.');
         if ( !defExt.empty() && defExt != wxS("*") )
-        {
-            hr = fileDialog->SetDefaultExtension(defExt.wc_str());
-            if ( FAILED(hr) )
-                wxLogApiError(wxS("IFileDialog::SetDefaultExtension"), hr);
-        }
+            fileDialog->SetDefaultExtension(defExt.wc_str());
     }
 
     if ( !m_dir.empty() )
@@ -1735,9 +1742,8 @@ int wxFileDialog::ShowIFileDialog(WXHWND hWndParent)
         }
         else // Single selected file is in m_path.
         {
-            // Note that we intentionally do not call AppendExtension() here
-            // because IFileDialog already does it if necessary and doing it
-            // again would be wrong, see the discussion in #24949.
+            // Append the extension if necessary.
+            m_path = AppendExtension(m_path, wildFilters[m_filterIndex]);
 
             const wxFileName fn(m_path);
             m_dir = fn.GetPath();

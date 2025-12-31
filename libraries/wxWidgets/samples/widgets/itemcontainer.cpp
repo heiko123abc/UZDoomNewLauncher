@@ -40,8 +40,6 @@ public:
     {
         m_tracker->StartTrackingData();
     }
-    TrackedClientData(const TrackedClientData&) = delete;
-    TrackedClientData& operator=(const TrackedClientData&) = delete;
 
     virtual ~TrackedClientData()
     {
@@ -56,6 +54,8 @@ public:
 private:
     ItemContainerWidgetsPage *m_tracker;
     int m_value;
+
+    wxDECLARE_NO_COPY_CLASS(TrackedClientData);
 };
 
 // ============================================================================
@@ -63,9 +63,9 @@ private:
 // ============================================================================
 
 ItemContainerWidgetsPage::ItemContainerWidgetsPage(WidgetsBookCtrl *book,
-                                                   wxVector<wxBitmapBundle>& imaglist,
+                                                   wxImageList *image_list,
                                                    const char *const icon[])
-: WidgetsPage(book, imaglist, icon)
+: WidgetsPage(book, image_list, icon)
 #if defined(__WXMSW__) || defined(__WXGTK__)
 // Reference data needs to be sorted in a dictionary order
 // since control's items are sorted in this order too.

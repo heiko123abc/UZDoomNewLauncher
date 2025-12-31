@@ -2,6 +2,7 @@
 // Name:        wx/gtk/dataform.h
 // Purpose:     declaration of the wxDataFormat class
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     19.10.99 (extracted from gtk/dataobj.h)
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -36,14 +37,14 @@ public:
     bool operator==(wxDataFormatId type) const
         { return m_type == type; }
     bool operator!=(wxDataFormatId type) const
-        { return !(*this == type); }
+        { return m_type != type; }
     bool operator==(NativeFormat format) const
         { return m_format == (NativeFormat)format; }
     bool operator!=(NativeFormat format) const
-        { return !(*this == (NativeFormat)format); }
+        { return m_format != (NativeFormat)format; }
     bool operator==(const wxDataFormat& other) const;
     bool operator!=(const wxDataFormat& other) const
-        { return !(*this == other); }
+        { return m_format != other.m_format; }
 
     // explicit and implicit conversions to NativeFormat which is one of
     // standard data types (implicit conversion is useful for preserving the
@@ -68,6 +69,8 @@ private:
 
     wxDataFormatId   m_type;
     NativeFormat     m_format;
+
+    void PrepareFormats();
 };
 
 #endif // _WX_GTK_DATAFORM_H

@@ -2,6 +2,7 @@
 // Name:        src/univ/ctrlrend.cpp
 // Purpose:     wxControlRenderer implementation
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     15.08.00
 // Copyright:   (c) 2000 SciTech Software, Inc. (www.scitechsoft.com)
 // Licence:     wxWindows licence
@@ -68,10 +69,11 @@ void wxControlRenderer::DrawLabel()
     m_dc.SetFont(m_window->GetFont());
     m_dc.SetTextForeground(m_window->GetForegroundColour());
 
-    wxControl *ctrl = wxStaticCast(m_window, wxControl);
-    wxString label = ctrl->GetLabelText();
+    wxString label = m_window->GetLabel();
     if ( !label.empty() )
     {
+        wxControl *ctrl = wxStaticCast(m_window, wxControl);
+
         m_renderer->DrawLabel(m_dc,
                               label,
                               m_rect,
@@ -88,9 +90,7 @@ void wxControlRenderer::DrawButtonLabel(const wxBitmap& bitmap,
     m_dc.SetFont(m_window->GetFont());
     m_dc.SetTextForeground(m_window->GetForegroundColour());
 
-    wxControl *ctrl = wxStaticCast(m_window, wxControl);
-    wxString label = ctrl->GetLabelText();
-
+    wxString label = m_window->GetLabel();
     if ( !label.empty() || bitmap.IsOk() )
     {
         wxRect rectLabel = m_rect;
@@ -98,6 +98,8 @@ void wxControlRenderer::DrawButtonLabel(const wxBitmap& bitmap,
         {
             rectLabel.Inflate(-marginX, -marginY);
         }
+
+        wxControl *ctrl = wxStaticCast(m_window, wxControl);
 
         m_renderer->DrawButtonLabel(m_dc,
                                     label,
@@ -118,7 +120,7 @@ void wxControlRenderer::DrawFrame()
     wxControl *ctrl = wxStaticCast(m_window, wxControl);
 
     m_renderer->DrawFrame(m_dc,
-                          ctrl->GetLabelText(),
+                          m_window->GetLabel(),
                           m_rect,
                           m_window->GetStateFlags(),
                           ctrl->GetAlignment(),
@@ -221,7 +223,6 @@ void wxControlRenderer::DrawScrollbar(const wxScrollBar *scrollbar,
     wxRegion rgnUpdate = scrollbar->GetUpdateRegion();
 
     {
-#if wxUSE_LOG_TRACE
         wxRect rectUpdate = rgnUpdate.GetBox();
         wxLogTrace(wxT("scrollbar"),
                    wxT("%s redraw: update box is (%d, %d)-(%d, %d)"),
@@ -230,7 +231,6 @@ void wxControlRenderer::DrawScrollbar(const wxScrollBar *scrollbar,
                    rectUpdate.GetTop(),
                    rectUpdate.GetRight(),
                    rectUpdate.GetBottom());
-#endif // wxUSE_LOG_TRACE
 
 #if 0 //def WXDEBUG_SCROLLBAR
         static bool s_refreshDebug = false;

@@ -81,7 +81,7 @@ wxSize wxGenericCollapsibleHeaderCtrl::DoGetBestClientSize() const
         self = const_cast<wxGenericCollapsibleHeaderCtrl*>(this);
 
     // The code here parallels that of OnPaint() -- except without drawing.
-    wxInfoDC dc(self);
+    wxClientDC dc(self);
 
     wxSize size = wxRendererNative::Get().GetCollapseButtonSize(self, dc);
 

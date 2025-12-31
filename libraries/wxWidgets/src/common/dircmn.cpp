@@ -2,6 +2,7 @@
 // Name:        src/common/dircmn.cpp
 // Purpose:     wxDir methods common to all implementations
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     19.05.01
 // Copyright:   (c) 2001 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -218,13 +219,13 @@ class wxDirTraverserSimple : public wxDirTraverser
 public:
     wxDirTraverserSimple(wxArrayString& files) : m_files(files) { }
 
-    virtual wxDirTraverseResult OnFile(const wxString& filename) override
+    virtual wxDirTraverseResult OnFile(const wxString& filename) wxOVERRIDE
     {
         m_files.push_back(filename);
         return wxDIR_CONTINUE;
     }
 
-    virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname)) override
+    virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname)) wxOVERRIDE
     {
         return wxDIR_CONTINUE;
     }
@@ -241,7 +242,7 @@ size_t wxDir::GetAllFiles(const wxString& dirname,
                           const wxString& filespec,
                           int flags)
 {
-    wxCHECK_MSG( files, (size_t)-1, wxT("null pointer in wxDir::GetAllFiles") );
+    wxCHECK_MSG( files, (size_t)-1, wxT("NULL pointer in wxDir::GetAllFiles") );
 
     size_t nFiles = 0;
 
@@ -265,13 +266,13 @@ class wxDirTraverserFindFirst : public wxDirTraverser
 public:
     wxDirTraverserFindFirst() { }
 
-    virtual wxDirTraverseResult OnFile(const wxString& filename) override
+    virtual wxDirTraverseResult OnFile(const wxString& filename) wxOVERRIDE
     {
         m_file = filename;
         return wxDIR_STOP;
     }
 
-    virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname)) override
+    virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname)) wxOVERRIDE
     {
         return wxDIR_CONTINUE;
     }
@@ -309,12 +310,14 @@ wxString wxDir::FindFirst(const wxString& dirname,
 // wxDir::GetTotalSize()
 // ----------------------------------------------------------------------------
 
+#if wxUSE_LONGLONG
+
 class wxDirTraverserSumSize : public wxDirTraverser
 {
 public:
     wxDirTraverserSumSize() { }
 
-    virtual wxDirTraverseResult OnFile(const wxString& filename) override
+    virtual wxDirTraverseResult OnFile(const wxString& filename) wxOVERRIDE
     {
         // wxFileName::GetSize won't use this class again as
         // we're passing it a file and not a directory;
@@ -336,7 +339,7 @@ public:
         return wxDIR_CONTINUE;
     }
 
-    virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname)) override
+    virtual wxDirTraverseResult OnDir(const wxString& WXUNUSED(dirname)) wxOVERRIDE
     {
         return wxDIR_CONTINUE;
     }
@@ -371,6 +374,8 @@ wxULongLong wxDir::GetTotalSize(const wxString &dirname, wxArrayString *filesSki
 
     return traverser.GetTotalSize();
 }
+
+#endif // wxUSE_LONGLONG
 
 // ----------------------------------------------------------------------------
 // wxDir helpers

@@ -2,6 +2,7 @@
 // Name:        ribbondemo.cpp
 // Purpose:     wxRibbon: Ribbon user interface - sample/test program
 // Author:      Peter Cawley
+// Modified by:
 // Created:     2009-05-25
 // Copyright:   (C) Copyright 2009, Peter Cawley
 // Licence:     wxWindows Library Licence
@@ -26,14 +27,13 @@
 #include "wx/combobox.h"
 #include "wx/tglbtn.h"
 #include "wx/wrapsizer.h"
-#include "wx/checkbox.h"
 
 // -- application --
 
 class MyApp : public wxApp
 {
 public:
-    bool OnInit() override;
+    bool OnInit() wxOVERRIDE;
 };
 
 wxDECLARE_APP(MyApp);
@@ -49,7 +49,7 @@ public:
 
     enum
     {
-        ID_CIRCLE = wxID_HIGHEST,
+        ID_CIRCLE = wxID_HIGHEST + 1,
         ID_CROSS,
         ID_TRIANGLE,
         ID_SQUARE,
@@ -81,9 +81,6 @@ public:
         ID_CHANGE_TEXT1,
         ID_CHANGE_TEXT2,
         ID_UI_CHANGE_TEXT_UPDATED,
-        ID_3CHECK,
-        ID_UI_2CHECK_UPDATED,
-        ID_UI_3CHECK_UPDATED,
         ID_REMOVE_PAGE,
         ID_HIDE_PAGES,
         ID_SHOW_PAGES,
@@ -99,7 +96,6 @@ public:
 
     void OnEnableUpdateUI(wxUpdateUIEvent& evt);
     void OnCheckUpdateUI(wxUpdateUIEvent& evt);
-    void OnCheckboxUpdateUI(wxUpdateUIEvent& evt);
     void OnChangeTextUpdateUI(wxUpdateUIEvent& evt);
     void OnCheck(wxRibbonButtonBarEvent& evt);
     void OnEnable(wxRibbonButtonBarEvent& evt);
@@ -160,7 +156,7 @@ protected:
         int gallery_id);
     void AddText(wxString msg);
     wxRibbonGalleryItem* AddColourToGallery(wxRibbonGallery *gallery,
-        wxString name, wxMemoryDC& dc, wxColour* value = nullptr);
+        wxString name, wxMemoryDC& dc, wxColour* value = NULL);
     wxColour GetGalleryColour(wxRibbonGallery *gallery,
         wxRibbonGalleryItem* item, wxString* name);
     void ResetGalleryArtProviders();
@@ -209,8 +205,6 @@ EVT_RIBBONBUTTONBAR_CLICKED(ID_UI_ENABLE_UPDATED, MyFrame::OnEnableUpdated)
 EVT_UPDATE_UI(ID_UI_ENABLE_UPDATED, MyFrame::OnEnableUpdateUI)
 EVT_RIBBONBUTTONBAR_CLICKED(ID_CHECK, MyFrame::OnCheck)
 EVT_UPDATE_UI(ID_UI_CHECK_UPDATED, MyFrame::OnCheckUpdateUI)
-EVT_UPDATE_UI(ID_UI_2CHECK_UPDATED, MyFrame::OnCheckboxUpdateUI)
-EVT_UPDATE_UI(ID_UI_3CHECK_UPDATED, MyFrame::OnCheckboxUpdateUI)
 EVT_RIBBONBUTTONBAR_CLICKED(ID_CHANGE_TEXT1, MyFrame::OnChangeText1)
 EVT_RIBBONBUTTONBAR_CLICKED(ID_CHANGE_TEXT2, MyFrame::OnChangeText2)
 EVT_UPDATE_UI(ID_UI_CHANGE_TEXT_UPDATED, MyFrame::OnChangeTextUpdateUI)
@@ -290,7 +284,7 @@ wxEND_EVENT_TABLE()
 #include "triangle.xpm"
 
 MyFrame::MyFrame()
-    : wxFrame(nullptr, wxID_ANY, "wxRibbon Sample Application", wxDefaultPosition, wxSize(800, 600), wxDEFAULT_FRAME_STYLE)
+    : wxFrame(NULL, wxID_ANY, "wxRibbon Sample Application", wxDefaultPosition, wxSize(800, 600), wxDEFAULT_FRAME_STYLE)
 {
     m_ribbon = new wxRibbonBar(this,-1,wxDefaultPosition, wxDefaultSize, wxRIBBON_BAR_FLOW_HORIZONTAL
                                 | wxRIBBON_BAR_SHOW_PAGE_LABELS
@@ -444,34 +438,6 @@ MyFrame::MyFrame()
         bar->AddButton(ID_CHANGE_TEXT1, "One", ribbon_xpm);
         bar->AddButton(ID_CHANGE_TEXT2, "Two", ribbon_xpm);
         bar->AddButton(ID_UI_CHANGE_TEXT_UPDATED, "Zero", ribbon_xpm);
-
-#if wxUSE_CHECKBOX
-        panel = new wxRibbonPanel(page, wxID_ANY, "3State",
-                                                    wxNullBitmap, wxDefaultPosition, wxDefaultSize,
-                                                    wxRIBBON_PANEL_DEFAULT_STYLE);
-        wxSizer* sizer = new wxBoxSizer(wxVERTICAL);
-        panel->SetSizer(sizer);
-        wxCheckBox* checkbox1 = new wxCheckBox(panel, ID_3CHECK,
-                                                    "Checkbox",
-                                                    wxDefaultPosition, wxDefaultSize,
-                                                    wxCHK_3STATE | wxCHK_ALLOW_3RD_STATE_FOR_USER);
-        checkbox1->SetMinSize(checkbox1->GetSizeFromText(checkbox1->GetLabelText()));
-        sizer->Add(checkbox1, 0, wxALL | wxEXPAND);
-        wxCheckBox* checkbox2 = new wxCheckBox(panel, ID_UI_2CHECK_UPDATED,
-                                                    "2Checkbox UI Updated",
-                                                    wxDefaultPosition, wxDefaultSize,
-                                                    wxCHK_2STATE);
-        checkbox2->SetMinSize(checkbox2->GetSizeFromText(checkbox2->GetLabelText()));
-        checkbox2->Disable();
-        sizer->Add(checkbox2, 0, wxALL | wxEXPAND);
-        wxCheckBox* checkbox3 = new wxCheckBox(panel, ID_UI_3CHECK_UPDATED,
-                                                    "3Checkbox UI Updated",
-                                                    wxDefaultPosition, wxDefaultSize,
-                                                    wxCHK_3STATE);
-        checkbox3->SetMinSize(checkbox3->GetSizeFromText(checkbox3->GetLabelText()));
-        checkbox3->Disable();
-        sizer->Add(checkbox3, 0, wxALL | wxEXPAND);
-#endif
 
         //Also set the general disabled text colour:
         wxRibbonArtProvider* artProvider = m_ribbon->GetArtProvider();
@@ -655,7 +621,7 @@ wxColour MyFrame::GetGalleryColour(wxRibbonGallery *gallery,
                                    wxRibbonGalleryItem* item, wxString* name)
 {
     ColourClientData *data = (ColourClientData*)gallery->GetItemClientObject(item);
-    if(name != nullptr)
+    if(name != NULL)
         *name = data->GetName();
     return data->GetColour();
 }
@@ -668,7 +634,7 @@ void MyFrame::OnHoveredColourChange(wxRibbonGalleryEvent& evt)
     wxRibbonGallery *gallery = evt.GetGallery();
     wxRibbonArtProvider *provider = gallery->GetArtProvider();
 
-    if(evt.GetGalleryItem() != nullptr)
+    if(evt.GetGalleryItem() != NULL)
     {
         if(provider == m_ribbon->GetArtProvider())
         {
@@ -676,7 +642,7 @@ void MyFrame::OnHoveredColourChange(wxRibbonGalleryEvent& evt)
             gallery->SetArtProvider(provider);
         }
         provider->SetColour(wxRIBBON_ART_GALLERY_HOVER_BACKGROUND_COLOUR,
-            GetGalleryColour(evt.GetGallery(), evt.GetGalleryItem(), nullptr));
+            GetGalleryColour(evt.GetGallery(), evt.GetGalleryItem(), NULL));
     }
     else
     {
@@ -694,7 +660,7 @@ void MyFrame::OnPrimaryColourSelect(wxRibbonGalleryEvent& evt)
     wxColour colour = GetGalleryColour(evt.GetGallery(), evt.GetGalleryItem(), &name);
     AddText("Colour \"" + name + "\" selected as primary.");
     wxColour secondary, tertiary;
-    m_ribbon->GetArtProvider()->GetColourScheme(nullptr, &secondary, &tertiary);
+    m_ribbon->GetArtProvider()->GetColourScheme(NULL, &secondary, &tertiary);
     m_ribbon->GetArtProvider()->SetColourScheme(colour, secondary, tertiary);
     ResetGalleryArtProviders();
     m_ribbon->Refresh();
@@ -706,7 +672,7 @@ void MyFrame::OnSecondaryColourSelect(wxRibbonGalleryEvent& evt)
     wxColour colour = GetGalleryColour(evt.GetGallery(), evt.GetGalleryItem(), &name);
     AddText("Colour \"" + name + "\" selected as secondary.");
     wxColour primary, tertiary;
-    m_ribbon->GetArtProvider()->GetColourScheme(&primary, nullptr, &tertiary);
+    m_ribbon->GetArtProvider()->GetColourScheme(&primary, NULL, &tertiary);
     m_ribbon->GetArtProvider()->SetColourScheme(primary, colour, tertiary);
     ResetGalleryArtProviders();
     m_ribbon->Refresh();
@@ -769,33 +735,6 @@ void MyFrame::OnEnableUpdateUI(wxUpdateUIEvent& evt)
 void MyFrame::OnCheckUpdateUI(wxUpdateUIEvent& evt)
 {
     evt.Check(m_bChecked);
-}
-
-void MyFrame::OnCheckboxUpdateUI(wxUpdateUIEvent& evt)
-{
-#if wxUSE_CHECKBOX
-    wxASSERT(evt.IsCheckable());
-    wxCheckBox* cb = wxDynamicCast(evt.GetEventObject(), wxCheckBox);
-    wxWindow* parent = cb->GetParent();
-    wxWindow* wnd = parent->FindWindow(ID_3CHECK);
-    wxCheckBox* src = wxCheckCast<wxCheckBox>(wnd);
-    if (!evt.Is3State())
-    {
-        if (src->Get3StateValue() != wxCHK_UNDETERMINED)
-        {
-            evt.Show(true);
-            evt.Check(src->Get3StateValue() != wxCHK_UNCHECKED);
-        }
-        else
-        {
-            evt.Show(false);
-        }
-    }
-    else
-    {
-        evt.Set3StateValue(src->Get3StateValue());
-    }
-#endif
 }
 
 void MyFrame::OnChangeTextUpdateUI(wxUpdateUIEvent& evt)
@@ -1031,7 +970,7 @@ wxRibbonGalleryItem* MyFrame::AddColourToGallery(wxRibbonGallery *gallery,
                                  wxString colour, wxMemoryDC& dc,
                                  wxColour* value)
 {
-    wxRibbonGalleryItem* item = nullptr;
+    wxRibbonGalleryItem* item = NULL;
     wxColour c;
     if (colour != "Default")
         c = wxColour(colour);
@@ -1074,12 +1013,12 @@ wxRibbonGalleryItem* MyFrame::AddColourToGallery(wxRibbonGallery *gallery,
 void MyFrame::OnColourGalleryButton(wxCommandEvent& evt)
 {
     wxRibbonGallery *gallery = wxDynamicCast(evt.GetEventObject(), wxRibbonGallery);
-    if(gallery == nullptr)
+    if(gallery == NULL)
         return;
 
     m_ribbon->DismissExpandedPanel();
     if(gallery->GetSelection())
-        m_colour_data.SetColour(GetGalleryColour(gallery, gallery->GetSelection(), nullptr));
+        m_colour_data.SetColour(GetGalleryColour(gallery, gallery->GetSelection(), NULL));
     wxColourDialog dlg(this, &m_colour_data);
     if(dlg.ShowModal() == wxID_OK)
     {
@@ -1087,18 +1026,18 @@ void MyFrame::OnColourGalleryButton(wxCommandEvent& evt)
         wxColour clr = m_colour_data.GetColour();
 
         // Try to find colour in gallery
-        wxRibbonGalleryItem *item = nullptr;
+        wxRibbonGalleryItem *item = NULL;
         for(unsigned int i = 0; i < gallery->GetCount(); ++i)
         {
             item = gallery->GetItem(i);
-            if(GetGalleryColour(gallery, item, nullptr) == clr)
+            if(GetGalleryColour(gallery, item, NULL) == clr)
                 break;
             else
-                item = nullptr;
+                item = NULL;
         }
 
         // Colour not in gallery - add it
-        if(item == nullptr)
+        if(item == NULL)
         {
             item = AddColourToGallery(gallery,
                 clr.GetAsString(wxC2S_HTML_SYNTAX), m_bitmap_creation_dc,

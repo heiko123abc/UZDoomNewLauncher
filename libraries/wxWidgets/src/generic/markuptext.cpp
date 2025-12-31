@@ -35,8 +35,7 @@
 
 #if wxUSE_GRAPHICS_CONTEXT
     #include "wx/graphics.h"
-
-    #include <memory>
+    #include "wx/scopedptr.h"
 #endif
 
 namespace
@@ -52,7 +51,7 @@ public:
     // Initialize the base class with the font to use. As we don't care about
     // colours (which don't affect the text measurements), don't bother to
     // specify them at all.
-    wxMarkupParserMeasureOutput(wxReadOnlyDC& dc, int *visibleHeight)
+    wxMarkupParserMeasureOutput(wxDC& dc, int *visibleHeight)
         : wxMarkupParserAttrOutput(dc.GetFont(), wxColour(), wxColour()),
           m_dc(dc),
           m_visibleHeight(visibleHeight)
@@ -64,7 +63,7 @@ public:
     const wxSize& GetSize() const { return m_size; }
 
 
-    virtual void OnText(const wxString& text) override
+    virtual void OnText(const wxString& text) wxOVERRIDE
     {
         // TODO-MULTILINE-MARKUP: Must use GetMultiLineTextExtent().
         const wxSize size = m_dc.GetTextExtent(text);
@@ -82,22 +81,22 @@ public:
         }
     }
 
-    virtual void OnAttrStart(const Attr& attr) override
+    virtual void OnAttrStart(const Attr& attr) wxOVERRIDE
     {
         m_dc.SetFont(attr.font);
     }
 
-    virtual void OnAttrEnd(const Attr& WXUNUSED(attr)) override
+    virtual void OnAttrEnd(const Attr& WXUNUSED(attr)) wxOVERRIDE
     {
         m_dc.SetFont(GetFont());
     }
 
 private:
-    wxReadOnlyDC& m_dc;
+    wxDC& m_dc;
 
     // The values that we compute.
     wxSize m_size;
-    int * const m_visibleHeight;    // may be null
+    int * const m_visibleHeight;    // may be NULL
 
     wxDECLARE_NO_COPY_CLASS(wxMarkupParserMeasureOutput);
 };
@@ -135,7 +134,7 @@ public:
     {
     }
 
-    virtual void OnAttrStart(const Attr& attr) override
+    virtual void OnAttrStart(const Attr& attr) wxOVERRIDE
     {
         m_dc.SetFont(attr.font);
         if ( attr.foreground.IsOk() )
@@ -150,7 +149,7 @@ public:
         }
     }
 
-    virtual void OnAttrEnd(const Attr& attr) override
+    virtual void OnAttrEnd(const Attr& attr) wxOVERRIDE
     {
         // We always restore the font because we always change it...
         m_dc.SetFont(GetFont());
@@ -202,7 +201,7 @@ public:
     {
     }
 
-    virtual void OnText(const wxString& text_) override
+    virtual void OnText(const wxString& text_) wxOVERRIDE
     {
         wxString text;
         int indexAccel = wxControl::FindAccelIndex(text_, &text);
@@ -249,7 +248,7 @@ public:
         m_ellipsizeMode = ellipsizeMode == wxELLIPSIZE_NONE ? wxELLIPSIZE_NONE : wxELLIPSIZE_END;
     }
 
-    virtual void OnText(const wxString& text) override
+    virtual void OnText(const wxString& text) wxOVERRIDE
     {
         wxRect rect(m_rect);
         rect.x = m_pos;
@@ -293,7 +292,7 @@ public:
 
 private:
 #if wxUSE_GRAPHICS_CONTEXT
-    std::unique_ptr<wxGraphicsContext> m_gc;
+    wxScopedPtr<wxGraphicsContext> m_gc;
 #endif
     wxWindow* const m_win;
     int const m_rendererFlags;
@@ -309,7 +308,7 @@ private:
 // wxMarkupText implementation
 // ============================================================================
 
-wxSize wxMarkupTextBase::Measure(wxReadOnlyDC& dc, int *visibleHeight) const
+wxSize wxMarkupTextBase::Measure(wxDC& dc, int *visibleHeight) const
 {
     wxMarkupParserMeasureOutput out(dc, visibleHeight);
     wxMarkupParser parser(out);
@@ -327,7 +326,7 @@ wxString wxMarkupText::GetMarkupForMeasuring() const
     return wxControl::RemoveMnemonics(m_markup);
 }
 
-void wxMarkupText::Render(wxDC& dc, const wxRect& rect, int flags, int align)
+void wxMarkupText::Render(wxDC& dc, const wxRect& rect, int flags)
 {
     // We want to center the above-baseline parts of the letter vertically, so
     // we use the visible height and not the total height (which includes
@@ -336,19 +335,7 @@ void wxMarkupText::Render(wxDC& dc, const wxRect& rect, int flags, int align)
     wxRect rectText(rect.GetPosition(), Measure(dc, &visibleHeight));
     rectText.height = visibleHeight;
 
-    if ( align & wxALIGN_RIGHT )
-        rectText.x = rect.GetRight() - rectText.width;
-    else if ( align & wxALIGN_CENTRE_HORIZONTAL )
-        rectText.x += (rect.GetWidth() - rectText.width) / 2;
-    //else: wxALIGN_LEFT, nothing to do
-
-    if ( align & wxALIGN_BOTTOM )
-        rectText.y = rect.GetBottom() - rectText.height;
-    else if ( align & wxALIGN_CENTRE_VERTICAL )
-        rectText.y += (rect.GetHeight() - rectText.height) / 2;
-    //else: wxALIGN_TOP, nothing to do
-
-    wxMarkupParserRenderLabelOutput out(dc, rectText, flags);
+    wxMarkupParserRenderLabelOutput out(dc, rectText.CentreIn(rect), flags);
     wxMarkupParser parser(out);
     parser.Parse(m_markup);
 }

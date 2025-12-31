@@ -43,14 +43,14 @@ class wxInfoBarGTKImpl
 public:
     wxInfoBarGTKImpl()
     {
-        m_label = nullptr;
-        m_close = nullptr;
+        m_label = NULL;
+        m_close = NULL;
     }
 
     // label for the text shown in the bar
     GtkWidget *m_label;
 
-    // the default close button, nullptr if not needed (m_buttons is not empty) or
+    // the default close button, NULL if not needed (m_buttons is not empty) or
     // not created yet
     GtkWidget *m_close;
 
@@ -75,6 +75,17 @@ public:
 // local functions
 // ----------------------------------------------------------------------------
 
+namespace
+{
+
+inline bool UseNative()
+{
+    // native GtkInfoBar widget is only available in GTK+ 2.18 and later
+    return wx_is_at_least_gtk2(18);
+}
+
+} // anonymous namespace
+
 extern "C"
 {
 
@@ -97,19 +108,10 @@ static void wxgtk_infobar_close(GtkInfoBar * WXUNUSED(infobar),
 // wxInfoBar implementation
 // ============================================================================
 
-bool wxInfoBar::UseNative() const
+bool wxInfoBar::Create(wxWindow *parent, wxWindowID winid)
 {
-    // Native GtkInfoBar widget is only available in GTK+ 2.18 and later.
-    // Also, if the checkbox is included, then we need to use
-    // the generic version.
-    return wx_is_at_least_gtk2(18) && !HasFlag(wxINFOBAR_CHECKBOX);
-}
-
-bool wxInfoBar::Create(wxWindow *parent, wxWindowID winid, long style)
-{
-    SetWindowStyle(style);
     if ( !UseNative() )
-        return wxInfoBarGeneric::Create(parent, winid, style);
+        return wxInfoBarGeneric::Create(parent, winid);
 
     m_impl = new wxInfoBarGTKImpl;
 
@@ -149,8 +151,8 @@ bool wxInfoBar::Create(wxWindow *parent, wxWindowID winid, long style)
     // Run-time check is needed because the bug was introduced in 3.10 and
     // fixed in 3.22.29 (see 6b4d95e86dabfcdaa805fbf068a99e19736a39a4 and a
     // couple of previous commits in GTK+ repository).
-    if ( gtk_check_version(3, 10, 0) == nullptr &&
-            gtk_check_version(3, 22, 29) != nullptr )
+    if ( gtk_check_version(3, 10, 0) == NULL &&
+            gtk_check_version(3, 22, 29) != NULL )
     {
         GObject* const
             revealer = gtk_widget_get_template_child(GTK_WIDGET(m_widget),
@@ -191,7 +193,7 @@ void wxInfoBar::ShowMessage(const wxString& msg, int flags)
     GtkMessageType type;
     if ( wxGTKImpl::ConvertMessageTypeFromWX(flags, &type) )
         gtk_info_bar_set_message_type(GTK_INFO_BAR(m_widget), type);
-    gtk_label_set_text(GTK_LABEL(m_impl->m_label), msg.utf8_str());
+    gtk_label_set_text(GTK_LABEL(m_impl->m_label), wxGTK_CONV(msg));
     gtk_label_set_ellipsize(GTK_LABEL(m_impl->m_label), PANGO_ELLIPSIZE_MIDDLE);
 
 #if wxUSE_TOOLTIPS
@@ -234,9 +236,9 @@ GtkWidget *wxInfoBar::GTKAddButton(wxWindowID btnid, const wxString& label)
 
     GtkWidget* button = gtk_info_bar_add_button(GTK_INFO_BAR(m_widget),
 #ifdef __WXGTK4__
-        (label.empty() ? wxConvertMnemonicsToGTK(wxGetStockLabel(btnid)) : label).utf8_str(),
+        wxGTK_CONV(label.empty() ? wxConvertMnemonicsToGTK(wxGetStockLabel(btnid)) : label),
 #else
-        label.empty() ? wxGetStockGtkID(btnid) : static_cast<const char*>(label.utf8_str()),
+        label.empty() ? wxGetStockGtkID(btnid) : static_cast<const char*>(wxGTK_CONV(label)),
 #endif
         btnid);
 
@@ -277,7 +279,7 @@ void wxInfoBar::AddButton(wxWindowID btnid, const wxString& label)
     if ( m_impl->m_close )
     {
         gtk_widget_destroy(m_impl->m_close);
-        m_impl->m_close = nullptr;
+        m_impl->m_close = NULL;
     }
 
     GtkWidget * const button = GTKAddButton(btnid, label);

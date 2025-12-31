@@ -13,8 +13,7 @@ ProjectFiles._FILE_TYPES['.cxx'] = ('sourcecode.cpp.cpp', 'PBXSourcesBuildPhase'
 from fix_xcode_ids import processFile
 
 bklfiles = ["../bakefiles/files.bkl", "../bakefiles/zlib.bkl", "../bakefiles/regex.bkl", "../bakefiles/tiff.bkl",
-            "../bakefiles/png.bkl", "../bakefiles/jpeg.bkl", "../bakefiles/scintilla.bkl", "../bakefiles/lexilla.bkl",
-            "../bakefiles/expat.bkl", "../bakefiles/webp.bkl"]
+            "../bakefiles/png.bkl", "../bakefiles/jpeg.bkl", "../bakefiles/scintilla.bkl", "../bakefiles/expat.bkl"]
 nodes = [
     # xcode group, entries[], targets []
     ["base", ["$(BASE_SRC)"], ["dynamic", "static", "base"]],
@@ -38,10 +37,8 @@ nodes = [
     ["libtiff", ["$(wxtiff)"], ["dynamic", "static", "wxtiff"]],
     ["libjpeg", ["$(wxjpeg)"], ["dynamic", "static", "wxjpeg"]],
     ["libpng", ["$(wxpng)"], ["dynamic", "static", "wxpng"]],
-    ["libwebp", ["$(wxwebp)"], ["dynamic", "static", "wxwebp"]],
     ["libregex", ["$(wxregex)"], ["dynamic", "static", "wxregex"]],
     ["libscintilla", ["$(wxscintilla)"], ["dynamic", "static", "wxscintilla"]],
-    ["liblexilla", ["$(wxlexilla)"], ["dynamic", "static", "wxlexilla"]],
     ["libexpat", ["$(wxexpat)"], ["dynamic", "static", "wxexpat"]]
 ]
 
@@ -106,7 +103,7 @@ def makeProject(projectName, conditions):
     populateProject(projectFile + "/project.pbxproj", fileGroups, nodes)
     processFile(projectFile + "/project.pbxproj")
 
-osxBuildFolder = os.path.dirname(os.path.realpath(__file__))
+osxBuildFolder = os.getcwd()
 
 makeProject("wxcocoa", ["PLATFORM_MACOSX=='1'", "TOOLKIT=='OSX_COCOA'", "WXUNIV=='0'", "USE_GUI=='1' and WXUNIV=='0'"])
 makeProject("wxiphone", ["PLATFORM_MACOSX=='1'", "TOOLKIT=='OSX_IPHONE'", "WXUNIV=='0'", "USE_GUI=='1' and WXUNIV=='0'"])

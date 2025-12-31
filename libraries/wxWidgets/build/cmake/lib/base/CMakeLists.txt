@@ -28,12 +28,15 @@ endif()
 
 wx_add_library(wxbase IS_BASE ${BASE_FILES})
 
+# Note that when using built-in versions of the libraries, their include
+# directories must come before the system ones which could be used by some
+# other dependency.
 if(wxUSE_ZLIB)
-    wx_lib_include_directories(wxbase ${ZLIB_INCLUDE_DIRS})
+    wx_lib_include_directories_before(wxbase ${ZLIB_INCLUDE_DIRS})
     wx_lib_link_libraries(wxbase PRIVATE ${ZLIB_LIBRARIES})
 endif()
 if(wxUSE_REGEX)
-    wx_lib_include_directories(wxbase ${REGEX_INCLUDE_DIRS})
+    wx_lib_include_directories_before(wxbase ${REGEX_INCLUDE_DIRS})
     wx_lib_link_libraries(wxbase PRIVATE ${REGEX_LIBRARIES})
 endif()
 if(wxUSE_LIBLZMA)
@@ -42,10 +45,6 @@ if(wxUSE_LIBLZMA)
 endif()
 if(UNIX AND wxUSE_SECRETSTORE)
     wx_lib_include_directories(wxbase ${LIBSECRET_INCLUDE_DIRS})
-    # Avoid linking with libsecret-1.so directly, we load this
-    # library dynamically in wxSecretStoreLibSecretImpl to avoid
-    # requiring it being installed on the target system.
-    list(REMOVE_ITEM LIBSECRET_LIBRARIES secret-1)
     wx_lib_link_libraries(wxbase PRIVATE ${LIBSECRET_LIBRARIES})
 endif()
 if(wxUSE_LIBICONV)
@@ -55,13 +54,24 @@ endif()
 
 if(APPLE)
     wx_lib_link_libraries(wxbase
+        PRIVATE
+        "-framework Security"
         PUBLIC
         "-framework CoreFoundation"
     )
+    if(WXOSX_IPHONE)
+        wx_lib_link_libraries(wxbase
+            PUBLIC
+            "-framework UIKit"
+        )
+    else()
+        wx_lib_link_libraries(wxbase
+            PUBLIC
+            "-framework AppKit"
+        )
+    endif()
     if(WXOSX_COCOA)
         wx_lib_link_libraries(wxbase
-            PRIVATE
-            "-framework Security"
             PUBLIC
             "-framework Carbon"
             "-framework Cocoa"

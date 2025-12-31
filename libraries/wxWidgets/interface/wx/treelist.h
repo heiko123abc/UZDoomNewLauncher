@@ -15,37 +15,11 @@
 */
 enum
 {
-    /// Only allow single selection (this is the default).
-    wxTL_SINGLE         = 0x0000,
-
-    /// Allow multiple selections.
-    wxTL_MULTIPLE       = 0x0001,
-
-    /**
-        Show checkboxes in the first column.
-
-        Without any additional styles, checkboxes may be only in checked or
-        unchecked state.
-     */
-    wxTL_CHECKBOX       = 0x0002,
-
-    /**
-        Allow 3rd state in checkboxes.
-
-        Specifying this style turns on ::wxTL_CHECKBOX too.
-
-        Unless ::wxTL_USER_3STATE is also specified, the 3rd state
-        ("undetermined") can only be set by the program but not by the user.
-     */
-    wxTL_3STATE         = 0x0004,
-
-    /**
-        Allow user to set 3rd state in the checkboxes.
-
-        Specifying this style turns on ::wxTL_3STATE and ::wxTL_CHECKBOX too.
-     */
-    wxTL_USER_3STATE    = 0x0008,
-
+    wxTL_SINGLE         = 0x0000,       /// This is the default anyhow.
+    wxTL_MULTIPLE       = 0x0001,       /// Allow multiple selection.
+    wxTL_CHECKBOX       = 0x0002,       /// Show checkboxes in the first column.
+    wxTL_3STATE         = 0x0004,       /// Allow 3rd state in checkboxes.
+    wxTL_USER_3STATE    = 0x0008,       /// Allow user to set 3rd state.
     /**
         Don't show the column headers.
 
@@ -56,8 +30,12 @@ enum
      */
     wxTL_NO_HEADER      = 0x0010,
 
-    /// Style used by the control by default.
-    wxTL_DEFAULT_STYLE  = wxTL_SINGLE
+    wxTL_DEFAULT_STYLE  = wxTL_SINGLE,
+    wxTL_STYLE_MASK     = wxTL_SINGLE |
+                          wxTL_MULTIPLE |
+                          wxTL_CHECKBOX |
+                          wxTL_3STATE |
+                          wxTL_USER_3STATE
 };
 
 
@@ -315,7 +293,7 @@ public:
         constructor and exactly once.
 
         @param parent
-            The parent window, must be non-null.
+            The parent window, must be non-NULL.
         @param id
             The window identifier, may be ::wxID_ANY.
         @param pos
@@ -471,7 +449,7 @@ public:
                               const wxString& text,
                               int imageClosed = NO_IMAGE,
                               int imageOpened = NO_IMAGE,
-                              wxClientData* data = nullptr);
+                              wxClientData* data = NULL);
 
     /**
         Insert a new item into the tree.
@@ -500,14 +478,14 @@ public:
                               const wxString& text,
                               int imageClosed = NO_IMAGE,
                               int imageOpened = NO_IMAGE,
-                              wxClientData* data = nullptr);
+                              wxClientData* data = NULL);
 
     /// Same as InsertItem() with wxTLI_FIRST.
     wxTreeListItem PrependItem(wxTreeListItem parent,
                                const wxString& text,
                                int imageClosed = NO_IMAGE,
                                int imageOpened = NO_IMAGE,
-                               wxClientData* data = nullptr);
+                               wxClientData* data = NULL);
 
     /// Delete the specified item.
     void DeleteItem(wxTreeListItem item);
@@ -863,14 +841,14 @@ public:
         @false and doesn't modify any of its output parameters.
 
         @param col
-            Receives the index of the column used for sorting if non-null.
+            Receives the index of the column used for sorting if non-@NULL.
         @param ascendingOrder
             Receives @true or @false depending on whether the items are sorted
             in ascending or descending order.
         @return
             @true if the control is sorted or @false if it isn't sorted at all.
      */
-    bool GetSortColumn(unsigned* col, bool* ascendingOrder = nullptr);
+    bool GetSortColumn(unsigned* col, bool* ascendingOrder = NULL);
 
     /**
         Set the object to use for comparing the items.
@@ -902,7 +880,7 @@ public:
     /**
         Return the view part of this control as a wxWindow.
 
-        This method always returns non-null pointer once the window was
+        This method always returns non-@NULL pointer once the window was
         created.
      */
     wxWindow* GetView() const;

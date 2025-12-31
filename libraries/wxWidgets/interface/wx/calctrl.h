@@ -296,12 +296,6 @@ enum wxCalendarHitTestResult
     @note Changing the selected date will trigger an EVT_CALENDAR_DAY, MONTH or
           YEAR event as well as an EVT_CALENDAR_SEL_CHANGED event.
 
-    @note In wxMSW this control always uses the default user locale, i.e. the
-        month and weekday names are always displayed in the Windows display
-        language and are not affected by wxUILocale. This is a limitation of
-        the native control and wxGenericCalendarCtrl must be used if this is
-        undesirable.
-
     @library{wxcore}
     @category{ctrl}
     @appearance{calendarctrl}
@@ -454,8 +448,8 @@ public:
         Not implemented in wxGTK currently.
     */
     virtual wxCalendarHitTestResult HitTest(const wxPoint& pos,
-                                            wxDateTime* date = nullptr,
-                                            wxDateTime::WeekDay* wd = nullptr);
+                                            wxDateTime* date = NULL,
+                                            wxDateTime::WeekDay* wd = NULL);
 
     /**
         Clears any attributes associated with the given day (in the range
@@ -559,11 +553,11 @@ public:
         @see SetDateRange()
 
         @param lowerdate
-            If non-null, the value of the low limit for the dates shown by the
+            If non-@NULL, the value of the low limit for the dates shown by the
             control is returned (which may be ::wxDefaultDateTime if no limit
             is set).
         @param upperdate
-            If non-null, the value of the upper limit for the dates shown by
+            If non-@NULL, the value of the upper limit for the dates shown by
             the control is returned (which may be ::wxDefaultDateTime if no
             limit is set).
         @return

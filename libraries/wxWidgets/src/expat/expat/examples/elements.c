@@ -14,7 +14,7 @@
    Copyright (c) 2001-2003 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
    Copyright (c) 2004-2006 Karl Waclawek <karl@waclawek.net>
    Copyright (c) 2005-2007 Steven Solie <steven@solie.ca>
-   Copyright (c) 2016-2022 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2016-2019 Sebastian Pipping <sebastian@pipping.org>
    Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
    Copyright (c) 2019      Zhongyuan Zhou <zhouzhongyuan@huawei.com>
    Licensed under the MIT license:
@@ -49,6 +49,7 @@
 #endif
 
 #ifdef XML_UNICODE_WCHAR_T
+#  include <wchar.h>
 #  define XML_FMT_STR "ls"
 #else
 #  define XML_FMT_STR "s"
@@ -57,7 +58,7 @@
 static void XMLCALL
 startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
   int i;
-  int *const depthPtr = (int *)userData;
+  int *depthPtr = (int *)userData;
   (void)atts;
 
   for (i = 0; i < *depthPtr; i++)
@@ -68,54 +69,34 @@ startElement(void *userData, const XML_Char *name, const XML_Char **atts) {
 
 static void XMLCALL
 endElement(void *userData, const XML_Char *name) {
-  int *const depthPtr = (int *)userData;
+  int *depthPtr = (int *)userData;
   (void)name;
 
   *depthPtr -= 1;
 }
 
 int
-main(void) {
+main(int argc, char *argv[]) {
+  char buf[BUFSIZ];
   XML_Parser parser = XML_ParserCreate(NULL);
   int done;
   int depth = 0;
-
-  if (! parser) {
-    fprintf(stderr, "Couldn't allocate memory for parser\n");
-    return 1;
-  }
+  (void)argc;
+  (void)argv;
 
   XML_SetUserData(parser, &depth);
   XML_SetElementHandler(parser, startElement, endElement);
-
   do {
-    void *const buf = XML_GetBuffer(parser, BUFSIZ);
-    if (! buf) {
-      fprintf(stderr, "Couldn't allocate memory for buffer\n");
-      XML_ParserFree(parser);
-      return 1;
-    }
-
-    const size_t len = fread(buf, 1, BUFSIZ, stdin);
-
-    if (ferror(stdin)) {
-      fprintf(stderr, "Read error\n");
-      XML_ParserFree(parser);
-      return 1;
-    }
-
-    done = feof(stdin);
-
-    if (XML_ParseBuffer(parser, (int)len, done) == XML_STATUS_ERROR) {
-      fprintf(stderr,
-              "Parse error at line %" XML_FMT_INT_MOD "u:\n%" XML_FMT_STR "\n",
-              XML_GetCurrentLineNumber(parser),
-              XML_ErrorString(XML_GetErrorCode(parser)));
+    size_t len = fread(buf, 1, sizeof(buf), stdin);
+    done = len < sizeof(buf);
+    if (XML_Parse(parser, buf, (int)len, done) == XML_STATUS_ERROR) {
+      fprintf(stderr, "%" XML_FMT_STR " at line %" XML_FMT_INT_MOD "u\n",
+              XML_ErrorString(XML_GetErrorCode(parser)),
+              XML_GetCurrentLineNumber(parser));
       XML_ParserFree(parser);
       return 1;
     }
   } while (! done);
-
   XML_ParserFree(parser);
   return 0;
 }

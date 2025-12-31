@@ -14,7 +14,7 @@
 #
 
 # Declare the minimum required CMake version
-cmake_minimum_required(VERSION 3.5...3.31)
+cmake_minimum_required(VERSION 3.5...4.1)
 
 if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     # If no deployment target has been set default to the minimum supported
@@ -29,11 +29,8 @@ endif()
 # Name the project
 project(minimal)
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Request the required wxWidgets libs
-find_package(wxWidgets 3.3 COMPONENTS core base REQUIRED CONFIG)
+find_package(wxWidgets 3.2 COMPONENTS core base REQUIRED CONFIG)
 
 # Define a variable containing a list of source files for the project
 set(SRC_FILES

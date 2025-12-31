@@ -2,6 +2,7 @@
 // Name:        src/osx/carbon/dcclient.cpp
 // Purpose:     wxClientDCImpl class
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     01/02/97
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -53,7 +54,7 @@ wxWindowDCImpl::wxWindowDCImpl( wxDC *owner, wxWindow *window )
     CGContextRef cg = (CGContextRef) window->MacGetCGContextRef();
 
     m_release = false;
-    if ( cg == nullptr )
+    if ( cg == NULL )
     {
         SetGraphicsContext( wxGraphicsContext::Create( window ) ) ;
         m_contentScaleFactor = window->GetContentScaleFactor();
@@ -104,21 +105,10 @@ void wxWindowDCImpl::DoGetSize( int* width, int* height ) const
         *height = m_height;
 }
 
-void wxWindowDCImpl::DestroyClippingRegion()
-{
-    wxGCDCImpl::DestroyClippingRegion();
-
-    wxPoint clipPos = DeviceToLogical(m_origin.x, m_origin.y);
-    wxSize clipDim = DeviceToLogicalRel(m_width, m_height);
-    DoSetClippingRegion(clipPos.x, clipPos.y, clipDim.x, clipDim.y);
-}
-
-#if WXWIN_COMPATIBILITY_3_2
 wxPoint wxWindowDCImpl::OSXGetOrigin() const
 {
     return m_origin;
 }
-#endif // WXWIN_COMPATIBILITY_3_2
 
 /*
  * wxClientDCImpl
@@ -139,11 +129,11 @@ wxClientDCImpl::wxClientDCImpl( wxDC *owner, wxWindow *window ) :
     m_window->GetClientSize( &m_width , &m_height);
     if ( !m_window->IsShownOnScreen() )
         m_width = m_height = 0;
-
+    
     int x0,y0;
     DoGetDeviceOrigin(&x0,&y0);
     SetDeviceOrigin( m_origin.x + x0, m_origin.y + y0 );
-
+    
     DoSetClippingRegion( 0 , 0 , m_width , m_height ) ;
 }
 

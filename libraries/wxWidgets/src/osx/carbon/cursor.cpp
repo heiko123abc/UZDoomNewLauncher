@@ -2,6 +2,7 @@
 // Name:        src/osx/carbon/cursor.cpp
 // Purpose:     wxCursor class
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -17,8 +18,6 @@
     #include "wx/image.h"
 #endif // WX_PRECOMP
 
-#include "wx/filename.h"
-#include "wx/stdpaths.h"
 #include "wx/xpmdecod.h"
 
 #include "wx/osx/private.h"
@@ -34,10 +33,10 @@ public:
     wxCursorRefData(const wxCursorRefData& cursor);
     virtual ~wxCursorRefData();
 
-    virtual bool IsOk() const override
+    virtual bool IsOk() const wxOVERRIDE
     {
 #if wxOSX_USE_COCOA_OR_CARBON
-        if ( m_hCursor != nullptr )
+        if ( m_hCursor != NULL )
             return true;
 
         return false;
@@ -193,7 +192,7 @@ ClassicCursor gMacCursors[kwxCursorLast+1] =
 0x1FF8, 0x1FF8, 0x1FF8, 0x0FF0, 0x07E0, 0x07E0, 0x07E0, 0x07E0},
 {0x0008, 0x0008}
 },
-
+    
 };
 
 #endif
@@ -202,12 +201,12 @@ wxCursor    gMacCurrentCursor ;
 
 wxCursorRefData::wxCursorRefData()
 {
-    m_hCursor = nullptr;
+    m_hCursor = NULL;
 }
 
 wxCursorRefData::wxCursorRefData(const wxCursorRefData& cursor) : wxGDIRefData()
 {
-    m_hCursor = nullptr;
+    m_hCursor = NULL;
 
 #if wxOSX_USE_COCOA
     m_hCursor = (WX_NSCursor) wxMacCocoaRetain(cursor.m_hCursor);
@@ -224,11 +223,6 @@ wxCursorRefData::~wxCursorRefData()
 
 wxCursor::wxCursor()
 {
-}
-
-wxCursor::wxCursor(const wxBitmap& bitmap, int hotSpotX, int hotSpotY)
-{
-    InitFromBitmap(bitmap, hotSpotX, hotSpotY);
 }
 
 #if wxUSE_IMAGE
@@ -255,14 +249,18 @@ wxGDIRefData *wxCursor::CloneGDIRefData(const wxGDIRefData *data) const
 
 WXHCURSOR wxCursor::GetHCURSOR() const
 {
-    return (M_CURSORDATA ? M_CURSORDATA->m_hCursor : nullptr);
+    return (M_CURSORDATA ? M_CURSORDATA->m_hCursor : 0);
 }
 
-void wxCursor::InitFromBitmap(const wxBitmap& bmp, int hotSpotX, int hotSpotY)
+#if wxUSE_IMAGE
+
+void wxCursor::InitFromImage(const wxImage & image)
 {
     m_refData = new wxCursorRefData;
-
+    int hotSpotX = image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_X);
+    int hotSpotY = image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_Y);
 #if wxOSX_USE_COCOA
+    wxBitmap bmp( image );
     CGImageRef cgimage = bmp.CreateCGImage();
     if ( cgimage )
     {
@@ -272,48 +270,20 @@ void wxCursor::InitFromBitmap(const wxBitmap& bmp, int hotSpotX, int hotSpotY)
 #endif
 }
 
-#if wxUSE_IMAGE
-
-void wxCursor::InitFromImage(const wxImage & image)
-{
-    int hotSpotX = image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_X);
-    int hotSpotY = image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_Y);
-    InitFromBitmap(image, hotSpotX, hotSpotY);
-}
-
 #endif //wxUSE_IMAGE
 
 wxCursor::wxCursor(const wxString& cursor_file, wxBitmapType flags, int hotSpotX, int hotSpotY)
 {
     m_refData = new wxCursorRefData;
-#if wxUSE_IMAGE
     if ( flags == wxBITMAP_TYPE_MACCURSOR_RESOURCE )
     {
 #if wxOSX_USE_COCOA
-        wxImage image;
-        wxFileName fileName( wxStandardPaths::Get().GetResourcesDir(), cursor_file, "png" );
-        if ( image.LoadFile( fileName.GetFullPath(), wxBITMAP_TYPE_PNG ) )
-        {
-            image.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_X, hotSpotX );
-            image.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_Y, hotSpotY );
-        }
-        else
-        {
-            fileName.SetExt( "cur" );
-            image.LoadFile( fileName.GetFullPath(), wxBITMAP_TYPE_CUR );
-        }
-        if ( image.IsOk() )
-        {
-            m_refData->DecRef();
-            m_refData = nullptr;
-            InitFromImage( image );
-        }
-        else
-            wxLogDebug( "No PNG or CUR cursor image found in Resources" );
+        wxFAIL_MSG( wxT("Not implemented") );
 #endif
     }
     else
     {
+#if wxUSE_IMAGE
         wxImage image ;
         image.LoadFile( cursor_file, flags ) ;
         if ( image.IsOk() )
@@ -321,16 +291,11 @@ wxCursor::wxCursor(const wxString& cursor_file, wxBitmapType flags, int hotSpotX
             image.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_X, hotSpotX ) ;
             image.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_Y, hotSpotY ) ;
             m_refData->DecRef() ;
-            m_refData = nullptr ;
+            m_refData = NULL ;
             InitFromImage( image ) ;
         }
-    }
-#else
-    wxUnusedVar(cursor_file);
-    wxUnusedVar(flags);
-    wxUnusedVar(hotSpotX);
-    wxUnusedVar(hotSpotY);
 #endif
+    }
 }
 
 // Cursors by stock number
@@ -361,11 +326,14 @@ wxPoint wxCursor::GetHotSpot() const
     return wxDefaultPosition;
 }
 
+wxCursor::~wxCursor()
+{
+}
+
 // Global cursor setting
 wxCursor gGlobalCursor;
-void wxSetCursor( const wxCursorBundle& cursors )
+void wxSetCursor(const wxCursor& cursor)
 {
-    wxCursor cursor = cursors.GetCursorForMainWindow();
     cursor.MacInstall() ;
     gGlobalCursor = cursor;
 }

@@ -4,6 +4,7 @@
 //              wxWidgets itself, it may contain identifiers which don't start
 //              with "wx".
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -66,7 +67,7 @@ public :
     virtual void        SetControlSize( wxWindowVariant variant );
     virtual double      GetContentScaleFactor() const ;
 
-    virtual void        SetNeedsDisplay( const wxRect* where = nullptr );
+    virtual void        SetNeedsDisplay( const wxRect* where = NULL );
     virtual bool        GetNeedsDisplay() const;
 
     virtual bool        CanFocus() const;
@@ -79,7 +80,7 @@ public :
 
     void                SetDefaultButton( bool isDefault );
     void                PerformClick();
-    virtual void        SetLabel(const wxString& title);
+    virtual void        SetLabel(const wxString& title, wxFontEncoding encoding);
 
     void                SetCursor( const wxCursor & cursor );
     void                CaptureMouse();
@@ -108,7 +109,7 @@ public :
 
     void                SetFont(const wxFont & font);
 
-    void                InstallEventHandler( WXWidget control = nullptr );
+    void                InstallEventHandler( WXWidget control = NULL );
     bool                EnableTouchEvents(int WXUNUSED(eventsMask)) { return false; }
 
     virtual void        DoNotifyFocusEvent(bool receivedFocus, wxWidgetImpl* otherWindow);
@@ -137,65 +138,65 @@ public :
 
     virtual ~wxNonOwnedWindowIPhoneImpl();
 
-    virtual void WillBeDestroyed() override;
-    void Create(wxWindow* parent, const wxPoint& pos, const wxSize& size,
-                long style, long extraStyle, const wxString& name ) override;
+    virtual void WillBeDestroyed() ;
+    void Create( wxWindow* parent, const wxPoint& pos, const wxSize& size,
+    long style, long extraStyle, const wxString& name ) ;
     void Create( wxWindow* parent, WXWindow nativeWindow );
 
-    WXWindow GetWXWindow() const override;
-    void Raise() override;
-    void Lower() override;
-    bool Show(bool show) override;
-    bool ShowWithEffect(bool show, wxShowEffect effect, unsigned timeout) override;
+    WXWindow GetWXWindow() const;
+    void Raise();
+    void Lower();
+    bool Show(bool show);
+    bool ShowWithEffect(bool show, wxShowEffect effect, unsigned timeout);
 
-    void Update() override;
-    bool SetTransparent(wxByte alpha) override;
-    bool SetBackgroundColour(const wxColour& col ) override;
-    void SetExtraStyle( long exStyle ) override;
-    bool SetBackgroundStyle(wxBackgroundStyle style) override;
-    bool CanSetTransparent() override;
+    void Update();
+    bool SetTransparent(wxByte alpha);
+    bool SetBackgroundColour(const wxColour& col );
+    void SetExtraStyle( long exStyle );
+    bool SetBackgroundStyle(wxBackgroundStyle style);
+    bool CanSetTransparent();
 
-    void MoveWindow(int x, int y, int width, int height) override;
-    void GetPosition( int &x, int &y ) const override;
-    void GetSize( int &width, int &height ) const override;
+    void MoveWindow(int x, int y, int width, int height);
+    void GetPosition( int &x, int &y ) const;
+    void GetSize( int &width, int &height ) const;
 
-    void GetContentArea( int &left , int &top , int &width , int &height ) const override;
-    bool SetShape(const wxRegion& region) override;
+    void GetContentArea( int &left , int &top , int &width , int &height ) const;
+    bool SetShape(const wxRegion& region);
 
-    virtual void SetTitle( const wxString& title ) override;
+    virtual void SetTitle( const wxString& title, wxFontEncoding encoding ) ;
 
     // Title bar buttons don't exist in iOS.
-    virtual bool EnableCloseButton(bool WXUNUSED(enable)) override { return false; }
-    virtual bool EnableMaximizeButton(bool WXUNUSED(enable)) override { return false; }
-    virtual bool EnableMinimizeButton(bool WXUNUSED(enable)) override { return false; }
+    virtual bool EnableCloseButton(bool WXUNUSED(enable)) { return false; }
+    virtual bool EnableMaximizeButton(bool WXUNUSED(enable)) { return false; }
+    virtual bool EnableMinimizeButton(bool WXUNUSED(enable)) { return false; }
 
-    virtual bool IsMaximized() const override;
+    virtual bool IsMaximized() const;
 
-    virtual bool IsIconized() const override;
+    virtual bool IsIconized() const;
 
-    virtual void Iconize( bool iconize ) override;
+    virtual void Iconize( bool iconize );
 
-    virtual void Maximize(bool maximize) override;
+    virtual void Maximize(bool maximize);
 
-    virtual bool IsFullScreen() const override;
+    virtual bool IsFullScreen() const;
 
-    virtual bool EnableFullScreenView(bool enable, long style) override;
+    virtual bool EnableFullScreenView(bool enable, long style);
 
-    virtual bool ShowFullScreen(bool show, long style) override;
+    virtual bool ShowFullScreen(bool show, long style);
 
-    virtual wxContentProtection GetContentProtection() const override
+    virtual wxContentProtection GetContentProtection() const wxOVERRIDE
         {  return wxCONTENT_PROTECTION_NONE; }
-    virtual bool SetContentProtection(wxContentProtection WXUNUSED(contentProtection)) override
+    virtual bool SetContentProtection(wxContentProtection contentProtection) wxOVERRIDE
         { return false; }
 
-    virtual void RequestUserAttention(int flags) override;
+    virtual void RequestUserAttention(int flags);
 
-    virtual void ScreenToWindow( int *x, int *y ) override;
+    virtual void ScreenToWindow( int *x, int *y );
 
-    virtual void WindowToScreen( int *x, int *y ) override;
+    virtual void WindowToScreen( int *x, int *y );
 
     // FIXME: Does iPhone have a concept of inactive windows?
-    virtual bool IsActive() override { return true; }
+    virtual bool IsActive() { return true; }
 
     wxNonOwnedWindow*   GetWXPeer() { return m_wxPeer; }
 
@@ -213,8 +214,6 @@ protected :
     WXDLLIMPEXP_CORE wxRect wxFromNSRect( UIView* parent, const CGRect& rect );
     WXDLLIMPEXP_CORE CGPoint wxToNSPoint( UIView* parent, const wxPoint& p );
     WXDLLIMPEXP_CORE wxPoint wxFromNSPoint( UIView* parent, const CGPoint& p );
-    WXDLLIMPEXP_CORE CGPoint wxToNSPointF(UIView* parent, const wxPoint2DDouble& p);
-    WXDLLIMPEXP_CORE wxPoint2DDouble wxFromNSPointF(UIView* parent, const CGPoint& p);
 
     CGRect WXDLLIMPEXP_CORE wxOSXGetFrameForControl( wxWindowMac* window , const wxPoint& pos , const wxSize &size ,
         bool adjustForOrigin = true );

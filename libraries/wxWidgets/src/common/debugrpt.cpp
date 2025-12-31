@@ -2,6 +2,7 @@
 // Name:        src/common/debugrpt.cpp
 // Purpose:     wxDebugReport and related classes implementation
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     2005-01-17
 // Copyright:   (c) 2005 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -73,7 +74,7 @@ public:
     bool IsOk() const { return m_isOk; }
 
 protected:
-    virtual void OnStackFrame(const wxStackFrame& frame) override;
+    virtual void OnStackFrame(const wxStackFrame& frame) wxOVERRIDE;
 
     wxXmlNode *m_nodeStack;
     bool m_isOk;
@@ -379,7 +380,7 @@ bool wxDebugReport::DoAddLoadedModules(wxXmlNode *nodeModules)
         if ( !path.empty() )
             nodeModule->AddAttribute(wxT("path"), path);
 
-        void *addr = nullptr;
+        void *addr = NULL;
         size_t len = 0;
         if ( info.GetAddress(&addr, &len) )
         {
@@ -585,7 +586,7 @@ bool wxDebugReport::DoProcess()
 
     msg += _("\nPlease send this report to the program maintainer, thank you!\n");
 
-    wxLogMessage(msg);
+    wxLogMessage(wxT("%s"), msg);
 
     // we have to do this or the report would be deleted, and we don't even
     // have any way to ask the user if he wants to keep it from here
@@ -735,7 +736,7 @@ bool wxDebugReportUpload::DoProcess()
         {
             for ( size_t n = 0; n < count; n++ )
             {
-                wxLogWarning(errors[n]);
+                wxLogWarning(wxT("%s"), errors[n]);
             }
         }
 

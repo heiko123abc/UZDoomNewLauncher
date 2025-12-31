@@ -31,57 +31,72 @@
 // test class
 // ----------------------------------------------------------------------------
 
-class ListCtrlTestCase : public ListBaseTestCase
+class ListCtrlTestCase : public ListBaseTestCase, public CppUnit::TestCase
 {
 public:
-    ListCtrlTestCase();
-    virtual ~ListCtrlTestCase() override;
+    ListCtrlTestCase() { }
 
-    virtual wxListCtrl *GetList() const override { return m_list; }
+    virtual void setUp() wxOVERRIDE;
+    virtual void tearDown() wxOVERRIDE;
 
-protected:
+    virtual wxListCtrl *GetList() const wxOVERRIDE { return m_list; }
+
+private:
+    CPPUNIT_TEST_SUITE( ListCtrlTestCase );
+        wxLIST_BASE_TESTS();
+        CPPUNIT_TEST( EditLabel );
+        WXUISIM_TEST( ColumnClick );
+        WXUISIM_TEST( ColumnDrag );
+        CPPUNIT_TEST( SubitemRect );
+        CPPUNIT_TEST( ColumnCount );
+    CPPUNIT_TEST_SUITE_END();
+
+    void EditLabel();
+    void SubitemRect();
+    void ColumnCount();
+#if wxUSE_UIACTIONSIMULATOR
+    // Column events are only supported in wxListCtrl currently so we test them
+    // here rather than in ListBaseTest
+    void ColumnClick();
+    void ColumnDrag();
+#endif // wxUSE_UIACTIONSIMULATOR
+
     wxListCtrl *m_list;
 
     wxDECLARE_NO_COPY_CLASS(ListCtrlTestCase);
 };
 
+// register in the unnamed registry so that these tests are run by default
+CPPUNIT_TEST_SUITE_REGISTRATION( ListCtrlTestCase );
+
+// also include in its own registry so that these tests can be run alone
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION( ListCtrlTestCase, "ListCtrlTestCase" );
+
 // ----------------------------------------------------------------------------
 // test initialization
 // ----------------------------------------------------------------------------
 
-ListCtrlTestCase::ListCtrlTestCase()
+void ListCtrlTestCase::setUp()
 {
     m_list = new wxListCtrl(wxTheApp->GetTopWindow());
-    m_list->SetWindowStyle(wxLC_REPORT | wxLC_EDIT_LABELS);
+    m_list->SetWindowStyle(wxLC_REPORT);
     m_list->SetSize(400, 200);
-
-    wxTheApp->GetTopWindow()->Raise();
 }
 
-ListCtrlTestCase::~ListCtrlTestCase()
+void ListCtrlTestCase::tearDown()
 {
     DeleteTestWindow(m_list);
+    m_list = NULL;
 }
 
-wxLIST_BASE_TESTS(ListCtrl, "[listctrl]")
-
-// Note that wxLIST_BASE_TESTS() already defines "ListCtrl::EditLabel" test.
-TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::CallEditLabel", "[listctrl]")
+void ListCtrlTestCase::EditLabel()
 {
-    EventCounter editItem(m_list, wxEVT_LIST_BEGIN_LABEL_EDIT);
-    EventCounter endEditItem(m_list, wxEVT_LIST_END_LABEL_EDIT);
-
     m_list->InsertColumn(0, "Column 0");
     m_list->InsertItem(0, "foo");
     m_list->EditLabel(0);
-
-    m_list->EndEditLabel(true);
-
-    CHECK(editItem.GetCount() == 1);
-    CHECK(endEditItem.GetCount() == 1);
 }
 
-TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::SubitemRect", "[listctrl]")
+void ListCtrlTestCase::SubitemRect()
 {
     wxBitmap bmp = wxArtProvider::GetBitmap(wxART_ERROR);
 
@@ -126,7 +141,7 @@ TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::SubitemRect", "[listctrl]")
     CHECK(rectLabel.GetRight() == rectItem.GetRight());
 }
 
-TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::ColumnCount", "[listctrl]")
+void ListCtrlTestCase::ColumnCount()
 {
     CHECK(m_list->GetColumnCount() == 0);
     m_list->InsertColumn(0, "Column 0");
@@ -154,12 +169,11 @@ TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::ColumnCount", "[listctrl]")
 }
 
 #if wxUSE_UIACTIONSIMULATOR
-
-TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::ColumnDrag", "[listctrl]")
+void ListCtrlTestCase::ColumnDrag()
 {
-    if ( !EnableUITests() )
-        return;
-
+#if defined(__WXMSW__) && !wxUSE_UNICODE
+    WARN("Skipping test broken in non-Unicode wxMSW build.");
+#else
     EventCounter begindrag(m_list, wxEVT_LIST_COL_BEGIN_DRAG);
     EventCounter dragging(m_list, wxEVT_LIST_COL_DRAGGING);
     EventCounter enddrag(m_list, wxEVT_LIST_COL_END_DRAG);
@@ -186,18 +200,16 @@ TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::ColumnDrag", "[listctrl]")
     sim.MouseUp();
     wxYield();
 
-    CHECK( begindrag.GetCount() == 1 );
-    CHECK( dragging.GetCount() > 0 );
-    CHECK( enddrag.GetCount() == 1 );
+    CPPUNIT_ASSERT_EQUAL(1, begindrag.GetCount());
+    CPPUNIT_ASSERT(dragging.GetCount() > 0);
+    CPPUNIT_ASSERT_EQUAL(1, enddrag.GetCount());
 
     m_list->ClearAll();
+#endif
 }
 
-TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::ColumnClick", "[listctrl]")
+void ListCtrlTestCase::ColumnClick()
 {
-    if ( !EnableUITests() )
-        return;
-
     EventCounter colclick(m_list, wxEVT_LIST_COL_CLICK);
     EventCounter colrclick(m_list, wxEVT_LIST_COL_RIGHT_CLICK);
 
@@ -213,8 +225,8 @@ TEST_CASE_METHOD(ListCtrlTestCase, "ListCtrl::ColumnClick", "[listctrl]")
     sim.MouseClick(wxMOUSE_BTN_RIGHT);
     wxYield();
 
-    CHECK( colclick.GetCount() == 1 );
-    CHECK( colrclick.GetCount() == 1 );
+    CPPUNIT_ASSERT_EQUAL(1, colclick.GetCount());
+    CPPUNIT_ASSERT_EQUAL(1, colrclick.GetCount());
 
     m_list->ClearAll();
 }

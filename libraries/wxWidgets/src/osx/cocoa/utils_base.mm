@@ -30,64 +30,34 @@
 // needed hack, see the above-mentioned files for more information
 class wxSocketManager;
 extern WXDLLIMPEXP_BASE wxSocketManager *wxOSXSocketManagerCF;
-wxSocketManager *wxOSXSocketManagerCF = nullptr;
+wxSocketManager *wxOSXSocketManagerCF = NULL;
 #endif // wxUSE_SOCKETS
-
-#if (defined(__APPLE__) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 101000) \
-    || (defined(__WXOSX_IPHONE__) && defined(__IPHONE_8_0))
-    #define wxHAS_NSPROCESSINFO 1
-#endif
 
 // our OS version is the same in non GUI and GUI cases
 wxOperatingSystemId wxGetOsVersion(int *verMaj, int *verMin, int *verMicro)
 {
-#if wxHAS_NSPROCESSINFO
     NSOperatingSystemVersion osVer = [NSProcessInfo processInfo].operatingSystemVersion;
 
-    if ( verMaj != nullptr )
+    if ( verMaj != NULL )
         *verMaj = osVer.majorVersion;
 
-    if ( verMin != nullptr )
+    if ( verMin != NULL )
         *verMin = osVer.minorVersion;
 
-    if ( verMicro != nullptr )
-        *verMicro = osVer.patchVersion;
-#else
-    SInt32 maj, min, micro;
-
-    Gestalt(gestaltSystemVersionMajor, &maj);
-    Gestalt(gestaltSystemVersionMinor, &min);
-    Gestalt(gestaltSystemVersionBugFix, &micro);
-
-    if ( verMaj != NULL )
-        *verMaj = maj;
-
-    if ( verMin != NULL )
-        *verMin = min;
-
     if ( verMicro != NULL )
-        *verMicro = micro;
-#endif
+        *verMicro = osVer.patchVersion;
+
     return wxOS_MAC_OSX_DARWIN;
 }
 
 bool wxCheckOsVersion(int majorVsn, int minorVsn, int microVsn)
 {
-#if wxHAS_NSPROCESSINFO
     NSOperatingSystemVersion osVer;
     osVer.majorVersion = majorVsn;
     osVer.minorVersion = minorVsn;
     osVer.patchVersion = microVsn;
 
     return [[NSProcessInfo processInfo] isOperatingSystemAtLeastVersion:osVer] != NO;
-#else
-    int majorCur, minorCur, microCur;
-    wxGetOsVersion(&majorCur, &minorCur, &microCur);
-
-    return majorCur > majorVsn
-        || (majorCur == majorVsn && minorCur >= minorVsn)
-        || (majorCur == majorVsn && minorCur == minorVsn && microCur >= microVsn);
-#endif
 }
 
 wxString wxGetOsDescription()
@@ -107,25 +77,6 @@ wxString wxGetOsDescription()
     {
         switch (minorVer)
         {
-            case 5:
-                osName = "Leopard";
-                osBrand = "Mac OS X";
-                break;
-            case 6:
-                osName = "Snow Leopard";
-                osBrand = "Mac OS X";
-                break;
-            case 7:
-                osName = "Lion";
-                // 10.7 was the last version where the "Mac" prefix was used
-                osBrand = "Mac OS X";
-                break;
-            case 8:
-                osName = "Mountain Lion";
-                break;
-            case 9:
-                osName = "Mavericks";
-                break;
             case 10:
                 osName = "Yosemite";
                 break;
@@ -144,7 +95,7 @@ wxString wxGetOsDescription()
             case 15:
                 osName = "Catalina";
                 break;
-        }
+        };
     }
     else if (majorVer > 10)
     {
@@ -199,8 +150,6 @@ bool wxDateTime::GetFirstWeekDay(wxDateTime::WeekDay *firstDay)
 
 #ifndef __WXOSX_IPHONE__
 
-#include <AppKit/AppKit.h>
-
 bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
 {
     // If there is not a single argument then there is no application
@@ -236,7 +185,7 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
     // Loop through command line arguments to the bundle,
     // turn them into CFURLs and then put them in cfaFiles
     // For use to launch services call
-    for( ; *argv != nullptr; ++argv )
+    for( ; *argv != NULL; ++argv )
     {
         NSURL *cfurlCurrentFile;
         wxString dir( *argv );
@@ -274,16 +223,16 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
     }
 
     NSWorkspace *ws = [NSWorkspace sharedWorkspace];
-
-
+    
+    
     NSRunningApplication *app = nil;
-
+    
     if ( [params count] > 0 )
         app = [ws openURLs:params withApplicationAtURL:url
                    options:NSWorkspaceLaunchAsync
              configuration:[NSDictionary dictionary]
                      error:&error];
-
+    
     if ( app == nil )
     {
         app = [ws launchApplicationAtURL:url
@@ -291,8 +240,8 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
                            configuration:[NSDictionary dictionary]
                                    error:&error];
 
-        // this was already processed argv is null and nothing bad will happen
-        for( ; *argv != nullptr; ++argv )
+        // this was already processed argv is NULL and nothing bad will happen
+        for( ; *argv != NULL; ++argv )
         {
             wxString currfile(*argv);
             if( [ws openFile:wxCFStringRef(currfile).AsNSString()
@@ -303,7 +252,7 @@ bool wxCocoaLaunch(const char* const* argv, pid_t &pid)
             }
         }
     }
-
+    
     [params release];
 
     if( app != nil )

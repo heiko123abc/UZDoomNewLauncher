@@ -14,8 +14,6 @@
 
 #include "wx/private/webrequest.h"
 
-DECLARE_WXCOCOA_OBJC_CLASS(NSError);
-DECLARE_WXCOCOA_OBJC_CLASS(NSURLComponents);
 DECLARE_WXCOCOA_OBJC_CLASS(NSURLCredential);
 DECLARE_WXCOCOA_OBJC_CLASS(NSURLSession);
 DECLARE_WXCOCOA_OBJC_CLASS(NSURLSessionTask);
@@ -37,13 +35,13 @@ public:
 
     ~wxWebAuthChallengeURLSession();
 
-    void SetCredentials(const wxWebCredentials& cred) override;
+    void SetCredentials(const wxWebCredentials& cred) wxOVERRIDE;
 
     WX_NSURLCredential GetURLCredential() const { return m_cred; }
 
 private:
     wxWebRequestURLSession& m_request;
-    WX_NSURLCredential m_cred = nullptr;
+    WX_NSURLCredential m_cred = NULL;
 
     wxDECLARE_NO_COPY_CLASS(wxWebAuthChallengeURLSession);
 };
@@ -55,19 +53,17 @@ public:
 
     ~wxWebResponseURLSession();
 
-    wxFileOffset GetContentLength() const override;
+    wxFileOffset GetContentLength() const wxOVERRIDE;
 
-    wxString GetURL() const override;
+    wxString GetURL() const wxOVERRIDE;
 
-    wxString GetHeader(const wxString& name) const override;
+    wxString GetHeader(const wxString& name) const wxOVERRIDE;
 
-    std::vector<wxString> GetAllHeaderValues(const wxString& name) const override;
+    int GetStatus() const wxOVERRIDE;
 
-    int GetStatus() const override;
+    wxString GetStatusText() const wxOVERRIDE;
 
-    wxString GetStatusText() const override;
-
-    wxString GetSuggestedFileName() const override;
+    wxString GetSuggestedFileName() const wxOVERRIDE;
 
     void HandleData(WX_NSData data);
 
@@ -80,45 +76,36 @@ private:
 class wxWebRequestURLSession : public wxWebRequestImpl
 {
 public:
-    // Ctor for asynchronous requests.
     wxWebRequestURLSession(wxWebSession& session,
                            wxWebSessionURLSession& sessionImpl,
                            wxEvtHandler* handler,
                            const wxString& url,
                            int winid);
 
-    // Ctor for synchronous requests.
-    wxWebRequestURLSession(wxWebSessionURLSession& sessionImpl,
-                           const wxString& url);
-
     ~wxWebRequestURLSession();
 
-    Result Execute() override;
+    void Start() wxOVERRIDE;
 
-    void Start() override;
-
-    wxWebResponseImplPtr GetResponse() const override
+    wxWebResponseImplPtr GetResponse() const wxOVERRIDE
         { return m_response; }
 
-    wxWebAuthChallengeImplPtr GetAuthChallenge() const override
+    wxWebAuthChallengeImplPtr GetAuthChallenge() const wxOVERRIDE
         { return m_authChallenge; }
 
-    wxFileOffset GetBytesSent() const override;
+    wxFileOffset GetBytesSent() const wxOVERRIDE;
 
-    wxFileOffset GetBytesExpectedToSend() const override;
+    wxFileOffset GetBytesExpectedToSend() const wxOVERRIDE;
 
-    wxFileOffset GetBytesReceived() const override;
+    wxFileOffset GetBytesReceived() const wxOVERRIDE;
 
-    wxFileOffset GetBytesExpectedToReceive() const override;
+    wxFileOffset GetBytesExpectedToReceive() const wxOVERRIDE;
 
-    wxWebRequestHandle GetNativeHandle() const override
+    wxWebRequestHandle GetNativeHandle() const wxOVERRIDE
     {
         return (wxWebRequestHandle)m_task;
     }
 
-    Result GetResultAfterCompletion(WX_NSError error);
-
-    void HandleCompletion(WX_NSError error);
+    void HandleCompletion();
 
     void HandleChallenge(wxWebAuthChallengeURLSession* challenge);
 
@@ -131,18 +118,7 @@ public:
         { return m_authChallenge.get(); }
 
 private:
-    void DoCancel() override;
-
-    // This is a blatant ODR-violation, but there doesn't seem to be any way to
-    // declare a function taking a block in (non-Objective) C++, so just skip
-    // its declaration when compiling pure C++ code.
-#if defined(__OBJC__)
-    // Common part of Execute() and Start(), used for both synchronous and
-    // asynchronous requests, but for the completion handler can only be
-    // non-nil in the synchronous case.
-    Result
-    DoPrepare(void (^completionHandler)(NSData*, NSURLResponse*, NSError*));
-#endif // __OBJC__
+    void DoCancel() wxOVERRIDE;
 
     wxWebSessionURLSession& m_sessionImpl;
     wxString m_url;
@@ -156,7 +132,7 @@ private:
 class wxWebSessionURLSession : public wxWebSessionImpl
 {
 public:
-    explicit wxWebSessionURLSession(Mode mode);
+    wxWebSessionURLSession();
 
     ~wxWebSessionURLSession();
 
@@ -164,34 +140,22 @@ public:
     CreateRequest(wxWebSession& session,
                   wxEvtHandler* handler,
                   const wxString& url,
-                  int winid = wxID_ANY) override;
+                  int winid = wxID_ANY) wxOVERRIDE;
 
-    wxWebRequestImplPtr
-    CreateRequestSync(wxWebSessionSync& session,
-                      const wxString& url) override;
+    wxVersionInfo GetLibraryVersionInfo() wxOVERRIDE;
 
-    wxVersionInfo GetLibraryVersionInfo() const override;
-
-    wxWebSessionHandle GetNativeHandle() const override
+    wxWebSessionHandle GetNativeHandle() const wxOVERRIDE
     {
         return (wxWebSessionHandle)m_session;
     }
 
-    bool SetProxy(const wxWebProxy& proxy) override;
-
-    bool EnablePersistentStorage(bool enable) override;
-
-    WX_NSURLSession GetSession();
+    WX_NSURLSession GetSession() { return m_session; }
 
     WX_wxWebSessionDelegate GetDelegate() { return m_delegate; }
 
 private:
-    WX_NSURLSession m_session = nullptr;
+    WX_NSURLSession m_session;
     WX_wxWebSessionDelegate m_delegate;
-#if !wxOSX_USE_IPHONE
-    WX_NSURLComponents m_proxyURL = nullptr;
-#endif // !wxOSX_USE_IPHONE
-    bool m_persistentStorageEnabled = false;
 
     wxDECLARE_NO_COPY_CLASS(wxWebSessionURLSession);
 };
@@ -199,15 +163,8 @@ private:
 class wxWebSessionFactoryURLSession : public wxWebSessionFactory
 {
 public:
-    wxWebSessionImpl* Create() override
-    {
-        return new wxWebSessionURLSession(wxWebSessionImpl::Mode::Async);
-    }
-
-    wxWebSessionImpl* CreateSync() override
-    {
-        return new wxWebSessionURLSession(wxWebSessionImpl::Mode::Sync);
-    }
+    wxWebSessionImpl* Create() wxOVERRIDE
+    { return new wxWebSessionURLSession(); }
 };
 
 #endif // wxUSE_WEBREQUEST_URLSESSION

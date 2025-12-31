@@ -2,6 +2,7 @@
 // Name:        debugrpt.cpp
 // Purpose:     minimal sample showing wxDebugReport and related classes
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     2005-01-20
 // Copyright:   (c) 2005 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -63,7 +64,7 @@ protected:
     // this is called with the contents of the server response: you will
     // probably want to parse the XML document in OnServerReply() instead of
     // just dumping it as I do
-    virtual bool OnServerReply(const wxArrayString& reply) override
+    virtual bool OnServerReply(const wxArrayString& reply) wxOVERRIDE
     {
         if ( reply.IsEmpty() )
         {
@@ -79,7 +80,7 @@ protected:
             s << '\t' << reply[n] << '\n';
         }
 
-        wxLogMessage(s);
+        wxLogMessage("%s", s);
 
         return true;
     }
@@ -118,7 +119,7 @@ public:
 // just some functions to get a slightly deeper stack trace
 static void bar(const char *p)
 {
-    char *pc = nullptr;
+    char *pc = 0;
     *pc = *p;
 
     printf("bar: %s\n", p);
@@ -157,8 +158,6 @@ class MyFrame : public wxFrame
 {
 public:
     MyFrame();
-    MyFrame(const MyFrame&) = delete;
-    MyFrame& operator=(const MyFrame&) = delete;
 
 private:
     void OnListLoadedDLLs(wxCommandEvent& event);
@@ -178,7 +177,7 @@ private:
     public:
         BadTimer() { }
 
-        virtual void Notify() override
+        virtual void Notify() wxOVERRIDE
         {
             foo(8);
         }
@@ -187,6 +186,7 @@ private:
     // number of lines drawn in OnPaint()
     int m_numLines;
 
+    wxDECLARE_NO_COPY_CLASS(MyFrame);
     wxDECLARE_EVENT_TABLE();
 };
 
@@ -203,14 +203,12 @@ class MyApp : public wxApp
 public:
     // call wxHandleFatalExceptions here
     MyApp();
-    MyApp(const MyApp&) = delete;
-    MyApp& operator=(const MyApp&) = delete;
 
     // create our main window here
-    virtual bool OnInit() override;
+    virtual bool OnInit() wxOVERRIDE;
 
     // called when a crash occurs in this application
-    virtual void OnFatalException() override;
+    virtual void OnFatalException() wxOVERRIDE;
 
     // this is where we really generate the debug report
     void GenerateReport(wxDebugReport::Context ctx);
@@ -222,6 +220,8 @@ public:
 
 private:
     bool m_uploadReport;
+
+    wxDECLARE_NO_COPY_CLASS(MyApp);
 };
 
 wxIMPLEMENT_APP(MyApp);
@@ -248,7 +248,7 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
 wxEND_EVENT_TABLE()
 
 MyFrame::MyFrame()
-       : wxFrame(nullptr, wxID_ANY, "wxWidgets Debug Report Sample",
+       : wxFrame(NULL, wxID_ANY, "wxWidgets Debug Report Sample",
                  wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE|wxDEFAULT_FRAME_STYLE)
 {
     m_numLines = 10;
@@ -317,7 +317,7 @@ void MyFrame::OnListLoadedDLLs(wxCommandEvent& WXUNUSED(event))
             return;
 
         const wxDynamicLibraryDetails& det = loaded[sel];
-        void *addr = nullptr;
+        void *addr = 0;
         size_t len = 0;
         det.GetAddress(&addr, &len);
         wxLogMessage("Full path is \"%s\", memory range %p:%p, version \"%s\"",

@@ -2,6 +2,7 @@
 // Name:        src/generic/printps.cpp
 // Purpose:     Postscript print/preview framework
 // Author:      Julian Smart
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -68,7 +69,7 @@ wxPostScriptPrinter::~wxPostScriptPrinter()
 bool wxPostScriptPrinter::Print(wxWindow *parent, wxPrintout *printout, bool prompt)
 {
     sm_abortIt = false;
-    sm_abortWindow = nullptr;
+    sm_abortWindow = NULL;
 
     if (!printout)
     {
@@ -111,10 +112,9 @@ bool wxPostScriptPrinter::Print(wxWindow *parent, wxPrintout *printout, bool pro
     printout->OnPreparePrinting();
 
     // Get some parameters from the printout, if defined
-    wxPrintPageRanges ranges;
-    const auto all = printout->GetPagesInfo(ranges);
-    const int minPage = all.fromPage;
-    const int maxPage = all.toPage;
+    int fromPage, toPage;
+    int minPage, maxPage;
+    printout->GetPageInfo(&minPage, &maxPage, &fromPage, &toPage);
 
     if (maxPage == 0)
     {
@@ -211,7 +211,7 @@ bool wxPostScriptPrinter::Print(wxWindow *parent, wxPrintout *printout, bool pro
 
 wxDC* wxPostScriptPrinter::PrintDialog(wxWindow *parent)
 {
-    wxDC* dc = nullptr;
+    wxDC* dc = NULL;
 
     wxGenericPrintDialog dialog( parent, &m_printDialogData );
     if (dialog.ShowModal() == wxID_OK)
@@ -219,7 +219,7 @@ wxDC* wxPostScriptPrinter::PrintDialog(wxWindow *parent)
         dc = dialog.GetPrintDC();
         m_printDialogData = dialog.GetPrintDialogData();
 
-        if (dc == nullptr)
+        if (dc == NULL)
             sm_lastError = wxPRINTER_ERROR;
         else
             sm_lastError = wxPRINTER_NO_ERROR;

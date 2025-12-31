@@ -11,14 +11,13 @@
 
 @tableofcontents
 
-A wxWidgets application does not have a @e main function; the equivalent, i.e.
-the entry point where the execution of the program begins, is the
-wxApp::OnInit() member function defined in a class derived from wxApp (this
-class is typically specified using wxIMPLEMENT_APP() macro).
+A wxWidgets application does not have a @e main procedure; the equivalent is
+the wxApp::OnInit member defined for a class derived from wxApp.
 
-@e OnInit usually creates the main application window and returns @true.
-If it returns @false, the application will exit immediately, without starting
-to run.
+@e OnInit will usually create a top window as a bare minimum. Unlike in earlier
+versions of wxWidgets, OnInit does not return a frame. Instead it returns a
+boolean value which indicates whether processing should continue (@true) or not
+(@false).
 
 Note that the program's command line arguments, represented by @e argc and
 @e argv, are available from within wxApp member functions.
@@ -39,14 +38,14 @@ An example of defining an application follows:
 class DerivedApp : public wxApp
 {
 public:
-    virtual bool OnInit() override;
+    virtual bool OnInit();
 };
 
 wxIMPLEMENT_APP(DerivedApp);
 
 bool DerivedApp::OnInit()
 {
-    wxFrame *the_frame = new wxFrame(nullptr, ID_MYFRAME, argv[0]);
+    wxFrame *the_frame = new wxFrame(NULL, ID_MYFRAME, argv[0]);
     ...
     the_frame->Show(true);
 
@@ -61,6 +60,10 @@ and tells wxWidgets which application class should be used.
 You can also use wxDECLARE_APP(appClass) in a header file to declare the wxGetApp
 function which returns a reference to the application object. Otherwise you can
 only use the global @c wxTheApp pointer which is of type @c wxApp*.
+
+Please note that wxIMPLEMENT_APP() and wxDECLARE_APP() must always be used in
+the global scope and not within a namespace, even if the application class is
+within a namespace.
 
 
 

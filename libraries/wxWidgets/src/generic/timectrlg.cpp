@@ -128,6 +128,7 @@ public:
     // The current time (date part is ignored).
     wxDateTime m_time;
 
+private:
     // The logical fields of the text control (AM/PM one may not be present).
     enum Field
     {
@@ -578,7 +579,7 @@ public:
 
 void wxTimePickerCtrlGeneric::Init()
 {
-    m_impl = nullptr;
+    m_impl = NULL;
 }
 
 bool
@@ -667,7 +668,7 @@ wxSize wxTimePickerCtrlGeneric::DoGetBestSize() const
 
     wxTextCtrl* const text = m_impl->m_text;
     int w;
-    text->GetTextExtent(m_impl->m_useAMPM ? "00:00:00 AM" : "00:00:00", &w, nullptr);
+    text->GetTextExtent(text->GetValue(), &w, NULL);
     wxSize size(text->GetSizeFromTextSize(w + 1));
 
     const wxSize sizeBtn(m_impl->m_btn->GetBestSize());

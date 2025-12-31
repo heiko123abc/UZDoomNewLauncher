@@ -191,7 +191,6 @@ builtinWindowClasses =
     | wxGauge
     | wxGenericAnimationCtrl
     | wxGenericDirCtrl
-    | wxGenericHyperlinkCtrl
     | wxGrid
     | wxHtmlWindow
     | wxHyperlinkCtrl
@@ -203,8 +202,6 @@ builtinWindowClasses =
     | wxNotebook
     | wxOwnerDrawnComboBox
     | wxPanel
-    | wxPropertyGrid
-    | wxPropertyGridManager
     | wxPropertySheetDialog
     | wxRadioButton
     | wxRadioBox
@@ -238,7 +235,6 @@ builtinWindowClasses =
     | wxToolbook
     | wxTreeCtrl
     | wxTreebook
-    | wxVListBox
     | wxWizard
     )
 
@@ -298,7 +294,6 @@ builtinClassesNames =
     | "wxGauge"
     | "wxGenericAnimationCtrl"
     | "wxGenericDirCtrl"
-    | "wxGenericHyperlinkCtrl"
     | "wxGrid"
     | "wxHtmlWindow"
     | "wxHyperlinkCtrl"
@@ -310,8 +305,6 @@ builtinClassesNames =
     | "wxNotebook"
     | "wxOwnerDrawnComboBox"
     | "wxPanel"
-    | "wxPropertyGrid"
-    | "wxPropertyGridManager"
     | "wxPropertySheetDialog"
     | "wxRadioButton"
     | "wxRadioBox"
@@ -345,7 +338,6 @@ builtinClassesNames =
     | "wxToolbook"
     | "wxTreeCtrl"
     | "wxTreebook"
-    | "wxVListBox"
     | "wxWizard"
 
     | "wxBoxSizer"
@@ -438,9 +430,7 @@ stdWindowProperties =
         [xrc:p="o"] element ownfont {_, t_font }* &
         [xrc:p="o"] element help    {_, t_text }*
 
-# hack: add "feature" to "platform" because it also can be used on any element
 platform =
-        attribute feature  { t_string }? &
         attribute platform {
             xsd:string { pattern = "(win|mac|msw|unix)( *\| *(win|mac|msw|unix))*" }
         }?
@@ -468,7 +458,8 @@ t_showeffect = "wxSHOW_EFFECT_NONE" | "wxSHOW_EFFECT_ROLL_TO_LEFT" |
                "wxSHOW_EFFECT_EXPAND"
 
 t_url        = string
-t_colour     = xsd:string { pattern = "(#[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]|[a-zA-Z0-9 ]+)(\|dark:(#[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]|[a-zA-Z0-9 ]+))?" }
+t_colour     = xsd:string { pattern = "#[0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z][0-9a-zA-Z]" } |
+               xsd:string { pattern = "[^#].*" }
 t_position   = t_size
 t_size       = xsd:string { pattern = "(-?\d+),(-?\d+)d?" }
 t_pair_ints  = xsd:string { pattern = "(-?\d+),(-?\d+)" }
@@ -628,7 +619,6 @@ wxAuiPaneInfo =
         [xrc:p="o"] element movable         {_, t_bool }* &
         [xrc:p="o"] element floatable       {_, t_bool }* &
         [xrc:p="o"] element floating_size   {_, t_size }* &
-        [xrc:p="o"] element floating_client_size   {_, t_size }* &
         [xrc:p="o"] element min_size        {_, t_size }* &
         [xrc:p="o"] element max_size        {_, t_size }* &
         [xrc:p="o"] element best_size       {_, t_size }* &
@@ -706,11 +696,9 @@ wxBitmapButton =
         [xrc:p="o"] element default  {_, t_bool }* &
         [xrc:p="o"] element close    {_, t_bool }* &
         [xrc:p="important"] element bitmap {_, t_bitmap }* &
-        [xrc:p="o"] element pressed  {_, t_bitmap }* &
         [xrc:p="o"] element selected {_, t_bitmap }* &
         [xrc:p="o"] element focus    {_, t_bitmap }* &
         [xrc:p="o"] element disabled {_, t_bitmap }* &
-        [xrc:p="o"] element current  {_, t_bitmap }* &
         [xrc:p="o"] element hover    {_, t_bitmap }*
     }
 
@@ -1046,14 +1034,6 @@ wxGenericDirCtrl =
         [xrc:p="o"] element defaultfilter {_, t_integer }*
     }
 
-wxGenericHyperlinkCtrl =
-    element object {
-        attribute class { "wxGenericHyperlinkCtrl" } &
-        stdObjectNodeAttributes &
-        stdWindowProperties &
-        [xrc:p="important"] element label {_, t_text }* &
-        [xrc:p="important"] element url   {_, t_url }*
-    }
 
 wxGrid =
     element object {
@@ -1094,8 +1074,6 @@ wxInfoBar =
         [xrc:p="o"] element effectduration {_, t_integer }* &
         [xrc:p="o"] element showeffect     {_, t_showeffect }* &
         [xrc:p="o"] element hideeffect     {_, t_showeffect }* &
-        [xrc:p="o"] element checkboxlabel  {_, t_text }* &
-        [xrc:p="o"] element checked        {_, t_bool }* &
         element object {
             attribute class { "button" } &
             attribute name  { t_identifier }? &
@@ -1294,62 +1272,6 @@ wxPanel =
         stdObjectNodeAttributes &
         stdWindowProperties &
         (sizerNode | windowNode* )?
-    }
-
-
-wxPropertyGrid =
-    element object {
-        attribute class { "wxPropertyGrid" } &
-        stdObjectNodeAttributes &
-        stdWindowProperties &
-        [xrc:p="o"] element virtualwidth {_, t_integer }* &
-        (wxPropertyGridProperty | objectRef)*
-    }
-
-wxPropertyGridManager =
-    element object {
-        attribute class { "wxPropertyGridManager" } &
-        stdObjectNodeAttributes &
-        stdWindowProperties &
-        [xrc:p="o"] element virtualwidth {_, t_integer }* &
-        (wxPropertyGridPage | objectRef)*
-    }
-
-wxPropertyGridPage =
-    element page {
-        [xrc:p="o"] element label    {_, t_text }* &
-        [xrc:p="o"] element columns  {_, t_integer}* &
-        [xrc:p="o"] element splitterpos {
-            attribute index { t_integer }* &
-            # Too lax: it should be t_integer with optional "%", not text.
-            t_text
-        }* &
-        [xrc:p="o"] element choices  {
-            attribute id { t_identifier } &
-            t_text
-        }* &
-        (wxPropertyGridProperty | objectRef)*
-    }
-
-wxPropertyGridProperty =
-    element property {
-        attribute class { t_identifier } &
-        [xrc:p="o"] element label    {_, t_text }* &
-        [xrc:p="o"] element value    {_, t_text }* &
-        [xrc:p="o"] element attribute{
-            attribute name { t_identifier } &
-            t_text
-        }* &
-        # Too lax: choices should either have an id attribute or start with "@"
-        # referencing an ID defined elsewhere.
-        [xrc:p="o"] element choices  {
-            attribute id { t_identifier }* &
-            t_text
-        }* &
-        [xrc:p="o"] element tip      {_, t_text }* &
-        [xrc:p="o"] element expanded {_, t_bool }* &
-        [xrc:p="o"] element flags    {_, t_text }* &
-        (wxPropertyGridProperty | objectRef)*
     }
 
 
@@ -1814,14 +1736,6 @@ wxTreebook_treebookpage =
         [xrc:p="o"] element selected {_, t_bool }* &
         [xrc:p="o"] element expanded {_, t_bool }* &
         windowNode
-    }
-
-
-wxVListBox =
-    element object {
-        attribute class { "wxVListBox" } &
-        stdObjectNodeAttributes &
-        stdWindowProperties
     }
 
 

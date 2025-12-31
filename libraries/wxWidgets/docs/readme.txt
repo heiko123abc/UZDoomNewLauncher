@@ -1,7 +1,7 @@
-wxWidgets 3.3.1 Release Notes
+wxWidgets 3.2.9 Release Notes
 =============================
 
-Welcome to the latest release of wxWidgets, a free and open source
+Welcome to the new stable release of wxWidgets, a free and open source
 cross-platform C++ framework for writing advanced GUI applications using
 native controls.
 
@@ -16,7 +16,7 @@ more about wxWidgets at:
 
 Documentation is available online at:
 
-* https://docs.wxwidgets.org/3.3.1/
+* https://docs.wxwidgets.org/3.2.9/
 
 wxWidgets sources and binaries for the selected platforms are available for
 download from:
@@ -25,53 +25,49 @@ download from:
 
 or, for a more more permanent but less convenient to use link, from
 
-* https://github.com/wxWidgets/wxWidgets/releases/tag/v3.3.1/
+* https://github.com/wxWidgets/wxWidgets/releases/tag/v3.2.9/
 
-Please see https://docs.wxwidgets.org/3.3.1/overview_install.html for full
+Please see https://docs.wxwidgets.org/3.2.9/overview_install.html for full
 installation instructions.
 
 
 
-Changes since 3.3.0
+Changes since 3.2.8
 -------------------
 
-This release comes only a few weeks after 3.3.0, but still has more than 200
-changes including several important fixes for bugs found in 3.3.0, notably:
+This release doesn't add any major new features, but contains some important
+fixes for bugs found in the previous 3.2.8 release:
 
-- Restore Windows date/time pickers behaviour under non-English OS (#25511).
-- Fix crash on startup under macOS when using Farsi as system language (#25561).
-- Fix losing wxGenericListCtrl contents after AppendColumn() (#25519).
-- Fix crash when sorting wxDataViewCtrl in wxGTK in some circumstances (#25625).
-- Fix crash when using per-window menu in Windows MDI applications (#25522).
-- Restore inadvertently broken API compatibility in wxPropertyGrid (#25627).
+- Fix crash when using Farsi as system language under macOS (#25561).
+- Fix handling total window size with GNOME with X11 (#25348).
+- Fix wxGLCanvas scale when using EGL/Wayland in high DPI (Popax21, #23733).
+- Fix missing wxEVT_CHAR for Ctrl-Letter in non-US layouts (#25384).
+- Fix selecting columns in wxGrid with mouse (Dietmar Schwertberger, #25884).
 
-There were also a number of fixes to the new Windows dark mode support:
+The new release still contains a couple of enhancements, including:
 
-- Fix crash with wxStaticBitmap inside wxNotebook in dark mode (#25499).
-- Fix disabled wxButton bitmaps appearance in dark mode (#25575).
-- Fix disabled wxStaticText appearance in dark mode (#25574).
-- Fix notebook background in dark high contrast themes (#25542).
-- Fix regression in wxDataViewCtrl border in light mode (#25532).
-- Fix selected toolbar buttons in dark mode (Stefan Ziegler, #25616).
-- Fix wxComboCtrl appearance in dark mode (#23766).
-- Fix wxTE_RICH wxTextCtrl appearance in dark mode (#25602).
+- Many improvements to CMake build system (#25448, #25749, #25998).
+- Support for building under macOS 26 Tahoe (#25798).
+- Fix wxStyledTextCtrl support in screen readers (Maarten Bent, #25963).
+- Respect HTML5 charset attribute in wxHTML (Kees van der Oord, #25546).
+- Add support for using EGL 1.4 (and not 1.5) in wxGLCanvas (#22325).
 
-And, finally, this release also contains a small number of new features:
+Other changes include:
 
-- Allow setting "app id" under supported platforms (Windows/Wayland) (#25548).
-- Add persistence support for wxRadioButtons (#25530) and wxCheckBox (#25515).
-- Add support for PNG "Description" text chunk to wxImage (#25556).
-- wxNumberFormatter improvements (#25614, #25635).
+- Fix memory leak in wxColour::Set() under macOS (#25569).
+- Fix memory leak when using wxOverlay in wxGTK (#24500).
+- Reduce wxStaticBitmap GDI resource usage in wxMSW (Alex Shvartzkop, #25698).
+- Significantly improve performance of drawing bitmaps in wxAUI (#23841).
 
-Please see the change log for the more complete list:
+Please see the full change log for more details:
 
-https://raw.githubusercontent.com/wxWidgets/wxWidgets/v3.3.1/docs/changes.txt
+https://raw.githubusercontent.com/wxWidgets/wxWidgets/v3.2.9/docs/changes.txt
 
-Note that in spite of all these changes, wxWidgets 3.3.1 is almost fully
-compatible with wxWidgets 3.2 and updating the existing applications to
-use it shouldn't require much effort. However please make sure to read the
-"INCOMPATIBLE CHANGES" section of the change log above when upgrading to be
-aware of the breaking changes in it.
+This release is API and ABI-compatible with the previous 3.2.x releases, so
+the existing applications don't even need to be rebuilt to profit from all the
+fixes above if they use shared/dynamic libraries. And if they do need to be
+recompiled, this can be done without any changes to the code.
+
 
 
 Supported Platforms
@@ -79,13 +75,14 @@ Supported Platforms
 
 This version of wxWidgets supports the following primary platforms:
 
-* Windows 7, 8, 10 and 11 (32/64 bits).
-* Most Unix variants using the GTK+ toolkit (version 2.6 or newer)
+* Windows XP, Vista, 7, 8, 10 and 11 (32/64 bits).
+* Most Unix variants using the GTK toolkit (version 2.6 or newer or 3.x)
 * macOS (10.10 or newer) using Cocoa (x86-64 or ARM).
 
 There is some support for the following platforms:
 
 * Most Unix variants with X11
+* Most Unix variants with Motif/Lesstif
 * Most Unix variants with GTK+ 1.2
 * Most Unix variants with Qt 5 or newer (experimental)
 
@@ -111,8 +108,8 @@ unrestricted distribution of application binaries. To answer a FAQ, you don't
 have to distribute any source if you wish to write commercial applications using
 wxWidgets.
 
-However, if you distribute wxGTK or wxQt version of your
-application, don't forget that it is linked against GTK or Qt, which
+However, if you distribute wxGTK, wxQt or wxMotif (with Lesstif) version of your
+application, don't forget that it is linked against GTK+, Qt or Lesstif, which
 are covered by LGPL *without* exception notice and so is bound by its
 requirements.
 
@@ -164,4 +161,4 @@ developed by its users and your contributions to it are always welcome!
 
 Have fun!
 
-The wxWidgets Team, July 2025
+The wxWidgets Team, December 2015

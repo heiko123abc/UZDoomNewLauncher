@@ -2,6 +2,7 @@
 // Name:        src/propgrid/propgrid.cpp
 // Purpose:     wxPropertyGrid
 // Author:      Jaakko Salli
+// Modified by:
 // Created:     2004-09-25
 // Copyright:   (c) Jaakko Salli
 // Licence:     wxWindows licence
@@ -45,9 +46,12 @@
     #include "wx/settings.h"
 #endif
 
+
+// This define is necessary to prevent macro clearing
+#define __wxPG_SOURCE_FILE__
+
 #include "wx/propgrid/propgrid.h"
 #include "wx/propgrid/editors.h"
-#include "wx/propgrid/private.h"
 
 #if wxPG_USE_RENDERER_NATIVE
     #include "wx/renderer.h"
@@ -65,7 +69,7 @@
 // recommended to use either custom or native rendering).
 // If you want them, get wxTreeMultiCtrl by Jorgen Bodde,
 // and copy xpm files from archive to wxPropertyGrid src directory
-// (and also comment/undef wxPG_ICON_WIDTH in private.h
+// (and also comment/undef wxPG_ICON_WIDTH in propGrid.h
 // and set wxPG_USE_RENDERER_NATIVE to 0).
 #ifndef wxPG_ICON_WIDTH
   #if defined(__WXMAC__)
@@ -89,6 +93,10 @@
 #define wxPG_DEFAULT_CURSOR             wxNullCursor
 #define wxPG_PIXELS_PER_UNIT            m_lineHeight
 
+#ifdef wxPG_ICON_WIDTH
+  #define m_iconHeight m_iconWidth
+#endif
+
 //#define wxPG_TOOLTIP_DELAY              1000
 
 // This is the number of pixels the expander button inside
@@ -96,10 +104,9 @@
 // adjusted.
 #define IN_CELL_EXPANDER_BUTTON_X_ADJUST    2
 
+#if WXWIN_COMPATIBILITY_3_0
 namespace
 {
-
-#if WXWIN_COMPATIBILITY_3_0
 // Hash containing for every active wxPG the list of editors and their event handlers
 // to be deleted in the idle event handler.
 // It emulates member variable 'm_deletedEditorObjects' in 3.0 compatibility mode.
@@ -108,24 +115,9 @@ WX_DECLARE_HASH_MAP(wxPropertyGrid*, wxArrayPGObject*,
                     DeletedObjects);
 
 DeletedObjects gs_deletedEditorObjects;
-#endif
-
-// Bit values for wxPropertyGrid::m_coloursCustomized.
-enum CustomColour
-{
-    CustomColour_None           = 0x0000,
-    CustomColour_Margin         = 0x0001,
-    CustomColour_CaptionBg      = 0x0002,
-    CustomColour_CaptionText    = 0x0004,
-    CustomColour_CellBg         = 0x0008,
-    CustomColour_CellText       = 0x0010,
-    CustomColour_SelectionBg    = 0x0020,
-    CustomColour_SelectionText  = 0x0040,
-    CustomColour_Line           = 0x0080,
-    CustomColour_DisabledText   = 0x0100
-};
 
 } // anonymous namespace
+#endif
 
 // -----------------------------------------------------------------------
 
@@ -146,18 +138,23 @@ const char wxPropertyGridNameStr[] = "wxPropertyGrid";
 // Statics in one class for easy destruction.
 // -----------------------------------------------------------------------
 
-// This is the real global wxPGGlobalVarsClass object allocated on demand.
-static wxPGGlobalVarsClass* g_PGGlobalVars = nullptr;
-
 #include "wx/module.h"
 
 class wxPGGlobalVarsClassManager : public wxModule
 {
     wxDECLARE_DYNAMIC_CLASS(wxPGGlobalVarsClassManager);
 public:
-    wxPGGlobalVarsClassManager() = default;
-    virtual bool OnInit() override { return true; }
-    virtual void OnExit() override { wxDELETE(g_PGGlobalVars); }
+    wxPGGlobalVarsClassManager() {}
+    virtual bool OnInit() wxOVERRIDE
+    {
+        // This shouldn't happen, but we can actually be more called more than
+        // once, e.g. wxPython does it, see #23165, and in this case we
+        // shouldn't lose the current state.
+        if ( !wxPGGlobalVars )
+            wxPGGlobalVars = new wxPGGlobalVarsClass();
+        return true;
+    }
+    virtual void OnExit() wxOVERRIDE { wxDELETE(wxPGGlobalVars); }
 };
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxPGGlobalVarsClassManager, wxModule);
@@ -172,35 +169,13 @@ void wxPGInitResourceModule()
     wxModule::InitializeModules();
 }
 
-// This object is a proxy that allows us to only create wxPGGlobalVarsClass
-// object when it's really needed. Note that we need to use an object for this
-// instead of a function for compatibility reasons: a lot of existing code uses
-// wxPGGlobalVars directly.
-wxPGGlobalVarsPtr wxPGGlobalVars;
+wxPGGlobalVarsClass* wxPGGlobalVars = NULL;
 
-wxPGGlobalVarsClass* wxPGGlobalVarsPtr::operator->() const
-{
-    if ( !g_PGGlobalVars )
-        g_PGGlobalVars = new wxPGGlobalVarsClass();
-
-    return g_PGGlobalVars;
-}
-
-bool wxPGGlobalVarsPtr::operator!() const
-{
-    return !g_PGGlobalVars;
-}
-
-wxPGGlobalVarsPtr::operator bool() const
-{
-    return !!g_PGGlobalVars;
-}
 
 wxPGGlobalVarsClass::wxPGGlobalVarsClass()
-    : m_fontFamilyChoices(nullptr)
-    , m_defaultRenderer(new wxPGDefaultRenderer())
-#if WXWIN_COMPATIBILITY_3_2
     // Prepare some shared variants
+    : m_fontFamilyChoices(NULL)
+    , m_defaultRenderer(new wxPGDefaultRenderer())
     , m_vEmptyString(wxString())
     , m_vZero(0L)
     , m_vMinusOne(-1L)
@@ -216,15 +191,15 @@ wxPGGlobalVarsClass::wxPGGlobalVarsClass()
     , m_strMax(wxS("Max"))
     , m_strUnits(wxS("Units"))
     , m_strHint(wxS("Hint"))
-#endif // WXWIN_COMPATIBILITY_3_2
+#if wxPG_COMPATIBILITY_1_4
+    , m_strInlineHelp(wxS("InlineHelp"))
+#endif
     , m_autoGetTranslation(false)
     , m_offline(0)
     , m_extraStyle(0)
     , m_warnings(0)
 {
-#if WXWIN_COMPATIBILITY_3_2
-    wxPGProperty::sm_wxPG_LABEL = new wxString("@!");
-#endif // WXWIN_COMPATIBILITY_3_2
+    wxPGProperty::sm_wxPG_LABEL = new wxString(wxPG_LABEL_STRING);
 
     /* TRANSLATORS: Name of Boolean false value */
     m_boolChoices.Add(_("False"));
@@ -241,26 +216,22 @@ wxPGGlobalVarsClass::~wxPGGlobalVarsClass()
     delete m_fontFamilyChoices;
 
 #if wxUSE_VALIDATORS
-    for ( wxValidator* val : m_arrValidators )
-    {
-        delete val;
-    }
+    for ( size_t i = 0; i < m_arrValidators.size(); i++ )
+        delete (m_arrValidators[i]);
 #endif
 
     // Destroy editor class instances.
     // iterate over all the elements in the class
-    for( const auto& vt_it : m_mapEditorClasses )
+    for( wxPGHashMapS2P::iterator vt_it = m_mapEditorClasses.begin(); vt_it != m_mapEditorClasses.end(); ++vt_it )
     {
-        delete vt_it.second;
+        delete ((wxPGEditor*)vt_it->second);
     }
 
     // Make sure the global pointers have been reset
-    wxASSERT(wxPG_EDITOR(TextCtrl) == nullptr);
-    wxASSERT(wxPG_EDITOR(ChoiceAndButton) == nullptr);
+    wxASSERT(wxPG_EDITOR(TextCtrl) == NULL);
+    wxASSERT(wxPG_EDITOR(ChoiceAndButton) == NULL);
 
-#if WXWIN_COMPATIBILITY_3_2
     delete wxPGProperty::sm_wxPG_LABEL;
-#endif // WXWIN_COMPATIBILITY_3_2
 }
 
 void wxPropertyGridInitGlobalsIfNeeded()
@@ -270,15 +241,6 @@ void wxPropertyGridInitGlobalsIfNeeded()
 // -----------------------------------------------------------------------
 // wxPropertyGrid
 // -----------------------------------------------------------------------
-
-#ifndef wxPG_ICON_WIDTH
-namespace
-{
-    // create two bitmap nodes for drawing
-    static wxBitmap s_expandbmp(expand_xpm);
-    static wxBitmap s_collbmp(collapse_xpm);
-}
-#endif
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxPropertyGrid, wxControl);
 
@@ -371,23 +333,23 @@ void wxPropertyGrid::Init1()
 
     m_validatingEditor = 0;
     m_iFlags = 0;
-    m_pState = nullptr;
-    m_wndEditor = m_wndEditor2 = nullptr;
+    m_pState = NULL;
+    m_wndEditor = m_wndEditor2 = NULL;
     m_selColumn = 1;
     m_colHover = 1;
-    m_propHover = nullptr;
-    m_labelEditor = nullptr;
-    m_labelEditorProperty = nullptr;
+    m_propHover = NULL;
+    m_labelEditor = NULL;
+    m_labelEditorProperty = NULL;
     m_eventObject = this;
-    m_curFocused = nullptr;
-    m_processedEvent = nullptr;
-    m_tlp = nullptr;
-    m_sortFunction = nullptr;
+    m_curFocused = NULL;
+    m_processedEvent = NULL;
+    m_tlp = NULL;
+    m_sortFunction = NULL;
     m_inDoPropertyChanged = false;
     m_inCommitChangesFromEditor = false;
     m_inDoSelectProperty = false;
     m_inOnValidationFailure = false;
-    m_permanentValidationFailureBehavior = wxPGVFBFlags::Default;
+    m_permanentValidationFailureBehavior = wxPG_VFB_DEFAULT;
     m_dragStatus = 0;
     m_editorFocused = false;
 
@@ -395,26 +357,25 @@ void wxPropertyGrid::Init1()
     m_unspecifiedAppearance.SetFgCol(*wxLIGHT_GREY);
 
     // Set default keys
-    AddActionTrigger(wxPGKeyboardAction::NextProperty, WXK_RIGHT);
-    AddActionTrigger(wxPGKeyboardAction::NextProperty, WXK_DOWN);
-    AddActionTrigger(wxPGKeyboardAction::PrevProperty, WXK_LEFT);
-    AddActionTrigger(wxPGKeyboardAction::PrevProperty, WXK_UP);
-    AddActionTrigger(wxPGKeyboardAction::ExpandProperty, WXK_RIGHT);
-    AddActionTrigger(wxPGKeyboardAction::CollapseProperty, WXK_LEFT);
-    AddActionTrigger(wxPGKeyboardAction::CancelEdit, WXK_ESCAPE);
-    AddActionTrigger(wxPGKeyboardAction::PressButton, WXK_DOWN, wxMOD_ALT);
-    AddActionTrigger(wxPGKeyboardAction::PressButton, WXK_F4);
+    AddActionTrigger( wxPG_ACTION_NEXT_PROPERTY, WXK_RIGHT );
+    AddActionTrigger( wxPG_ACTION_NEXT_PROPERTY, WXK_DOWN );
+    AddActionTrigger( wxPG_ACTION_PREV_PROPERTY, WXK_LEFT );
+    AddActionTrigger( wxPG_ACTION_PREV_PROPERTY, WXK_UP );
+    AddActionTrigger( wxPG_ACTION_EXPAND_PROPERTY, WXK_RIGHT);
+    AddActionTrigger( wxPG_ACTION_COLLAPSE_PROPERTY, WXK_LEFT);
+    AddActionTrigger( wxPG_ACTION_CANCEL_EDIT, WXK_ESCAPE );
+    AddActionTrigger( wxPG_ACTION_PRESS_BUTTON, WXK_DOWN, wxMOD_ALT );
+    AddActionTrigger( wxPG_ACTION_PRESS_BUTTON, WXK_F4 );
 
-    m_coloursCustomized = CustomColour_None;
+    m_coloursCustomized = 0;
 
-    m_doubleBuffer = nullptr;
+    m_doubleBuffer = NULL;
 
 #ifndef wxPG_ICON_WIDTH
     m_iconWidth = 11;
     m_iconHeight = 11;
 #else
     m_iconWidth = wxPG_ICON_WIDTH;
-    m_iconHeight = wxPG_ICON_WIDTH;
 #endif
 
     m_gutterWidth = wxPG_GUTTER_MIN;
@@ -428,7 +389,7 @@ void wxPropertyGrid::Init1()
     m_commonValues.push_back(new wxPGCommonValue(_("Unspecified"), wxPGGlobalVars->m_defaultRenderer) );
     m_cvUnspecified = 0;
 
-    m_chgInfo_changedProperty = nullptr;
+    m_chgInfo_changedProperty = NULL;
 #if WXWIN_COMPATIBILITY_3_0
     // Object array for this wxPG shouldn't exist in the hash map.
     wxASSERT( gs_deletedEditorObjects.find(this) == gs_deletedEditorObjects.end() );
@@ -472,10 +433,14 @@ void wxPropertyGrid::Init2()
     GetClientSize(&m_width,&m_height);
 
 #ifndef wxPG_ICON_WIDTH
+    // create two bitmap nodes for drawing
+    m_expandbmp = wxBitmap(expand_xpm);
+    m_collbmp = wxBitmap(collapse_xpm);
+
     // calculate average font height for bitmap centering
 
-    m_iconWidth = s_expandbmp.GetWidth();
-    m_iconHeight = s_expandbmp.GetHeight();
+    m_iconWidth = m_expandbmp.GetWidth();
+    m_iconHeight = m_expandbmp.GetHeight();
 #endif
 
     m_curcursor = wxCURSOR_ARROW;
@@ -501,12 +466,14 @@ void wxPropertyGrid::Init2()
 #endif // wxALWAYS_NATIVE_DOUBLE_BUFFER
 
     // Hook the top-level parent
-    m_tlpClosed = nullptr;
+    m_tlpClosed = NULL;
     m_tlpClosedTime = 0;
 
     // set virtual size to this window size
     wxSize clientSize = GetClientSize();
     SetVirtualSize(clientSize);
+
+    m_timeCreated = ::wxGetLocalTimeMillis();
 
     m_iFlags |= wxPG_FL_INITIALIZED;
 
@@ -523,16 +490,19 @@ void wxPropertyGrid::Init2()
 
 wxPropertyGrid::~wxPropertyGrid()
 {
+    size_t i;
+
 #if wxUSE_THREADS
     wxCriticalSectionLocker lock(wxPGGlobalVars->m_critSect);
 #endif
 
     //
     // Remove grid and property pointers from live wxPropertyGridEvents.
-    for ( wxPropertyGridEvent* evt : m_liveEvents )
+    for ( i=0; i<m_liveEvents.size(); i++ )
     {
-        evt->SetPropertyGrid(nullptr);
-        evt->SetProperty(nullptr);
+        wxPropertyGridEvent* evt = m_liveEvents[i];
+        evt->SetPropertyGrid(NULL);
+        evt->SetProperty(NULL);
     }
     m_liveEvents.clear();
 
@@ -553,7 +523,7 @@ wxPropertyGrid::~wxPropertyGrid()
                        wxS("at idle time instead."));
     }
 
-    DoSelectProperty(nullptr, wxPGSelectPropertyFlags::NoValidate| wxPGSelectPropertyFlags::DontSendEvent);
+    DoSelectProperty(NULL, wxPG_SEL_NOVALIDATE|wxPG_SEL_DONT_SEND_EVENT);
 
     // This should do prevent things from going too badly wrong
     m_iFlags &= ~(wxPG_FL_INITIALIZED);
@@ -561,10 +531,10 @@ wxPropertyGrid::~wxPropertyGrid()
     if ( m_iFlags & wxPG_FL_MOUSE_CAPTURED )
         ReleaseMouse();
 
-    // Call with nullptr to disconnect event handling
+    // Call with NULL to disconnect event handling
     if ( HasExtraStyle(wxPG_EX_ENABLE_TLP_TRACKING) )
     {
-        OnTLPChanging(nullptr);
+        OnTLPChanging(NULL);
 
         wxASSERT_MSG( !IsEditorsValueModified(),
                       wxS("Most recent change in property editor was ")
@@ -603,9 +573,11 @@ wxPropertyGrid::~wxPropertyGrid()
         delete m_pState;
 
     // Delete common value records
-    for ( wxPGCommonValue* v : m_commonValues )
+    for ( i=0; i<m_commonValues.size(); i++ )
     {
-        delete v;
+        // Use temporary variable to work around possible strange VC6 (asserts because m_size is zero)
+        wxPGCommonValue* value = m_commonValues[i];
+        delete value;
     }
 #if WXWIN_COMPATIBILITY_3_0
     wxASSERT( gs_deletedEditorObjects[this]->empty() );
@@ -707,13 +679,13 @@ void wxPropertyGrid::DoThaw()
         // Force property re-selection
         // NB: We must copy the selection.
         wxArrayPGProperty selection = m_pState->m_selection;
-        DoSetSelection(selection, wxPGSelectPropertyFlags::Force | wxPGSelectPropertyFlags::Nonvisible);
+        DoSetSelection(selection, wxPG_SEL_FORCE | wxPG_SEL_NONVISIBLE);
     }
 }
 
 // -----------------------------------------------------------------------
 
-bool wxPropertyGrid::DoAddToSelection( wxPGProperty* prop, wxPGSelectPropertyFlags selFlags )
+bool wxPropertyGrid::DoAddToSelection( wxPGProperty* prop, int selFlags )
 {
     wxCHECK( prop, false );
 
@@ -734,9 +706,9 @@ bool wxPropertyGrid::DoAddToSelection( wxPGProperty* prop, wxPGSelectPropertyFla
 
         selection.push_back(prop);
 
-        if ( !(selFlags & wxPGSelectPropertyFlags::DontSendEvent) )
+        if ( !(selFlags & wxPG_SEL_DONT_SEND_EVENT) )
         {
-            SendEvent( wxEVT_PG_SELECTED, prop, nullptr );
+            SendEvent( wxEVT_PG_SELECTED, prop, NULL );
         }
 
         DrawItem(prop);
@@ -747,7 +719,7 @@ bool wxPropertyGrid::DoAddToSelection( wxPGProperty* prop, wxPGSelectPropertyFla
 
 // -----------------------------------------------------------------------
 
-bool wxPropertyGrid::DoRemoveFromSelection( wxPGProperty* prop, wxPGSelectPropertyFlags selFlags )
+bool wxPropertyGrid::DoRemoveFromSelection( wxPGProperty* prop, int selFlags )
 {
     wxCHECK( prop, false );
     bool res;
@@ -755,7 +727,7 @@ bool wxPropertyGrid::DoRemoveFromSelection( wxPGProperty* prop, wxPGSelectProper
     wxArrayPGProperty& selection = m_pState->m_selection;
     if ( selection.size() <= 1 )
     {
-        res = DoSelectProperty(nullptr, selFlags);
+        res = DoSelectProperty(NULL, selFlags);
     }
     else
     {
@@ -771,7 +743,7 @@ bool wxPropertyGrid::DoRemoveFromSelection( wxPGProperty* prop, wxPGSelectProper
 
 bool wxPropertyGrid::DoSelectAndEdit( wxPGProperty* prop,
                                       unsigned int colIndex,
-                                      wxPGSelectPropertyFlags selFlags )
+                                      unsigned int selFlags )
 {
     //
     // NB: Enable following if label editor background colour is
@@ -794,15 +766,15 @@ bool wxPropertyGrid::DoSelectAndEdit( wxPGProperty* prop,
     else
     {
         // send event
-        DoClearSelection(false, wxPGSelectPropertyFlags::NoRefresh);
+        DoClearSelection(false, wxPG_SEL_NO_REFRESH);
 
-        if ( m_pState->m_editableColumns.find(colIndex) == m_pState->m_editableColumns.end() )
+        if ( !wxPGItemExistsInVector<int>(m_pState->m_editableColumns, colIndex) )
         {
             res = DoAddToSelection(prop, selFlags);
         }
         else
         {
-            res = DoAddToSelection(prop, selFlags| wxPGSelectPropertyFlags::NoRefresh);
+            res = DoAddToSelection(prop, selFlags|wxPG_SEL_NO_REFRESH);
 
             DoBeginLabelEdit(colIndex, selFlags);
         }
@@ -817,7 +789,7 @@ bool wxPropertyGrid::DoSelectAndEdit( wxPGProperty* prop,
 bool wxPropertyGrid::AddToSelectionFromInputEvent( wxPGProperty* prop,
                                                    unsigned int colIndex,
                                                    wxMouseEvent* mouseEvent,
-                                                   wxPGSelectPropertyFlags selFlags )
+                                                   int selFlags )
 {
     const wxArrayPGProperty& selection = GetSelectedProperties();
     bool alreadySelected = m_pState->DoIsPropertySelected(prop);
@@ -931,7 +903,7 @@ bool wxPropertyGrid::AddToSelectionFromInputEvent( wxPGProperty* prop,
 // -----------------------------------------------------------------------
 
 void wxPropertyGrid::DoSetSelection( const wxArrayPGProperty& newSelection,
-                                     wxPGSelectPropertyFlags selFlags )
+                                     int selFlags )
 {
     if ( !newSelection.empty() )
     {
@@ -957,42 +929,48 @@ void wxPropertyGrid::MakeColumnEditable( unsigned int column,
                                          bool editable )
 {
     // The second column is always editable. To make it read-only is a property
-    // by property decision by setting its wxPGFlags::ReadOnly flag.
+    // by property decision by setting its wxPG_PROP_READONLY flag.
     wxASSERT_MSG
     (
          column != 1,
-         wxS("Set wxPGFlags::ReadOnly property flag instead")
+         wxS("Set wxPG_PROP_READONLY property flag instead")
     );
+
+    wxVector<int>& cols = m_pState->m_editableColumns;
 
     if ( editable )
     {
-        m_pState->m_editableColumns.insert(column);
+        cols.push_back(column);
     }
     else
     {
-        m_pState->m_editableColumns.erase(column);
+        for ( int i = cols.size() - 1; i > 0; i-- )
+        {
+            if ( cols[i] == (int)column )
+                cols.erase( cols.begin() + i );
+        }
     }
 }
 
 // -----------------------------------------------------------------------
 
 void wxPropertyGrid::DoBeginLabelEdit( unsigned int colIndex,
-                                       wxPGSelectPropertyFlags selFlags )
+                                       int selFlags )
 {
     wxPGProperty* selected = GetSelection();
     wxCHECK_RET(selected, wxS("No property selected"));
     wxCHECK_RET(colIndex != 1, wxS("Do not use this for column 1"));
 
-    if ( !(selFlags & wxPGSelectPropertyFlags::DontSendEvent) )
+    if ( !(selFlags & wxPG_SEL_DONT_SEND_EVENT) )
     {
         if ( SendEvent( wxEVT_PG_LABEL_EDIT_BEGIN,
-                        selected, nullptr, wxPGSelectPropertyFlags::Null,
+                        selected, NULL, 0,
                         colIndex ) )
             return;
     }
 
     wxString text;
-    const wxPGCell* cell = nullptr;
+    const wxPGCell* cell = NULL;
     if ( selected->HasCell(colIndex) )
     {
         cell = &selected->GetCell(colIndex);
@@ -1011,7 +989,7 @@ void wxPropertyGrid::DoBeginLabelEdit( unsigned int colIndex,
     if ( cell && cell->HasText() )
         text = cell->GetText();
 
-    DoEndLabelEdit(true, wxPGSelectPropertyFlags::NoValidate);  // send event
+    DoEndLabelEdit(true, wxPG_SEL_NOVALIDATE);  // send event
 
     m_selColumn = colIndex;
 
@@ -1020,7 +998,7 @@ void wxPropertyGrid::DoBeginLabelEdit( unsigned int colIndex,
     wxWindow* tc = GenerateEditorTextCtrl(r.GetPosition(),
                                           r.GetSize(),
                                           text,
-                                          nullptr,
+                                          NULL,
                                           wxTE_PROCESS_ENTER,
                                           0,
                                           colIndex);
@@ -1062,7 +1040,7 @@ void wxPropertyGrid::OnLabelEditorKeyPress( wxKeyEvent& event )
 
 // -----------------------------------------------------------------------
 
-void wxPropertyGrid::DoEndLabelEdit( bool commit, wxPGSelectPropertyFlags selFlags )
+void wxPropertyGrid::DoEndLabelEdit( bool commit, int selFlags )
 {
     if ( !m_labelEditor )
         return;
@@ -1074,7 +1052,7 @@ void wxPropertyGrid::DoEndLabelEdit( bool commit, wxPGSelectPropertyFlags selFla
     {
         const int labelColIdx = m_selColumn;
 
-        if ( !(selFlags & wxPGSelectPropertyFlags::DontSendEvent) )
+        if ( !(selFlags & wxPG_SEL_DONT_SEND_EVENT) )
         {
             // Don't send wxEVT_PG_LABEL_EDIT_ENDING event recursively
             // for the same property and the same label.
@@ -1085,9 +1063,9 @@ void wxPropertyGrid::DoEndLabelEdit( bool commit, wxPGSelectPropertyFlags selFla
                 return;
             }
 
-            // wxPGSelectPropertyFlags::NoValidate is passed correctly in selFlags
+            // wxPG_SEL_NOVALIDATE is passed correctly in selFlags
             if ( SendEvent( wxEVT_PG_LABEL_EDIT_ENDING,
-                            prop, nullptr, selFlags,
+                            prop, NULL, selFlags,
                             m_selColumn ) )
                 return;
         }
@@ -1102,7 +1080,7 @@ void wxPropertyGrid::DoEndLabelEdit( bool commit, wxPGSelectPropertyFlags selFla
         }
         else
         {
-            wxPGCell* cell = nullptr;
+            wxPGCell* cell = NULL;
             if ( prop->HasCell(labelColIdx) )
             {
                 cell = &prop->GetCell(labelColIdx);
@@ -1124,8 +1102,8 @@ void wxPropertyGrid::DoEndLabelEdit( bool commit, wxPGSelectPropertyFlags selFla
 
     DestroyEditorWnd(m_labelEditor);
 
-    m_labelEditor = nullptr;
-    m_labelEditorProperty = nullptr;
+    m_labelEditor = NULL;
+    m_labelEditorProperty = NULL;
 
     // Fix focus (needed at least on wxGTK)
     if ( wasFocused )
@@ -1141,7 +1119,7 @@ void wxPropertyGrid::SetExtraStyle( long exStyle )
     if ( exStyle & wxPG_EX_ENABLE_TLP_TRACKING )
         OnTLPChanging(::wxGetTopLevelParent(this));
     else
-        OnTLPChanging(nullptr);
+        OnTLPChanging(NULL);
 
     if ( exStyle & wxPG_EX_NATIVE_DOUBLE_BUFFERING )
     {
@@ -1225,11 +1203,11 @@ void wxPropertyGrid::OnTLPChanging( wxWindow* newTLP )
              m_tlpClosedTime+250 < currentTime )
         {
             newTLP->Bind(wxEVT_CLOSE_WINDOW, &wxPropertyGrid::OnTLPClose, this);
-            m_tlpClosed = nullptr;
+            m_tlpClosed = NULL;
         }
         else
         {
-            newTLP = nullptr;
+            newTLP = NULL;
         }
     }
 
@@ -1247,10 +1225,10 @@ void wxPropertyGrid::OnTLPClose( wxCloseEvent& event )
         return;
     }
 
-    // Ok, it can close, set tlp pointer to nullptr. Some other event
+    // Ok, it can close, set tlp pointer to NULL. Some other event
     // handler can of course veto the close, but our OnIdle() should
     // then be able to regain the tlp pointer.
-    OnTLPChanging(nullptr);
+    OnTLPChanging(NULL);
 
     event.Skip();
 }
@@ -1285,11 +1263,11 @@ void wxPropertyGrid::SetScrollbars(int pixelsPerUnitX, int pixelsPerUnitY,
                                    int xPos, int yPos, bool noRefresh)
 {
     int oldX;
-    CalcUnscrolledPosition(0, 0, &oldX, nullptr);
+    CalcUnscrolledPosition(0, 0, &oldX, NULL);
     wxScrolled<wxControl>::SetScrollbars(pixelsPerUnitX, pixelsPerUnitY,
                                   noUnitsX, noUnitsY, xPos, yPos, noRefresh);
     int newX;
-    CalcUnscrolledPosition(0, 0, &newX, nullptr);
+    CalcUnscrolledPosition(0, 0, &newX, NULL);
     if ( newX != oldX )
     {
         // Notify wxPropertyGridManager about the grid being scrolled horizontally
@@ -1308,7 +1286,7 @@ void wxPropertyGrid::CalculateFontAndBitmapStuff( int vspacing )
 
     m_captionFont = wxControl::GetFont();
 
-    GetTextExtent(wxS("jG"), &x, &y, nullptr, nullptr, &m_captionFont);
+    GetTextExtent(wxS("jG"), &x, &y, NULL, NULL, &m_captionFont);
     m_subgroup_extramargin = x + (x/2);
     m_fontHeight = y;
 
@@ -1320,11 +1298,6 @@ void wxPropertyGrid::CalculateFontAndBitmapStuff( int vspacing )
     if ( m_iconWidth < 5 ) m_iconWidth = 5;
     else if ( !(m_iconWidth & 0x01) ) m_iconWidth++; // must be odd
 
-#endif
-
-#ifdef wxPG_ICON_WIDTH
-    // Icons are always square in this case.
-    m_iconHeight = m_iconWidth;
 #endif
 
     m_gutterWidth = m_iconWidth / wxPG_GUTTER_DIV;
@@ -1344,7 +1317,7 @@ void wxPropertyGrid::CalculateFontAndBitmapStuff( int vspacing )
         m_marginWidth = m_gutterWidth*2 + m_iconWidth;
 
     m_captionFont.SetWeight(wxFONTWEIGHT_BOLD);
-    GetTextExtent(wxS("jG"), &x, &y, nullptr, nullptr, &m_captionFont);
+    GetTextExtent(wxS("jG"), &x, &y, NULL, NULL, &m_captionFont);
 
     m_lineHeight = m_fontHeight+(2*m_spacingy)+1;
 
@@ -1438,7 +1411,7 @@ static int wxPGGetColAvg( const wxColour& col )
 
 void wxPropertyGrid::RegainColours()
 {
-    if ( !(m_coloursCustomized & CustomColour_CaptionBg) )
+    if ( !(m_coloursCustomized & 0x0002) )
     {
         wxColour col = wxSystemSettings::GetColour( wxSYS_COLOUR_BTNFACE );
 
@@ -1455,10 +1428,10 @@ void wxPropertyGrid::RegainColours()
         m_categoryDefaultCell.GetData()->SetBgCol(m_colCapBack);
     }
 
-    if ( !(m_coloursCustomized & CustomColour_Margin) )
+    if ( !(m_coloursCustomized & 0x0001) )
         m_colMargin = m_colCapBack;
 
-    if ( !(m_coloursCustomized & CustomColour_CaptionText) )
+    if ( !(m_coloursCustomized & 0x0004) )
     {
     #ifdef __WXGTK__
         int colDec = -90;
@@ -1473,7 +1446,7 @@ void wxPropertyGrid::RegainColours()
         m_categoryDefaultCell.GetData()->SetFgCol(capForeCol);
     }
 
-    if ( !(m_coloursCustomized & CustomColour_CellBg) )
+    if ( !(m_coloursCustomized & 0x0008) )
     {
         wxColour bgCol = wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW );
         m_colPropBack = bgCol;
@@ -1482,7 +1455,7 @@ void wxPropertyGrid::RegainColours()
             m_unspecifiedAppearance.SetBgCol(bgCol);
     }
 
-    if ( !(m_coloursCustomized & CustomColour_CellText) )
+    if ( !(m_coloursCustomized & 0x0010) )
     {
         wxColour fgCol = wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT );
         m_colPropFore = fgCol;
@@ -1491,17 +1464,17 @@ void wxPropertyGrid::RegainColours()
             m_unspecifiedAppearance.SetFgCol(fgCol);
     }
 
-    if ( !(m_coloursCustomized & CustomColour_SelectionBg) )
+    if ( !(m_coloursCustomized & 0x0020) )
         m_colSelBack = wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHT );
 
-    if ( !(m_coloursCustomized & CustomColour_SelectionText) )
+    if ( !(m_coloursCustomized & 0x0040) )
         m_colSelFore = wxSystemSettings::GetColour( wxSYS_COLOUR_HIGHLIGHTTEXT );
 
-    if ( !(m_coloursCustomized & CustomColour_Line) )
+    if ( !(m_coloursCustomized & 0x0080) )
         m_colLine = m_colCapBack;
 
-    if ( !(m_coloursCustomized & CustomColour_DisabledText) )
-        m_colDisPropFore = wxSystemSettings::GetColour( wxSYS_COLOUR_GRAYTEXT );
+    if ( !(m_coloursCustomized & 0x0100) )
+        m_colDisPropFore = m_colCapFore;
 
     m_colEmptySpace = wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW );
 }
@@ -1510,7 +1483,7 @@ void wxPropertyGrid::RegainColours()
 
 void wxPropertyGrid::ResetColours()
 {
-    m_coloursCustomized = CustomColour_None;
+    m_coloursCustomized = 0;
 
     RegainColours();
 
@@ -1539,7 +1512,7 @@ bool wxPropertyGrid::SetFont( const wxFont& font )
 void wxPropertyGrid::SetLineColour( const wxColour& col )
 {
     m_colLine = col;
-    m_coloursCustomized |= CustomColour_Line;
+    m_coloursCustomized |= 0x80;
     Refresh();
 }
 
@@ -1548,7 +1521,7 @@ void wxPropertyGrid::SetLineColour( const wxColour& col )
 void wxPropertyGrid::SetMarginColour( const wxColour& col )
 {
     m_colMargin = col;
-    m_coloursCustomized |= CustomColour_Margin;
+    m_coloursCustomized |= 0x01;
     Refresh();
 }
 
@@ -1557,7 +1530,7 @@ void wxPropertyGrid::SetMarginColour( const wxColour& col )
 void wxPropertyGrid::SetCellBackgroundColour( const wxColour& col )
 {
     m_colPropBack = col;
-    m_coloursCustomized |= CustomColour_CellBg;
+    m_coloursCustomized |= 0x08;
 
     m_propertyDefaultCell.GetData()->SetBgCol(col);
     m_unspecifiedAppearance.SetBgCol(col);
@@ -1570,7 +1543,7 @@ void wxPropertyGrid::SetCellBackgroundColour( const wxColour& col )
 void wxPropertyGrid::SetCellTextColour( const wxColour& col )
 {
     m_colPropFore = col;
-    m_coloursCustomized |= CustomColour_CellText;
+    m_coloursCustomized |= 0x10;
 
     m_propertyDefaultCell.GetData()->SetFgCol(col);
     m_unspecifiedAppearance.SetFgCol(col);
@@ -1592,7 +1565,7 @@ void wxPropertyGrid::SetEmptySpaceColour( const wxColour& col )
 void wxPropertyGrid::SetCellDisabledTextColour( const wxColour& col )
 {
     m_colDisPropFore = col;
-    m_coloursCustomized |= CustomColour_DisabledText;
+    m_coloursCustomized |= 0x100;
     Refresh();
 }
 
@@ -1601,7 +1574,7 @@ void wxPropertyGrid::SetCellDisabledTextColour( const wxColour& col )
 void wxPropertyGrid::SetSelectionBackgroundColour( const wxColour& col )
 {
     m_colSelBack = col;
-    m_coloursCustomized |= CustomColour_SelectionBg;
+    m_coloursCustomized |= 0x20;
     Refresh();
 }
 
@@ -1610,7 +1583,7 @@ void wxPropertyGrid::SetSelectionBackgroundColour( const wxColour& col )
 void wxPropertyGrid::SetSelectionTextColour( const wxColour& col )
 {
     m_colSelFore = col;
-    m_coloursCustomized |= CustomColour_SelectionText;
+    m_coloursCustomized |= 0x40;
     Refresh();
 }
 
@@ -1619,7 +1592,7 @@ void wxPropertyGrid::SetSelectionTextColour( const wxColour& col )
 void wxPropertyGrid::SetCaptionBackgroundColour( const wxColour& col )
 {
     m_colCapBack = col;
-    m_coloursCustomized |= CustomColour_CaptionBg;
+    m_coloursCustomized |= 0x02;
 
     m_categoryDefaultCell.GetData()->SetBgCol(col);
 
@@ -1631,7 +1604,7 @@ void wxPropertyGrid::SetCaptionBackgroundColour( const wxColour& col )
 void wxPropertyGrid::SetCaptionTextColour( const wxColour& col )
 {
     m_colCapFore = col;
-    m_coloursCustomized |= CustomColour_CaptionText;
+    m_coloursCustomized |= 0x04;
 
     m_categoryDefaultCell.GetData()->SetFgCol(col);
 
@@ -1649,7 +1622,7 @@ void wxPropertyGrid::PrepareAfterItemsAdded()
     m_pState->m_itemsAdded = false;
 
     if ( m_windowStyle & wxPG_AUTO_SORT )
-        Sort(wxPGPropertyValuesFlags::SortTopLevelOnly);
+        Sort(wxPG_SORT_TOP_LEVEL_ONLY);
 
     RecalculateVirtualSize();
 
@@ -1777,8 +1750,10 @@ wxString& wxPropertyGrid::ExpandEscapeSequences( wxString& dst_str, const wxStri
 
     bool prev_is_slash = false;
 
-    for ( wxUniChar a : src_str )
+    for ( wxString::const_iterator i = src_str.begin(); i != src_str.end(); ++i )
     {
+        wxUniChar a = *i;
+
         if ( a != wxS('\\') )
         {
             if ( !prev_is_slash )
@@ -1825,8 +1800,10 @@ wxString& wxPropertyGrid::CreateEscapeSequences( wxString& dst_str, const wxStri
         return dst_str;
     }
 
-    for( wxUniChar a : src_str )
+    for ( wxString::const_iterator i = src_str.begin(); i != src_str.end(); ++i )
     {
+        wxUniChar a = *i;
+
         if ( a == wxS('\r') )
             // Carriage Return.
             dst_str << wxS("\\r");
@@ -1888,7 +1865,7 @@ wxPGProperty* wxPropertyGrid::DoGetItemAtY( int y ) const
 {
     // Outside?
     if ( y < 0 )
-        return nullptr;
+        return NULL;
 
     unsigned int a = 0;
     return m_pState->DoGetRoot()->GetItemAtY(y, m_lineHeight, &a);
@@ -1900,7 +1877,7 @@ wxPGProperty* wxPropertyGrid::DoGetItemAtY( int y ) const
 
 void wxPropertyGrid::OnPaint( wxPaintEvent& WXUNUSED(event) )
 {
-    wxDC* dcPtr = nullptr;
+    wxDC* dcPtr = NULL;
     if ( !HasExtraStyle(wxPG_EX_NATIVE_DOUBLE_BUFFERING) )
     {
         if ( m_doubleBuffer )
@@ -1958,25 +1935,64 @@ void wxPropertyGrid::DrawExpanderButton( wxDC& dc, const wxRect& rect,
     r.Offset(m_gutterWidth, m_buttonSpacingY);
     r.width = m_iconWidth; r.height = m_iconHeight;
 
+#if (wxPG_USE_RENDERER_NATIVE)
+    //
+#elif wxPG_ICON_WIDTH
+    // Drawing expand/collapse button manually
+    dc.SetPen(m_colPropFore);
+    if ( property->IsCategory() )
+        dc.SetBrush(*wxTRANSPARENT_BRUSH);
+    else
+        dc.SetBrush(m_colPropBack);
+
+    dc.DrawRectangle( r );
+    int _y = r.y+(m_iconWidth/2);
+    dc.DrawLine(r.x+2,_y,r.x+m_iconWidth-2,_y);
+#else
+    wxBitmap bmp;
+#endif
+
+    if ( property->IsExpanded() )
+    {
     // wxRenderer functions are non-mutating in nature, so it
     // should be safe to cast "const wxPropertyGrid*" to "wxWindow*".
     // Hopefully this does not cause problems.
-#if wxPG_USE_RENDERER_NATIVE
-    wxRendererNative::Get().DrawTreeItemButton(
-            const_cast<wxPropertyGrid*>(this),
-            dc,
-            r,
-            property->IsExpanded() ? wxCONTROL_EXPANDED : wxCONTROL_NONE
-        );
+    #if (wxPG_USE_RENDERER_NATIVE)
+        wxRendererNative::Get().DrawTreeItemButton(
+                const_cast<wxPropertyGrid*>(this),
+                dc,
+                r,
+                wxCONTROL_EXPANDED
+            );
+    #elif wxPG_ICON_WIDTH
+        //
+    #else
+        bmp = m_collbmp;
+    #endif
+
+    }
+    else
+    {
+    #if (wxPG_USE_RENDERER_NATIVE)
+        wxRendererNative::Get().DrawTreeItemButton(
+                const_cast<wxPropertyGrid*>(this),
+                dc,
+                r,
+                0
+            );
+    #elif wxPG_ICON_WIDTH
+        int _x = r.x+(m_iconWidth/2);
+        dc.DrawLine(_x,r.y+2,_x,r.y+m_iconWidth-2);
+    #else
+        bmp = m_expandbmp;
+    #endif
+    }
+
+#if (wxPG_USE_RENDERER_NATIVE)
+    //
 #elif wxPG_ICON_WIDTH
-    wxRendererNative::GetGeneric().DrawTreeItemButton(
-            const_cast<wxPropertyGrid*>(this),
-            dc,
-            r,
-            property->IsExpanded() ? wxCONTROL_EXPANDED : wxCONTROL_NONE
-        );
+    //
 #else
-    wxBitmap bmp = property->IsExpanded() ? s_collbmp : s_expandbmp;
     dc.DrawBitmap( bmp, r.x, r.y, true );
 #endif
 }
@@ -2122,7 +2138,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
     const wxPGProperty* firstSelected = GetSelection();
     const wxPropertyGridPageState* state = m_pState;
-    const std::vector<int>& colWidths = state->m_colWidths;
+    const wxVector<int>& colWidths = state->m_colWidths;
     const unsigned int colCount = state->GetColumnCount();
 
     dc.SetFont(normalFont);
@@ -2133,14 +2149,14 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
     //
     // Pre-generate list of visible properties.
-    std::vector<wxPGProperty*> visPropArray;
+    wxVector<wxPGProperty*> visPropArray;
     visPropArray.reserve((m_height/m_lineHeight)+6);
 
     for ( ; !it.AtEnd(); it.Next() )
     {
         const wxPGProperty* p = *it;
 
-        if ( !p->HasFlag(wxPGFlags::Hidden) )
+        if ( !p->HasFlag(wxPG_PROP_HIDDEN) )
         {
             visPropArray.push_back(const_cast<wxPGProperty*>(p));
 
@@ -2151,17 +2167,17 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
         }
     }
 
-    visPropArray.push_back(nullptr);
+    visPropArray.push_back(NULL);
 
     wxPGProperty* nextP = visPropArray[0];
 
     // Calculate splitters positions
-    std::vector<int> splitterPos;
+    wxVector<int> splitterPos;
     splitterPos.reserve(colCount);
     int sx = x;
-    for ( int cw : colWidths )
+    for (wxVector<int>::const_iterator cit = colWidths.begin(); cit != colWidths.end(); ++cit)
     {
-        sx += cw;
+        sx += *cit;
         splitterPos.push_back(sx);
     }
 
@@ -2347,7 +2363,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
             if ( butRect.x > 0 )
                 butRect.x += IN_CELL_EXPANDER_BUTTON_X_ADJUST;
 
-            if ( p->HasFlag(wxPGFlags::Modified) &&
+            if ( p->HasFlag(wxPG_PROP_MODIFIED) &&
                  (windowStyle & wxPG_BOLD_MODIFIED) )
             {
                 dc.SetFont(m_captionFont);
@@ -2396,7 +2412,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
             if ( !isCategory )
                 cellRect.width -= 1;
 
-            wxWindow* cellEditor = nullptr;
+            wxWindow* cellEditor = NULL;
             int cellRenderFlags = renderFlags;
 
             // Tree Item Button (must be drawn before clipping is set up)
@@ -2425,7 +2441,7 @@ int wxPropertyGrid::DoDrawItems( wxDC& dc,
 
                     if ( m_dragStatus != 0 ||
                          (m_iFlags & wxPG_FL_CUR_USES_CUSTOM_IMAGE) )
-                        cellEditor = nullptr;
+                        cellEditor = NULL;
                 }
                 else
                 {
@@ -2502,7 +2518,7 @@ wxRect wxPropertyGrid::GetPropertyRect( const wxPGProperty* p1, const wxPGProper
 {
     if ( m_width < 10 || m_height < 10 ||
          !m_pState->DoGetRoot()->GetChildCount() ||
-         p1 == nullptr )
+         p1 == NULL )
         return wxRect(0,0,0,0);
 
     int vy = 0;
@@ -2568,16 +2584,14 @@ void wxPropertyGrid::DrawItems( const wxPGProperty* p1, const wxPGProperty* p2 )
 
 void wxPropertyGrid::RefreshProperty( wxPGProperty* p )
 {
-    wxCHECK_RET( p, wxS("invalid property id") );
-
     if ( m_pState->DoIsPropertySelected(p) || p->IsChildSelected(true) )
     {
         // NB: We must copy the selection.
         wxArrayPGProperty selection = m_pState->m_selection;
-        wxPGSelectPropertyFlags selFlags = wxPGSelectPropertyFlags::Force;
+        int selFlags = wxPG_SEL_FORCE;
         // We want to keep property's editor focused.
         if ( IsEditorFocused() )
-            selFlags |= wxPGSelectPropertyFlags::Focus;
+            selFlags |= wxPG_SEL_FOCUS;
         DoSetSelection(selection, selFlags);
     }
 
@@ -2588,8 +2602,6 @@ void wxPropertyGrid::RefreshProperty( wxPGProperty* p )
 
 void wxPropertyGrid::DrawItemAndValueRelated( wxPGProperty* p )
 {
-    wxCHECK_RET( p, wxS("invalid property id") );
-
     if ( IsFrozen() )
         return;
 
@@ -2652,7 +2664,7 @@ void wxPropertyGrid::Clear()
 {
     m_pState->DoClear();
 
-    m_propHover = nullptr;
+    m_propHover = NULL;
 
     RecalculateVirtualSize();
 
@@ -2749,7 +2761,7 @@ void wxPropertyGrid::SwitchState( wxPropertyGridPageState* pNewState )
                                        pgWidth - pNewState->GetVirtualWidth());
     }
 
-    m_propHover = nullptr;
+    m_propHover = NULL;
 
     // If necessary, convert state to correct mode.
     if ( orig_mode != new_state_mode )
@@ -2777,19 +2789,19 @@ void wxPropertyGrid::SwitchState( wxPropertyGridPageState* pNewState )
 
 // Call to SetSplitterPosition will always disable splitter auto-centering
 // if parent window is shown.
-void wxPropertyGrid::DoSetSplitter( int newxpos,
-                                    int splitterIndex,
-                                    wxPGSplitterPositionFlags flags )
+void wxPropertyGrid::DoSetSplitterPosition( int newxpos,
+                                            int splitterIndex,
+                                            int flags )
 {
     if ( newxpos < wxPG_DRAG_MARGIN )
         return;
 
-    if ( !!(flags & wxPGSplitterPositionFlags::FromEvent) )
+    if ( flags & wxPG_SPLITTER_FROM_EVENT )
         m_pState->m_dontCenterSplitter = true;
 
-    m_pState->DoSetSplitter(newxpos, splitterIndex, flags);
+    m_pState->DoSetSplitterPosition(newxpos, splitterIndex, flags);
 
-    if ( !!(flags & wxPGSplitterPositionFlags::Refresh) )
+    if ( flags & wxPG_SPLITTER_REFRESH )
     {
         if ( GetSelection() )
         {
@@ -2808,7 +2820,7 @@ void wxPropertyGrid::ResetColumnSizes( bool enableAutoResizing )
 {
     if ( m_pState )
     {
-        m_pState->ResetColumnSizes(wxPGSplitterPositionFlags::Null);
+        m_pState->ResetColumnSizes(0);
         if ( GetSelection() )
         {
             CorrectEditorWidgetSizeX();
@@ -2839,7 +2851,7 @@ void wxPropertyGrid::CenterSplitter( bool enableAutoResizing )
 wxPGProperty* wxPropertyGrid::GetNearestPaintVisible( wxPGProperty* p ) const
 {
     int vy1;// Top left corner of client
-    GetViewStart(nullptr,&vy1);
+    GetViewStart(NULL,&vy1);
     vy1 *= wxPG_PIXELS_PER_UNIT;
 
     int vy2 = vy1 + m_height;
@@ -2868,7 +2880,7 @@ wxPGProperty* wxPropertyGrid::GetNearestPaintVisible( wxPGProperty* p ) const
 // commits any changes in editor of selected property
 // return true if validation did not fail
 // flags are same as with DoSelectProperty
-bool wxPropertyGrid::CommitChangesFromEditor(wxPGSelectPropertyFlags flags)
+bool wxPropertyGrid::CommitChangesFromEditor( wxUint32 flags )
 {
     // Committing already?
     if ( m_inCommitChangesFromEditor )
@@ -2901,9 +2913,9 @@ bool wxPropertyGrid::CommitChangesFromEditor(wxPGSelectPropertyFlags flags)
         wxWindow* oldFocus = m_curFocused;
 
         bool validationFailure = false;
-        bool forceSuccess = !!(flags & (wxPGSelectPropertyFlags::NoValidate | wxPGSelectPropertyFlags::Force));
+        bool forceSuccess = (flags & (wxPG_SEL_NOVALIDATE|wxPG_SEL_FORCE)) ? true : false;
 
-        m_chgInfo_changedProperty = nullptr;
+        m_chgInfo_changedProperty = NULL;
 
         // If truly modified, schedule value as pending.
         if ( selected->GetEditorClass()->
@@ -2969,8 +2981,8 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
     // Returns true if value passes all tests.
     //
 
-    m_validationInfo.SetFailureBehavior(m_permanentValidationFailureBehavior);
-    m_validationInfo.SetFailing(true);
+    m_validationInfo.m_failureBehavior = m_permanentValidationFailureBehavior;
+    m_validationInfo.m_isFailing = true;
 
     //
     // Variant list a special value that cannot be validated
@@ -2984,9 +2996,9 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
     //
     // Adapt list to child values, if necessary
     wxVariant* pPendingValue = &pendingValue;
-    wxVariant* pList = nullptr;
+    wxVariant* pList = NULL;
 
-    // If parent has wxPGFlags::Aggregate flag, or uses composite
+    // If parent has wxPG_PROP_AGGREGATE flag, or uses composite
     // string value, then we need treat as it was changed instead
     // (or, in addition, as is the case with composite string parent).
     // This includes creating list variant for child values.
@@ -3000,7 +3012,7 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
     listValue.SetName(p->GetBaseName());
 
     while ( pwc &&
-            (pwc->HasFlag(wxPGFlags::Aggregate) || pwc->HasFlag(wxPGFlags::ComposedValue)) )
+            (pwc->HasFlag(wxPG_PROP_AGGREGATE) || pwc->HasFlag(wxPG_PROP_COMPOSED_VALUE)) )
     {
         wxVariantList tempList;
         wxVariant lv(tempList, pwc->GetBaseName());
@@ -3008,7 +3020,7 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
         listValue = lv;
         pPendingValue = &listValue;
 
-        if ( pwc->HasFlag(wxPGFlags::Aggregate) )
+        if ( pwc->HasFlag(wxPG_PROP_AGGREGATE) )
         {
             baseChangedProperty = pwc;
             bcpPendingList = lv;
@@ -3038,9 +3050,9 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
     {
         // FIXME: After proper ValueToString()s added, remove
         // this. It is just a temporary fix, as evt_changing
-        // will simply not work for wxPGFlags::ComposedValue
+        // will simply not work for wxPG_PROP_COMPOSED_VALUE
         // (unless it is selected, and textctrl editor is open).
-        if ( changedProperty->HasFlag(wxPGFlags::ComposedValue) )
+        if ( changedProperty->HasFlag(wxPG_PROP_COMPOSED_VALUE) )
         {
             evtChangingProperty = baseChangedProperty;
             if ( evtChangingProperty != p )
@@ -3053,7 +3065,7 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
             }
         }
 
-        if ( evtChangingProperty->HasFlag(wxPGFlags::ComposedValue) )
+        if ( evtChangingProperty->HasFlag(wxPG_PROP_COMPOSED_VALUE) )
         {
             if ( changedProperty == GetSelection() )
             {
@@ -3068,7 +3080,7 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
         }
     }
 
-    wxASSERT( m_chgInfo_changedProperty == nullptr );
+    wxASSERT( m_chgInfo_changedProperty == NULL );
     m_chgInfo_changedProperty = changedProperty;
     m_chgInfo_baseChangedProperty = baseChangedProperty;
     m_chgInfo_pendingValue = value;
@@ -3098,11 +3110,11 @@ bool wxPropertyGrid::PerformValidation( wxPGProperty* p, wxVariant& pendingValue
     {
         // If called in 'generic' context, we need to reset
         // m_chgInfo_changedProperty and write back translated value.
-        m_chgInfo_changedProperty = nullptr;
+        m_chgInfo_changedProperty = NULL;
         pendingValue = value;
     }
 
-    m_validationInfo.SetFailing(false);
+    m_validationInfo.m_isFailing = false;
 
     return true;
 }
@@ -3118,7 +3130,7 @@ wxStatusBar* wxPropertyGrid::GetStatusBar()
     {
         return frame->GetStatusBar();
     }
-    return nullptr;
+    return NULL;
 }
 #endif
 
@@ -3155,7 +3167,7 @@ void wxPropertyGrid::DoHidePropertyError( wxPGProperty* WXUNUSED(property) )
         wxStatusBar* pStatusBar = GetStatusBar();
         if ( pStatusBar )
         {
-            pStatusBar->SetStatusText(wxString());
+            pStatusBar->SetStatusText(wxEmptyString);
             return;
         }
     }
@@ -3174,18 +3186,18 @@ bool wxPropertyGrid::OnValidationFailure( wxPGProperty* property,
     wxON_BLOCK_EXIT_SET(m_inOnValidationFailure, false);
 
     wxWindow* editor = GetEditorControl();
-    wxPGVFBFlags vfb = m_validationInfo.GetFailureBehavior();
+    int vfb = m_validationInfo.m_failureBehavior;
 
     if ( m_inDoSelectProperty )
     {
         // When property selection is being changed, do not display any
         // messages, if some were already shown for this property.
-        if ( property->HasFlag(wxPGFlags::InvalidValue) )
+        if ( property->HasFlag(wxPG_PROP_INVALID_VALUE) )
         {
-            m_validationInfo.SetFailureBehavior(
-                vfb & (~(wxPGVFBFlags::ShowMessage |
-                        wxPGVFBFlags::ShowMessageBox |
-                        wxPGVFBFlags::ShowMessageOnStatusBar)));
+            m_validationInfo.m_failureBehavior =
+                vfb & ~(wxPG_VFB_SHOW_MESSAGE |
+                        wxPG_VFB_SHOW_MESSAGEBOX |
+                        wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR);
         }
     }
 
@@ -3202,20 +3214,20 @@ bool wxPropertyGrid::OnValidationFailure( wxPGProperty* property,
         property->GetEditorClass()->UpdateControl(property, editor);
     }
 
-    property->SetFlag(wxPGFlags::InvalidValue);
+    property->SetFlag(wxPG_PROP_INVALID_VALUE);
 
     return res;
 }
 
 bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& WXUNUSED(invalidValue) )
 {
-    wxPGVFBFlags vfb = m_validationInfo.GetFailureBehavior();
+    int vfb = m_validationInfo.m_failureBehavior;
 
-    if ( !!(vfb & wxPGVFBFlags::Beep) )
+    if ( vfb & wxPG_VFB_BEEP )
         ::wxBell();
 
-    if ( !!(vfb & wxPGVFBFlags::MarkCell) &&
-         !property->HasFlag(wxPGFlags::InvalidValue) )
+    if ( (vfb & wxPG_VFB_MARK_CELL) &&
+         !property->HasFlag(wxPG_PROP_INVALID_VALUE) )
     {
         unsigned int colCount = m_pState->GetColumnCount();
 
@@ -3249,17 +3261,17 @@ bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& W
         DrawItemAndChildren(property);
     }
 
-    if ( !!(vfb & (wxPGVFBFlags::ShowMessage |
-                wxPGVFBFlags::ShowMessageBox |
-                wxPGVFBFlags::ShowMessageOnStatusBar)) )
+    if ( vfb & (wxPG_VFB_SHOW_MESSAGE |
+                wxPG_VFB_SHOW_MESSAGEBOX |
+                wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR) )
     {
-        wxString msg = m_validationInfo.GetFailureMessage();
+        wxString msg = m_validationInfo.m_failureMessage;
 
         if ( msg.empty() )
             msg = _("You have entered invalid value. Press ESC to cancel editing.");
 
     #if wxUSE_STATUSBAR
-        if ( !!(vfb & wxPGVFBFlags::ShowMessageOnStatusBar) )
+        if ( vfb & wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR )
         {
             if ( !wxPGGlobalVars->m_offline )
             {
@@ -3274,10 +3286,10 @@ bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& W
         // so let's preserve the current focus in order to restore it afterwards.
         wxWindow* focusedWnd = wxWindow::FindFocus();
 
-        if ( !!(vfb & wxPGVFBFlags::ShowMessage) )
+        if ( vfb & wxPG_VFB_SHOW_MESSAGE )
             DoShowPropertyError(property, msg);
 
-        if ( !!(vfb & wxPGVFBFlags::ShowMessageBox) )
+        if ( vfb & wxPG_VFB_SHOW_MESSAGEBOX )
             /* TRANSLATORS: Caption of message box displaying any property error */
             ::wxMessageBox(msg, _("Property Error"));
 
@@ -3288,16 +3300,16 @@ bool wxPropertyGrid::DoOnValidationFailure( wxPGProperty* property, wxVariant& W
         }
     }
 
-    return !(vfb & wxPGVFBFlags::StayInProperty);
+    return (vfb & wxPG_VFB_STAY_IN_PROPERTY) ? false : true;
 }
 
 // -----------------------------------------------------------------------
 
 void wxPropertyGrid::DoOnValidationFailureReset( wxPGProperty* property )
 {
-    wxPGVFBFlags vfb = m_validationInfo.GetFailureBehavior();
+    int vfb = m_validationInfo.m_failureBehavior;
 
-    if ( !!(vfb & wxPGVFBFlags::MarkCell) )
+    if ( vfb & wxPG_VFB_MARK_CELL )
     {
         // Revert cells
         property->m_cells = m_propCellsBackup;
@@ -3316,29 +3328,29 @@ void wxPropertyGrid::DoOnValidationFailureReset( wxPGProperty* property )
     }
 
 #if wxUSE_STATUSBAR
-    if ( !!(vfb & wxPGVFBFlags::ShowMessageOnStatusBar) )
+    if ( vfb & wxPG_VFB_SHOW_MESSAGE_ON_STATUSBAR )
     {
         if ( !wxPGGlobalVars->m_offline )
         {
             wxStatusBar* pStatusBar = GetStatusBar();
             if ( pStatusBar )
-                pStatusBar->SetStatusText(wxString());
+                pStatusBar->SetStatusText(wxEmptyString);
         }
     }
 #endif
 
-    if ( !!(vfb & wxPGVFBFlags::ShowMessage) )
+    if ( vfb & wxPG_VFB_SHOW_MESSAGE )
     {
         DoHidePropertyError(property);
     }
 
-    m_validationInfo.SetFailing(false);
+    m_validationInfo.m_isFailing = false;
 }
 
 // -----------------------------------------------------------------------
 
 // flags are same as with DoSelectProperty
-bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, wxPGSelectPropertyFlags selFlags )
+bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, unsigned int selFlags )
 {
     if ( m_inDoPropertyChanged )
         return true;
@@ -3351,7 +3363,7 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, wxPGSelectPropertyFlags
     m_pState->m_anyModified = true;
 
     // Maybe need to update control
-    wxASSERT( m_chgInfo_changedProperty != nullptr );
+    wxASSERT( m_chgInfo_changedProperty != NULL );
 
     // These values were calculated in PerformValidation()
     wxPGProperty* changedProperty = m_chgInfo_changedProperty;
@@ -3360,16 +3372,16 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, wxPGSelectPropertyFlags
     // If property's value is being changed, assume it is valid
     OnValidationFailureReset(selected);
 
-    changedProperty->SetValue(value, &m_chgInfo_valueList, wxPGSetValueFlags::ByUser);
+    changedProperty->SetValue(value, &m_chgInfo_valueList, wxPG_SETVAL_BY_USER);
 
     // NB: Call GetEditorControl() as late as possible, because OnSetValue()
     //     and perhaps other user-defined virtual functions may change it.
     wxWindow* editor = GetEditorControl();
 
     // Set as Modified (not if dragging just began)
-    if ( !p->HasFlag(wxPGFlags::Modified) )
+    if ( !p->HasFlag(wxPG_PROP_MODIFIED) )
     {
-        p->SetFlag(wxPGFlags::Modified);
+        p->SetFlag(wxPG_PROP_MODIFIED);
         if ( p == selected && (m_windowStyle & wxPG_BOLD_MODIFIED) )
         {
             if ( editor )
@@ -3380,11 +3392,11 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, wxPGSelectPropertyFlags
     // Propagate updates to parent(s)
     wxPGProperty* topPaintedProperty = changedProperty->GetMainParent();
     wxPGProperty* pwc = p;
-    wxPGProperty* prevPwc = nullptr;
+    wxPGProperty* prevPwc = NULL;
 
     while ( prevPwc != topPaintedProperty )
     {
-        pwc->SetFlag(wxPGFlags::Modified);
+        pwc->SetFlag(wxPG_PROP_MODIFIED);
 
         if ( pwc == selected && (m_windowStyle & wxPG_BOLD_MODIFIED) )
         {
@@ -3402,7 +3414,7 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, wxPGSelectPropertyFlags
     //
     // If value was set by wxPGProperty::OnEvent, then update the editor
     // control.
-    if ( !!(selFlags & wxPGSelectPropertyFlags::DialogVal) )
+    if ( selFlags & wxPG_SEL_DIALOGVAL )
     {
         RefreshEditor();
     }
@@ -3415,22 +3427,22 @@ bool wxPropertyGrid::DoPropertyChanged( wxPGProperty* p, wxPGSelectPropertyFlags
     }
 
     // Sanity check
-    wxASSERT( !changedProperty->GetParent()->HasFlag(wxPGFlags::Aggregate) );
+    wxASSERT( !changedProperty->GetParent()->HasFlag(wxPG_PROP_AGGREGATE) );
 
     // If top parent has composite string value, then send to child parents,
     // starting from baseChangedProperty.
-    if ( changedProperty->HasFlag(wxPGFlags::ComposedValue) )
+    if ( changedProperty->HasFlag(wxPG_PROP_COMPOSED_VALUE) )
     {
         pwc = m_chgInfo_baseChangedProperty;
 
         while ( pwc != changedProperty )
         {
-            SendEvent( wxEVT_PG_CHANGED, pwc, nullptr );
+            SendEvent( wxEVT_PG_CHANGED, pwc, NULL );
             pwc = pwc->GetParent();
         }
     }
 
-    SendEvent( wxEVT_PG_CHANGED, changedProperty, nullptr );
+    SendEvent( wxEVT_PG_CHANGED, changedProperty, NULL );
 
     return true;
 }
@@ -3441,7 +3453,7 @@ bool wxPropertyGrid::ChangePropertyValue( wxPGPropArg id, wxVariant newValue )
 {
     wxPG_PROP_ARG_CALL_PROLOG_RETVAL(false)
 
-    m_chgInfo_changedProperty = nullptr;
+    m_chgInfo_changedProperty = NULL;
 
     if ( PerformValidation(p, newValue) )
     {
@@ -3463,7 +3475,7 @@ wxVariant wxPropertyGrid::GetUncommittedPropertyValue()
     wxPGProperty* prop = GetSelectedProperty();
 
     if ( !prop )
-        return wxVariant();
+        return wxNullVariant;
 
     wxTextCtrl* tc = GetEditorTextCtrl();
     wxVariant value = prop->GetValue();
@@ -3471,12 +3483,7 @@ wxVariant wxPropertyGrid::GetUncommittedPropertyValue()
     if ( !tc || !IsEditorsValueModified() )
         return value;
 
-#if WXWIN_COMPATIBILITY_3_2
-    // Special implementation with check if user-overriden obsolete function is still in use
-    if ( !prop->StringToValueWithCheck(value, tc->GetValue()) )
-#else
     if ( !prop->StringToValue(value, tc->GetValue()) )
-#endif // WXWIN_COMPATIBILITY_3_2 | !WXWIN_COMPATIBILITY_3_2
         return value;
 
     if ( !PerformValidation(prop, value, IsStandaloneValidation) )
@@ -3495,8 +3502,8 @@ bool wxPropertyGrid::DoEditorValidate()
     if ( guard.IsInside() )
         return false;
 
-    m_validationInfo.SetFailureBehavior(m_permanentValidationFailureBehavior);
-    m_validationInfo.SetFailing(true);
+    m_validationInfo.m_failureBehavior = m_permanentValidationFailureBehavior;
+    m_validationInfo.m_isFailing = true;
 
     wxPGProperty* selected = GetSelection();
     if ( selected )
@@ -3512,7 +3519,7 @@ bool wxPropertyGrid::DoEditorValidate()
         }
     }
 
-    m_validationInfo.SetFailing(false);
+    m_validationInfo.m_isFailing = false;
 #endif
     return true;
 }
@@ -3547,7 +3554,7 @@ bool wxPropertyGrid::HandleCustomEditorEvent( wxEvent &event )
     // Somehow, event is handled after property has been deselected.
     // Possibly, but very rare.
     if ( !selected ||
-          selected->HasFlag(wxPGFlags::BeingDeleted) ||
+          selected->HasFlag(wxPG_PROP_BEING_DELETED) ||
           m_inOnValidationFailure ||
           // Also don't handle editor event if wxEVT_PG_CHANGED or
           // similar is currently doing something (showing a
@@ -3561,12 +3568,12 @@ bool wxPropertyGrid::HandleCustomEditorEvent( wxEvent &event )
     wxVariant pendingValue(selected->GetValueRef());
     wxWindow* wnd = GetEditorControl();
     wxWindow* editorWnd = wxDynamicCast(event.GetEventObject(), wxWindow);
-    wxPGSelectPropertyFlags selFlags = wxPGSelectPropertyFlags::Null;
+    int selFlags = 0;
     bool wasUnspecified = selected->IsValueUnspecified();
     int usesAutoUnspecified = selected->UsesAutoUnspecified();
     bool valueIsPending = false;
 
-    m_chgInfo_changedProperty = nullptr;
+    m_chgInfo_changedProperty = NULL;
 
     m_iFlags &= ~wxPG_FL_VALUE_CHANGE_IN_EVENT;
 
@@ -3662,7 +3669,7 @@ bool wxPropertyGrid::HandleCustomEditorEvent( wxEvent &event )
                     // failing and value was not unspecified
                     if ( !valueIsPending &&
                          !pendingValue.IsNull() &&
-                         m_validationInfo.IsFailing() )
+                         m_validationInfo.m_isFailing )
                          valueIsPending = true;
                 }
                 else
@@ -3684,7 +3691,7 @@ bool wxPropertyGrid::HandleCustomEditorEvent( wxEvent &event )
     {
         valueIsPending = true;
         pendingValue = m_changeInEventValue;
-        selFlags |= wxPGSelectPropertyFlags::DialogVal;
+        selFlags |= wxPG_SEL_DIALOGVAL;
     }
 
     if ( !validationFailure && valueIsPending )
@@ -3697,8 +3704,7 @@ bool wxPropertyGrid::HandleCustomEditorEvent( wxEvent &event )
     }
     else if ( valueIsPending )
     {
-        selFlags |= ( !wasUnspecified && selected->IsValueUnspecified() && usesAutoUnspecified )
-                                                 ? wxPGSelectPropertyFlags::SetUnspec : wxPGSelectPropertyFlags::Null;
+        selFlags |= ( !wasUnspecified && selected->IsValueUnspecified() && usesAutoUnspecified ) ? wxPG_SEL_SETUNSPEC : 0;
 
         DoPropertyChanged(selected, selFlags);
         EditorsValueWasNotModified();
@@ -3792,7 +3798,7 @@ wxRect wxPropertyGrid::GetImageRect( wxPGProperty* p, int item ) const
 // return size of custom paint image
 wxSize wxPropertyGrid::GetImageSize( wxPGProperty* p, int item ) const
 {
-    // If called with nullptr property, then return default image
+    // If called with NULL property, then return default image
     // size for properties that use image.
     if ( !p )
         return wxSize(wxPG_CUSTOM_IMAGE_WIDTH,wxPG_STD_CUST_IMAGE_HEIGHT(m_lineHeight));
@@ -3804,7 +3810,7 @@ wxSize wxPropertyGrid::GetImageSize( wxPGProperty* p, int item ) const
     if ( item >= choiceCount && comVals > 0 )
     {
         unsigned int cvi = item-choiceCount;
-        cis = GetCommonValue(cvi)->GetRenderer()->GetImageSize(nullptr, 1, cvi);
+        cis = GetCommonValue(cvi)->GetRenderer()->GetImageSize(NULL, 1, cvi);
     }
     else if ( item >= 0 && choiceCount == 0 )
         return wxSize(0, 0);
@@ -3830,7 +3836,6 @@ void wxPropertyGrid::ImprovedClientToScreen( int* px, int* py ) const
     wxASSERT(px && py);
     CalcScrolledPosition(*px, *py, px, py);
     ClientToScreen( px, py );
-
 }
 
 // -----------------------------------------------------------------------
@@ -3856,16 +3861,16 @@ void wxPropertyGrid::CustomSetCursor( int type, bool override )
 // -----------------------------------------------------------------------
 
 wxString
-wxPropertyGrid::GetUnspecifiedValueText(wxPGPropValFormatFlags flags) const
+wxPropertyGrid::GetUnspecifiedValueText( int argFlags ) const
 {
     const wxPGCell& ua = GetUnspecifiedValueAppearance();
 
     if ( ua.HasText() &&
-         !(flags & wxPGPropValFormatFlags::FullValue) &&
-         !(flags & wxPGPropValFormatFlags::EditableValue) )
+         !(argFlags & wxPG_FULL_VALUE) &&
+         !(argFlags & wxPG_EDITABLE_VALUE) )
         return ua.GetText();
 
-    return wxString();
+    return wxEmptyString;
 }
 
 // -----------------------------------------------------------------------
@@ -3882,10 +3887,12 @@ public:
     {
     }
 
-    virtual ~wxPropertyGridEditorEventForwarder() = default;
+    virtual ~wxPropertyGridEditorEventForwarder()
+    {
+    }
 
 private:
-    bool ProcessEvent( wxEvent& event ) override
+    bool ProcessEvent( wxEvent& event ) wxOVERRIDE
     {
         // Always skip
         event.Skip();
@@ -3985,7 +3992,7 @@ void wxPropertyGrid::FreeEditors()
         m_wndEditor2->Hide();
         m_deletedEditorObjects.push_back(handler);
         DestroyEditorWnd(m_wndEditor2);
-        m_wndEditor2 = nullptr;
+        m_wndEditor2 = NULL;
     }
 
     if ( m_wndEditor )
@@ -3994,12 +4001,12 @@ void wxPropertyGrid::FreeEditors()
         m_wndEditor->Hide();
         m_deletedEditorObjects.push_back(handler);
         DestroyEditorWnd(m_wndEditor);
-        m_wndEditor = nullptr;
+        m_wndEditor = NULL;
     }
 }
 
-// Call with nullptr to de-select property
-bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags flags )
+// Call with NULL to de-select property
+bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, unsigned int flags )
 {
     /*
     if (p)
@@ -4009,7 +4016,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
     }
     else
     {
-        wxLogDebug(wxS("SelectProperty( nullptr, -1 )"));
+        wxLogDebug(wxS("SelectProperty( NULL, -1 )"));
     }
     */
 
@@ -4025,13 +4032,13 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
     wxArrayPGProperty prevSelection = m_pState->m_selection;
     wxPGProperty* prevFirstSel;
 
-    prevFirstSel = prevSelection.empty()? nullptr: prevSelection[0];
+    prevFirstSel = prevSelection.empty()? NULL: prevSelection[0];
 
-    if ( prevFirstSel && prevFirstSel->HasFlag(wxPGFlags::BeingDeleted) )
-        prevFirstSel = nullptr;
+    if ( prevFirstSel && prevFirstSel->HasFlag(wxPG_PROP_BEING_DELETED) )
+        prevFirstSel = NULL;
 
     // Always send event, as this is indirect call
-    DoEndLabelEdit(true, wxPGSelectPropertyFlags::NoValidate);
+    DoEndLabelEdit(true, wxPG_SEL_NOVALIDATE);
 
 /*
     if ( prevFirstSel )
@@ -4042,10 +4049,10 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
     if (p)
         wxPrintf( "P =  %s\n", p->GetClassInfo()->GetClassName() );
     else
-        wxPrintf( "P = nullptr\n" );
+        wxPrintf( "P = NULL\n" );
 */
 
-    wxWindow* primaryCtrl = nullptr;
+    wxWindow* primaryCtrl = NULL;
 
     // If we are frozen, then just set the values.
     if ( IsFrozen() )
@@ -4059,19 +4066,19 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
         FreeEditors();
 
         // Prevent any further selection measures in this call
-        p = nullptr;
+        p = NULL;
     }
     else
     {
         // Is it the same?
         if ( prevFirstSel == p &&
              prevSelection.size() <= 1 &&
-             !(flags & wxPGSelectPropertyFlags::Force) )
+             !(flags & wxPG_SEL_FORCE) )
         {
             // Only set focus if not deselecting
             if ( p )
             {
-                if ( !!(flags & wxPGSelectPropertyFlags::Focus) )
+                if ( flags & wxPG_SEL_FOCUS )
                 {
                     if ( m_wndEditor )
                     {
@@ -4120,9 +4127,9 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
         m_pState->DoSetSelection(p);
 
         // Redraw unselected
-        for( wxPGProperty* selProp : prevSelection )
+        for ( unsigned int i=0; i<prevSelection.size(); i++ )
         {
-            DrawItem(selProp);
+            DrawItem(prevSelection[i]);
         }
 
         //
@@ -4132,16 +4139,16 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
             int propY = p->GetY2(m_lineHeight);
 
             int splitterX;
-            CalcScrolledPosition(GetSplitterPosition(), 0, &splitterX, nullptr);
+            CalcScrolledPosition(GetSplitterPosition(), 0, &splitterX, NULL);
 
             m_editorFocused = false;
             m_iFlags |= wxPG_FL_PRIMARY_FILLS_ENTIRE;
 
-            wxASSERT( m_wndEditor == nullptr );
+            wxASSERT( m_wndEditor == NULL );
 
             //
             // Only create editor for non-disabled non-caption
-            if ( !p->IsCategory() && !p->HasFlag(wxPGFlags::Disabled) )
+            if ( !p->IsCategory() && !p->HasFlag(wxPG_PROP_DISABLED) )
             {
             // do this for non-caption items
 
@@ -4149,7 +4156,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
 
                 // Do we need to paint the custom image, if any?
                 m_iFlags &= ~(wxPG_FL_CUR_USES_CUSTOM_IMAGE);
-                if ( p->HasFlag(wxPGFlags::CustomImage) &&
+                if ( p->HasFlag(wxPG_PROP_CUSTOMIMAGE) &&
                      !p->GetEditorClass()->CanContainCustomImage()
                    )
                     m_iFlags |= wxPG_FL_CUR_USES_CUSTOM_IMAGE;
@@ -4162,7 +4169,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
 
                 const wxPGEditor* editor = p->GetEditorClass();
                 wxCHECK_MSG(editor, false,
-                    wxS("null editor class not allowed"));
+                    wxS("NULL editor class not allowed"));
 
                 m_iFlags &= ~wxPG_FL_FIXED_WIDTH_EDITOR;
 
@@ -4191,7 +4198,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
                 // Essentially, primaryCtrl == m_wndEditor
                 //
 
-                // NOTE: It is allowed for m_wndEditor to be null - in this
+                // NOTE: It is allowed for m_wndEditor to be NULL - in this
                 //       case value is drawn as normal, and m_wndEditor2 is
                 //       assumed to be a right-aligned button that triggers
                 //       a separate editorCtrl window.
@@ -4215,7 +4222,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
 
                     // If it has modified status, use bold font
                     // (must be done before capturing m_ctrlXAdjust)
-                    if ( p->HasFlag(wxPGFlags::Modified) &&
+                    if ( p->HasFlag(wxPG_PROP_MODIFIED) &&
                          (m_windowStyle & wxPG_BOLD_MODIFIED) )
                         SetCurControlBoldFont();
                     // Store x relative to splitter (we'll need it).
@@ -4233,7 +4240,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
                     SetupChildEventHandling(primaryCtrl);
 
                     // Focus and select all (wxTextCtrl, wxComboBox etc.)
-                    if ( !!(flags & wxPGSelectPropertyFlags::Focus) )
+                    if ( flags & wxPG_SEL_FOCUS )
                     {
                         primaryCtrl->SetFocus();
 
@@ -4272,12 +4279,12 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
                     // NOTE: Due to problems focusing away from it, this
                     //       has been disabled.
                     /*
-                    if ( (flags & wxPGSelectPropertyFlags::Focus) && !m_wndEditor )
+                    if ( (flags & wxPG_SEL_FOCUS) && !m_wndEditor )
                         m_wndEditor2->SetFocus();
                     */
                 }
 
-                if ( !!(flags & wxPGSelectPropertyFlags::Focus) )
+                if ( flags & wxPG_SEL_FOCUS )
                     m_editorFocused = true;
 
             }
@@ -4292,7 +4299,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
 
             // If it's inside collapsed section, expand parent, scroll, etc.
             // Also, if it was partially visible, scroll it into view.
-            if ( !(flags & wxPGSelectPropertyFlags::Nonvisible) )
+            if ( !(flags & wxPG_SEL_NONVISIBLE) )
                 EnsureVisible( p );
 
             if ( m_wndEditor )
@@ -4300,7 +4307,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
                 m_wndEditor->Show(true);
             }
 
-            if ( !(flags & wxPGSelectPropertyFlags::NoRefresh) )
+            if ( !(flags & wxPG_SEL_NO_REFRESH) )
                 DrawItem(p);
         }
         else
@@ -4312,7 +4319,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
         ClearInternalFlag(wxPG_FL_IN_SELECT_PROPERTY);
     }
 
-    const wxString* pHelpString = nullptr;
+    const wxString* pHelpString = NULL;
 
     if ( p )
         pHelpString = &p->GetHelpString();
@@ -4339,7 +4346,7 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
             {
                 // Clear help box - but only if it was written
                 // by us at previous time.
-                statusbar->SetStatusText(wxString());
+                statusbar->SetStatusText(wxEmptyString);
                 m_iFlags &= ~(wxPG_FL_STRING_IN_STATUSBAR);
             }
         }
@@ -4366,8 +4373,8 @@ bool wxPropertyGrid::DoSelectProperty( wxPGProperty* p, wxPGSelectPropertyFlags 
     {
         p = prevFirstSel;
     }
-    if ( !(flags & wxPGSelectPropertyFlags::DontSendEvent) && p)
-        SendEvent( wxEVT_PG_SELECTED, p, nullptr );
+    if ( !(flags & wxPG_SEL_DONT_SEND_EVENT) && p)
+        SendEvent( wxEVT_PG_SELECTED, p, NULL );
 
     return true;
 }
@@ -4381,7 +4388,7 @@ bool wxPropertyGrid::UnfocusEditor()
     if ( !selected || !m_wndEditor || IsFrozen() )
         return true;
 
-    if ( !CommitChangesFromEditor() )
+    if ( !CommitChangesFromEditor(0) )
         return false;
 
     SetFocusOnCanvas();
@@ -4406,7 +4413,7 @@ void wxPropertyGrid::RefreshEditor()
     // calling UpdateControl().
     if ( HasFlag(wxPG_BOLD_MODIFIED) )
     {
-        if ( p->HasFlag(wxPGFlags::Modified) )
+        if ( p->HasFlag(wxPG_PROP_MODIFIED) )
             wnd->SetFont(GetCaptionFont());
         else
             wnd->SetFont(GetFont());
@@ -4426,9 +4433,9 @@ bool wxPropertyGrid::SelectProperty( wxPGPropArg id, bool focus )
 {
     wxPG_PROP_ARG_CALL_PROLOG_RETVAL(false)
 
-    wxPGSelectPropertyFlags flags = wxPGSelectPropertyFlags::DontSendEvent;
+    unsigned int flags = wxPG_SEL_DONT_SEND_EVENT;
     if ( focus )
-        flags |= wxPGSelectPropertyFlags::Focus;
+        flags |= wxPG_SEL_FOCUS;
 
     return DoSelectProperty(p, flags);
 }
@@ -4495,17 +4502,18 @@ bool wxPropertyGrid::DoExpand( wxPGProperty* p, bool sendEvents )
 
 // -----------------------------------------------------------------------
 
-bool wxPropertyGrid::DoHideProperty( wxPGProperty* p, bool hide, wxPGPropertyValuesFlags flags )
+bool wxPropertyGrid::DoHideProperty( wxPGProperty* p, bool hide, int flags )
 {
     if ( IsFrozen() )
         return m_pState->DoHideProperty(p, hide, flags);
 
     wxArrayPGProperty selection = m_pState->m_selection;  // Must use a copy
-    for( wxPGProperty* selected: selection )
+    for ( unsigned int i=0; i<selection.size(); i++ )
     {
+        wxPGProperty* selected = selection[i];
         if ( selected == p || selected->IsSomeParent(p) )
         {
-            if ( !DoRemoveFromSelection(p) )
+            if ( !DoRemoveFromSelection(p, flags) )
                 return false;
         }
     }
@@ -4593,10 +4601,10 @@ void wxPropertyGrid::OnResize( wxSizeEvent& event )
         if ( !m_doubleBuffer )
         {
             // Create double buffer bitmap to draw on, if none
-            int w = wxMax(width, FromDIP(250));
-            int h = wxMax(height + dblh, FromDIP(400));
+            int w = wxMax(width, 250);
+            int h = wxMax(height + dblh, 400);
             m_doubleBuffer = new wxBitmap;
-            m_doubleBuffer->CreateWithLogicalSize( w, h, scaleFactor );
+            m_doubleBuffer->CreateWithDIPSize( w, h, scaleFactor );
         }
         else
         {
@@ -4610,7 +4618,7 @@ void wxPropertyGrid::OnResize( wxSizeEvent& event )
                 if ( h < (height+dblh) ) h = height + dblh;
                 delete m_doubleBuffer;
                 m_doubleBuffer = new wxBitmap;
-                m_doubleBuffer->CreateWithLogicalSize( w, h, scaleFactor );
+                m_doubleBuffer->CreateWithDIPSize( w, h, scaleFactor );
             }
         }
     }
@@ -4691,10 +4699,10 @@ void wxPropertyGrid::SetFocusOnCanvas()
 // Returns true if event was vetoed.
 bool wxPropertyGrid::SendEvent( wxEventType eventType, wxPGProperty* p,
                                 wxVariant* pValue,
-                                wxPGSelectPropertyFlags selFlags,
+                                unsigned int selFlags,
                                 unsigned int column )
 {
-    // selFlags should have wxPGSelectPropertyFlags::NoValidate if event is not
+    // selFlags should have wxPG_SEL_NOVALIDATE if event is not
     // vetoable.
 
     // Send property grid event of specific type and with specific property
@@ -4707,7 +4715,7 @@ bool wxPropertyGrid::SendEvent( wxEventType eventType, wxPGProperty* p,
     {
         wxASSERT( pValue );
         evt.SetCanVeto(true);
-        m_validationInfo.SetValue(pValue ? *pValue : wxVariant());
+        m_validationInfo.m_pValue = pValue;
         evt.SetupValidationInfo();
     }
     else
@@ -4715,7 +4723,7 @@ bool wxPropertyGrid::SendEvent( wxEventType eventType, wxPGProperty* p,
         if ( p )
             evt.SetPropertyValue(p->GetValue());
 
-        if ( !(selFlags & wxPGSelectPropertyFlags::NoValidate) )
+        if ( !(selFlags & wxPG_SEL_NOVALIDATE) )
             evt.SetCanVeto(true);
     }
 
@@ -4732,7 +4740,7 @@ void wxPropertyGrid::SendEvent(wxEventType eventType, int intVal)
     wxPropertyGridEvent evt(eventType, m_eventObject->GetId());
     evt.SetPropertyGrid(this);
     evt.SetEventObject(m_eventObject);
-    evt.SetProperty(nullptr);
+    evt.SetProperty(NULL);
     evt.SetColumn(0);
     evt.SetInt(intVal);
 
@@ -4803,11 +4811,11 @@ bool wxPropertyGrid::HandleMouseClick( int x, unsigned int y, wxMouseEvent &even
             else if ( splitterHit == -1 )
             {
             // Click on value.
-                wxPGSelectPropertyFlags selFlag = wxPGSelectPropertyFlags::Null;
+                unsigned int selFlag = 0;
                 if ( columnHit == 1 )
                 {
                     m_iFlags |= wxPG_FL_ACTIVATION_BY_CLICK;
-                    selFlag = wxPGSelectPropertyFlags::Focus;
+                    selFlag = wxPG_SEL_FOCUS;
                 }
                 if ( !AddToSelectionFromInputEvent( p,
                                                     columnHit,
@@ -4842,11 +4850,11 @@ bool wxPropertyGrid::HandleMouseClick( int x, unsigned int y, wxMouseEvent &even
                         {
                             ResetColumnSizes( true );
 
-                            SendEvent(wxEVT_PG_COLS_RESIZED, wxNullProperty);
+                            SendEvent(wxEVT_PG_COLS_RESIZED, (wxPGProperty*)NULL);
                             SendEvent(wxEVT_PG_COL_DRAGGING,
                                       m_propHover,
-                                      nullptr,
-                                      wxPGSelectPropertyFlags::NoValidate,
+                                      NULL,
+                                      wxPG_SEL_NOVALIDATE,
                                       0); // dragged splitter is always 0 here
                         }
                     }
@@ -4857,11 +4865,11 @@ bool wxPropertyGrid::HandleMouseClick( int x, unsigned int y, wxMouseEvent &even
                         //
 
                         // send event
-                        DoEndLabelEdit(true, wxPGSelectPropertyFlags::NoValidate);
+                        DoEndLabelEdit(true, wxPG_SEL_NOVALIDATE);
 
                         // Allow application to veto dragging
                         if ( !SendEvent(wxEVT_PG_COL_BEGIN_DRAG,
-                                        p, nullptr, wxPGSelectPropertyFlags::Null,
+                                        p, NULL, 0,
                                         (unsigned int)splitterHit) )
                         {
                             if ( m_wndEditor )
@@ -4989,10 +4997,8 @@ bool wxPropertyGrid::HandleMouseMove( int x, unsigned int y,
 
     if ( m_dragStatus > 0 )
     {
-        const int dragMargin = FromDIP(wxPG_DRAG_MARGIN);
-
-        if ( x > (m_marginWidth + dragMargin) &&
-             x < (m_pState->GetVirtualWidth() - dragMargin) )
+        if ( x > (m_marginWidth + wxPG_DRAG_MARGIN) &&
+             x < (m_pState->GetVirtualWidth() - wxPG_DRAG_MARGIN) )
         {
 
             int splitterX = x - splitterHitOffset;
@@ -5002,16 +5008,16 @@ bool wxPropertyGrid::HandleMouseMove( int x, unsigned int y,
             if ( newSplitterX != splitterX )
             {
                 // Move everything
-                DoSetSplitter(newSplitterX,
-                              m_draggedSplitter,
-                              wxPGSplitterPositionFlags::Refresh |
-                              wxPGSplitterPositionFlags::FromEvent);
+                DoSetSplitterPosition(newSplitterX,
+                                      m_draggedSplitter,
+                                      wxPG_SPLITTER_REFRESH |
+                                      wxPG_SPLITTER_FROM_EVENT);
 
-                SendEvent(wxEVT_PG_COLS_RESIZED, wxNullProperty);
+                SendEvent(wxEVT_PG_COLS_RESIZED, (wxPGProperty*)NULL);
                 SendEvent(wxEVT_PG_COL_DRAGGING,
                           m_propHover,
-                          nullptr,
-                    wxPGSelectPropertyFlags::NoValidate,
+                          NULL,
+                          wxPG_SEL_NOVALIDATE,
                           (unsigned int)m_draggedSplitter);
             }
 
@@ -5091,15 +5097,10 @@ bool wxPropertyGrid::HandleMouseMove( int x, unsigned int y,
                             wxSize imageSize = GetImageSize(m_propHover, -1);
                             if ( imageSize.x > 0 )
                                 imageWidth = imageSize.x;
-#if WXWIN_COMPATIBILITY_3_2
-                            // Special implementation with check if user-overriden obsolete function is still in use
-                            tipString = m_propHover->GetValueAsStringWithCheck();
-#else
                             tipString = m_propHover->GetValueAsString();
-#endif // WXWIN_COMPATIBILITY_3_2 | !WXWIN_COMPATIBILITY_3_2
                             if ( GetColumnCount() <= 2 )
                             {
-                                wxString unitsString = m_propHover->GetAttribute(wxPG_ATTR_UNITS, wxString());
+                                wxString unitsString = m_propHover->GetAttribute(wxPG_ATTR_UNITS, wxEmptyString);
                                 if ( !unitsString.empty() )
                                     tipString = wxString::Format(wxS("%s %s"), tipString, unitsString );
                             }
@@ -5108,23 +5109,23 @@ bool wxPropertyGrid::HandleMouseMove( int x, unsigned int y,
                         space -= m_propHover->GetImageOffset(imageWidth);
                         space -= (wxPG_XBEFORETEXT + 1);
                         int tw, th;
-                        const wxFont* font = nullptr;
-                        if ( (m_windowStyle & wxPG_BOLD_MODIFIED) && m_propHover->HasFlag(wxPGFlags::Modified) )
+                        const wxFont* font = NULL;
+                        if ( (m_windowStyle & wxPG_BOLD_MODIFIED) && m_propHover->HasFlag(wxPG_PROP_MODIFIED) )
                             font = &m_captionFont;
                         if ( cell.GetFont().IsOk() )
                             font = &cell.GetFont();
-                        GetTextExtent( tipString, &tw, &th, nullptr, nullptr, font );
+                        GetTextExtent( tipString, &tw, &th, NULL, NULL, font );
                         if ( tw > space )
                             SetToolTip( tipString );
                     }
                     else
                     {
-                        SetToolTip(wxString());
+                        SetToolTip(wxEmptyString);
                     }
                 }
                 else
                 {
-                    SetToolTip(wxString());
+                    SetToolTip(wxEmptyString);
                 }
             }
         }
@@ -5181,7 +5182,7 @@ bool wxPropertyGrid::HandleMouseMove( int x, unsigned int y,
 
             // Since categories cannot be selected along with 'other'
             // properties, exclude them from iterator flags.
-            int iterFlags = wxPG_ITERATE_VISIBLE & (~wxPGFlags::Category);
+            int iterFlags = wxPG_ITERATE_VISIBLE & (~wxPG_PROP_CATEGORY);
 
             for ( int i=(selection.size()-1); i>=0; i-- )
             {
@@ -5227,8 +5228,8 @@ bool wxPropertyGrid::HandleMouseUp( int x, unsigned int WXUNUSED(y),
 
         SendEvent(wxEVT_PG_COL_END_DRAG,
                   m_propHover,
-                  nullptr,
-                  wxPGSelectPropertyFlags::NoValidate,
+                  NULL,
+                  wxPG_SEL_NOVALIDATE,
                   (unsigned int)m_draggedSplitter);
 
         // Disable splitter auto-centering (but only if moved any -
@@ -5299,7 +5300,7 @@ bool wxPropertyGrid::OnMouseCommon( wxMouseEvent& event, int* px, int* py )
     wxRect r;
     if ( wnd )
         r = wnd->GetRect();
-    if ( wnd == nullptr || m_dragStatus ||
+    if ( wnd == NULL || m_dragStatus ||
          (
            ux <= (splitterX + wxPG_SPLITTERX_DETECTMARGIN2) ||
            ux >= (r.x+r.width) ||
@@ -5523,98 +5524,74 @@ void wxPropertyGrid::OnMouseUpChild( wxMouseEvent &event )
 // wxPropertyGrid keyboard event handling
 // -----------------------------------------------------------------------
 
-std::pair<wxPGKeyboardAction, wxPGKeyboardAction> wxPropertyGrid::KeyEventToActions(const wxKeyEvent& event) const
+int wxPropertyGrid::KeyEventToActions(wxKeyEvent &event, int* pSecond) const
 {
-    // Translates wxKeyEvent to wxPGKeyboardAction::XXX
+    // Translates wxKeyEvent to wxPG_ACTION_XXX
 
     int keycode = event.GetKeyCode();
     int modifiers = event.GetModifiers();
 
-    wxASSERT(!(modifiers & ~(0xFFFF)));
+    wxASSERT( !(modifiers&~(0xFFFF)) );
 
     int hashMapKey = (keycode & 0xFFFF) | ((modifiers & 0xFFFF) << 16);
 
-    auto it = m_actionTriggers.find(hashMapKey);
+    wxPGHashMapI2I::const_iterator it = m_actionTriggers.find(hashMapKey);
 
     if ( it == m_actionTriggers.end() )
-        return std::make_pair(wxPGKeyboardAction::Invalid, wxPGKeyboardAction::Invalid);
-
-    return it->second;
-}
-
-#if WXWIN_COMPATIBILITY_3_2
-wxPGKeyboardAction wxPropertyGrid::KeyEventToActions(wxKeyEvent &event, wxPGKeyboardAction* pSecond) const
-{
-    // Translates wxKeyEvent to wxPGKeyboardAction::XXX
-    std::pair<wxPGKeyboardAction, wxPGKeyboardAction> actions = KeyEventToActions(event);
+        return 0;
 
     if ( pSecond )
     {
-        *pSecond = actions.second;
+        int second = (it->second>>16) & 0xFFFF;
+        *pSecond = second;
     }
 
-    return actions.first;
-}
-#endif // WXWIN_COMPATIBILITY_3_2
-
-wxPGKeyboardAction wxPropertyGrid::KeyEventToAction(wxKeyEvent& event) const
-{
-    return KeyEventToActions(event).first;
+    return (it->second & 0xFFFF);
 }
 
-void wxPropertyGrid::AddActionTrigger(wxPGKeyboardAction action, int keycode, int modifiers)
+void wxPropertyGrid::AddActionTrigger( int action, int keycode, int modifiers )
 {
     wxASSERT( !(modifiers&~(0xFFFF)) );
 
     int hashMapKey = (keycode & 0xFFFF) | ((modifiers & 0xFFFF) << 16);
 
-    std::pair<wxPGKeyboardAction, wxPGKeyboardAction> curActions;
+    wxPGHashMapI2I::iterator it = m_actionTriggers.find(hashMapKey);
 
-    auto it = m_actionTriggers.find(hashMapKey);
     if ( it != m_actionTriggers.end() )
     {
         // This key combination is already used
-        curActions = it->second;
 
         // Can add secondary?
-        wxASSERT_MSG( curActions.second == wxPGKeyboardAction::Invalid,
-                      "You can only add up to two separate actions per key combination." );
+        wxASSERT_MSG( !(it->second&~(0xFFFF)),
+                      wxS("You can only add up to two separate actions per key combination.") );
 
-        curActions.second = action;
-    }
-    else
-    {
-        curActions = std::make_pair(action, wxPGKeyboardAction::Invalid);
+        action = it->second | (action<<16);
     }
 
-    m_actionTriggers[hashMapKey] = curActions;
+    m_actionTriggers[hashMapKey] = action;
 }
 
-void wxPropertyGrid::ClearActionTriggers(wxPGKeyboardAction action)
+void wxPropertyGrid::ClearActionTriggers( int action )
 {
-//    wxCHECK_RET(!(action & ~(0xFFFF)), wxS("You can only clear triggers for one action at a time.")
+    bool didSomething;
 
-    auto it = m_actionTriggers.begin();
-    while ( it != m_actionTriggers.end() )
+    do
     {
-        if ( it->second.second == action )
-        {
-            it->second.second = wxPGKeyboardAction::Invalid;
-        }
+        didSomething = false;
 
-        if ( it->second.first == action )
+        for (wxPGHashMapI2I::iterator it = m_actionTriggers.begin();
+              it != m_actionTriggers.end();
+              ++it )
         {
-            if ( it->second.second == wxPGKeyboardAction::Invalid )
+            if ( it->second == action )
             {
-                it = m_actionTriggers.erase(it);
-                continue;
+                m_actionTriggers.erase(it);
+                didSomething = true;
+                break;
             }
-
-            it->second.first = it->second.second;
         }
-
-        ++it;
     }
+    while ( didSomething );
 }
 
 void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
@@ -5636,7 +5613,7 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
         {
             if ( !editorFocused && m_wndEditor )
             {
-                DoSelectProperty( selected, wxPGSelectPropertyFlags::Focus );
+                DoSelectProperty( selected, wxPG_SEL_FOCUS );
             }
             else
             {
@@ -5677,11 +5654,10 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
         return;
     }
 
-    wxPGKeyboardAction action;
-    wxPGKeyboardAction secondAction;
-    std::tie(action, secondAction) = KeyEventToActions(event);
+    int secondAction;
+    int action = KeyEventToActions(event, &secondAction);
 
-    if ( editorFocused && action == wxPGKeyboardAction::CancelEdit )
+    if ( editorFocused && action == wxPG_ACTION_CANCEL_EDIT )
     {
         //
         // Esc cancels any changes
@@ -5704,7 +5680,13 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
 
     // Except for TAB, ESC, and any keys specifically dedicated to
     // wxPropertyGrid itself, handle child control events in child control.
-    if ( fromChild && m_dedicatedKeys.count(keycode) == 0 )
+    if ( fromChild &&
+#if WXWIN_COMPATIBILITY_3_0
+         // Deprecated: use a hash set instead.
+         !wxPGItemExistsInVector<int>(m_dedicatedKeys, keycode) )
+#else
+         m_dedicatedKeys.find(keycode) == m_dedicatedKeys.end() )
+#endif
     {
         // Only propagate event if it had modifiers
         if ( !event.HasModifiers() )
@@ -5725,12 +5707,12 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
 
         wxPGProperty* p = selected;
 
-        if ( action == wxPGKeyboardAction::Edit && !editorFocused )
+        if ( action == wxPG_ACTION_EDIT && !editorFocused )
         {
             // Mark as handled only for editable property
-            if ( !p->IsCategory() && p->IsEnabled() && !p->HasFlag(wxPGFlags::ReadOnly) )
+            if ( !p->IsCategory() && p->IsEnabled() && !p->HasFlag(wxPG_PROP_READONLY) )
             {
-                DoSelectProperty( p, wxPGSelectPropertyFlags::Focus );
+                DoSelectProperty( p, wxPG_SEL_FOCUS );
                 wasHandled = true;
             }
         }
@@ -5740,12 +5722,12 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
 
         if ( p->GetChildCount() )
         {
-            if ( action == wxPGKeyboardAction::CollapseProperty || secondAction == wxPGKeyboardAction::CollapseProperty )
+            if ( action == wxPG_ACTION_COLLAPSE_PROPERTY || secondAction == wxPG_ACTION_COLLAPSE_PROPERTY )
             {
                 if ( (m_windowStyle & wxPG_HIDE_MARGIN) || DoCollapse(p, true) )
                     wasHandled = true;
             }
-            else if ( action == wxPGKeyboardAction::ExpandProperty || secondAction == wxPGKeyboardAction::ExpandProperty )
+            else if ( action == wxPG_ACTION_EXPAND_PROPERTY || secondAction == wxPG_ACTION_EXPAND_PROPERTY )
             {
                 if ( (m_windowStyle & wxPG_HIDE_MARGIN) || DoExpand(p, true) )
                     wasHandled = true;
@@ -5754,11 +5736,11 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
 
         if ( !wasHandled )
         {
-            if ( action == wxPGKeyboardAction::PrevProperty || secondAction == wxPGKeyboardAction::PrevProperty )
+            if ( action == wxPG_ACTION_PREV_PROPERTY || secondAction == wxPG_ACTION_PREV_PROPERTY )
             {
                 selectDir = -1;
             }
-            else if ( action == wxPGKeyboardAction::NextProperty || secondAction == wxPGKeyboardAction::NextProperty )
+            else if ( action == wxPG_ACTION_NEXT_PROPERTY || secondAction == wxPG_ACTION_NEXT_PROPERTY )
             {
                 selectDir = 1;
             }
@@ -5769,14 +5751,14 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
             p = wxPropertyGridIterator::OneStep( m_pState, wxPG_ITERATE_VISIBLE, p, selectDir );
             if ( p )
             {
-                wxPGSelectPropertyFlags selFlags = wxPGSelectPropertyFlags::Null;
+                int selFlags = 0;
                 int reopenLabelEditorCol = -1;
 
-                if ( action == wxPGKeyboardAction::Edit )
+                if ( action == wxPG_ACTION_EDIT )
                 {
                     // Make the next editor focused as well
                     // if we are actually going to edit the property.
-                    selFlags |= wxPGSelectPropertyFlags::Focus;
+                    selFlags |= wxPG_SEL_FOCUS;
                 }
                 else
                 {
@@ -5790,7 +5772,7 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
                 if ( reopenLabelEditorCol >= 0 )
                     DoBeginLabelEdit(reopenLabelEditorCol);
             }
-            else if ( action == wxPGKeyboardAction::Edit )
+            else if ( action == wxPG_ACTION_EDIT )
             {
                 // For first and last item just validate the value
                 CommitChangesFromEditor();
@@ -5802,7 +5784,7 @@ void wxPropertyGrid::HandleKeyEvent( wxKeyEvent &event, bool fromChild )
     {
         // If nothing was selected, select the first item now
         // (or navigate out of tab).
-        if ( action != wxPGKeyboardAction::CancelEdit && secondAction != wxPGKeyboardAction::CancelEdit )
+        if ( action != wxPG_ACTION_CANCEL_EDIT && secondAction != wxPG_ACTION_CANCEL_EDIT )
         {
             wxPGProperty* p = wxPropertyGridInterface::GetFirst();
             if ( p ) DoSelectProperty(p);
@@ -5836,15 +5818,16 @@ void wxPropertyGrid::OnKey( wxKeyEvent &event )
 
 // -----------------------------------------------------------------------
 
-bool wxPropertyGrid::ButtonTriggerKeyTest(wxPGKeyboardAction action, wxKeyEvent& event)
+bool wxPropertyGrid::ButtonTriggerKeyTest( int action, wxKeyEvent& event )
 {
-    if ( action == wxPGKeyboardAction::Invalid )
+    if ( action == -1 )
     {
-        action = KeyEventToActions(event).first;
+        int secondAction;
+        action = KeyEventToActions(event, &secondAction);
     }
 
     // Does the keycode trigger button?
-    if ( action == wxPGKeyboardAction::PressButton &&
+    if ( action == wxPG_ACTION_PRESS_BUTTON &&
          m_wndEditor2 )
     {
         wxCommandEvent evt(wxEVT_BUTTON, m_wndEditor2->GetId());
@@ -5903,7 +5886,7 @@ void wxPropertyGrid::OnIdle( wxIdleEvent& WXUNUSED(event) )
     {
         size_t cntBefore = cntAfter;
 
-        DeleteProperty(*(m_deletedProperties.begin()));
+        DeleteProperty(m_deletedProperties[0]);
 
         cntAfter = m_deletedProperties.size();
         wxASSERT_MSG( cntAfter <= cntBefore,
@@ -5917,7 +5900,7 @@ void wxPropertyGrid::OnIdle( wxIdleEvent& WXUNUSED(event) )
     {
         size_t cntBefore = cntAfter;
 
-        RemoveProperty(*(m_removedProperties.begin()));
+        RemoveProperty(m_removedProperties[0]);
 
         cntAfter = m_removedProperties.size();
         wxASSERT_MSG( cntAfter <= cntBefore,
@@ -6038,9 +6021,9 @@ void wxPropertyGrid::HandleFocusChange( wxWindow* newFocused )
         if ( m_iFlags & wxPG_FL_INITIALIZED )
         {
             const wxArrayPGProperty& sel = GetSelectedProperties();
-            for( wxPGProperty* selProp : sel )
+            for ( size_t i = 0; i < sel.size(); i++ )
             {
-                DrawItem(selProp);
+                DrawItem(sel[i]);
             }
         }
     }
@@ -6094,15 +6077,17 @@ wxPGEditor* wxPropertyGrid::DoRegisterEditorClass( wxPGEditor* editorClass,
                                                    const wxString& editorName,
                                                    bool noDefCheck )
 {
-    wxCHECK( editorClass, nullptr );
+    wxASSERT( editorClass );
 
     if ( !noDefCheck && wxPGGlobalVars->m_mapEditorClasses.empty() )
         RegisterDefaultEditors();
 
-    wxString name = editorName.empty() ? editorClass->GetName() : editorName;
+    wxString name = editorName;
+    if ( name.empty() )
+        name = editorClass->GetName();
 
     // Existing editor under this name?
-    auto vt_it = wxPGGlobalVars->m_mapEditorClasses.find(name);
+    wxPGHashMapS2P::iterator vt_it = wxPGGlobalVars->m_mapEditorClasses.find(name);
 
     if ( vt_it != wxPGGlobalVars->m_mapEditorClasses.end() )
     {
@@ -6112,17 +6097,17 @@ wxPGEditor* wxPropertyGrid::DoRegisterEditorClass( wxPGEditor* editorClass,
     }
 
     wxCHECK_MSG( vt_it == wxPGGlobalVars->m_mapEditorClasses.end(),
-                 vt_it->second,
+                 (wxPGEditor*) vt_it->second,
                  wxS("Editor with given name was already registered") );
 
-    wxPGGlobalVars->m_mapEditorClasses[name] = editorClass;
+    wxPGGlobalVars->m_mapEditorClasses[name] = (void*)editorClass;
 
     return editorClass;
 }
 
 // Use this in RegisterDefaultEditors.
 #define wxPGRegisterDefaultEditorClass(EDITOR) \
-    if ( wxPGEditor_##EDITOR == nullptr ) \
+    if ( wxPGEditor_##EDITOR == NULL ) \
     { \
         wxPGEditor_##EDITOR = wxPropertyGrid::RegisterEditorClass( \
             new wxPG##EDITOR##Editor, true ); \
@@ -6151,6 +6136,10 @@ void wxPropertyGrid::RegisterDefaultEditors()
 
 wxPGStringTokenizer::wxPGStringTokenizer( const wxString& str, wxChar delimiter )
     : m_str(str), m_curPos(str.begin()), m_delimiter(delimiter)
+{
+}
+
+wxPGStringTokenizer::~wxPGStringTokenizer()
 {
 }
 
@@ -6217,6 +6206,65 @@ wxString wxPGStringTokenizer::GetNextToken()
 }
 
 // -----------------------------------------------------------------------
+// wxPGChoiceEntry
+// -----------------------------------------------------------------------
+
+wxPGChoiceEntry::wxPGChoiceEntry()
+    : wxPGCell(), m_value(wxPG_INVALID_VALUE)
+{
+}
+
+// -----------------------------------------------------------------------
+// wxPGChoicesData
+// -----------------------------------------------------------------------
+
+wxPGChoicesData::wxPGChoicesData()
+{
+}
+
+wxPGChoicesData::~wxPGChoicesData()
+{
+    Clear();
+}
+
+void wxPGChoicesData::Clear()
+{
+    m_items.clear();
+}
+
+void wxPGChoicesData::CopyDataFrom( wxPGChoicesData* data )
+{
+    wxASSERT( m_items.empty() );
+
+    m_items = data->m_items;
+}
+
+wxPGChoiceEntry& wxPGChoicesData::Insert( int index,
+                                          const wxPGChoiceEntry& item )
+{
+    wxVector<wxPGChoiceEntry>::iterator it;
+    if ( index == -1 )
+    {
+        it = m_items.end();
+        index = (int) m_items.size();
+    }
+    else
+    {
+        it = m_items.begin() + index;
+    }
+
+    m_items.insert(it, item);
+
+    wxPGChoiceEntry& ownEntry = m_items[index];
+
+    // Need to fix value?
+    if ( ownEntry.GetValue() == wxPG_INVALID_VALUE )
+        ownEntry.SetValue(index);
+
+    return ownEntry;
+}
+
+// -----------------------------------------------------------------------
 // wxPropertyGridEvent
 // -----------------------------------------------------------------------
 
@@ -6245,9 +6293,9 @@ wxDEFINE_EVENT( wxEVT_PG_COLS_RESIZED, wxPropertyGridEvent);
 
 wxPropertyGridEvent::wxPropertyGridEvent(wxEventType commandType, int id)
     : wxCommandEvent(commandType,id)
-    , m_property(nullptr)
-    , m_pg(nullptr)
-    , m_validationInfo(nullptr)
+    , m_property(NULL)
+    , m_pg(NULL)
+    , m_validationInfo(NULL)
     , m_column(1)
     , m_canVeto(false)
     , m_wasVetoed(false)
@@ -6293,9 +6341,9 @@ wxPropertyGridEvent::~wxPropertyGridEvent()
 
         // Use iterate from the back since it is more likely that the event
         // being destroyed is at the end of the array.
-        std::vector<wxPropertyGridEvent*>& liveEvents = m_pg->m_liveEvents;
+        wxVector<wxPropertyGridEvent*>& liveEvents = m_pg->m_liveEvents;
 
-        for ( std::vector<wxPropertyGridEvent*>::reverse_iterator rit = liveEvents.rbegin(); rit != liveEvents.rend(); ++rit )
+        for ( wxVector<wxPropertyGridEvent*>::reverse_iterator rit = liveEvents.rbegin(); rit != liveEvents.rend(); ++rit )
         {
             if ( *rit == this )
             {
@@ -6320,8 +6368,8 @@ wxEvent* wxPropertyGridEvent::Clone() const
 // -----------------------------------------------------------------------
 
 wxPropertyGridPopulator::wxPropertyGridPopulator()
-    : m_pg(nullptr)
-    , m_state(nullptr)
+    : m_pg(NULL)
+    , m_state(NULL)
 {
     wxPGGlobalVars->m_offline++;
 }
@@ -6347,9 +6395,10 @@ void wxPropertyGridPopulator::SetGrid( wxPropertyGrid* pg )
 wxPropertyGridPopulator::~wxPropertyGridPopulator()
 {
     // Free unused sets of choices
-    for( const auto& it : m_dictIdChoices )
+    for( wxPGHashMapS2P::iterator it = m_dictIdChoices.begin(); it != m_dictIdChoices.end(); ++it )
     {
-        it.second->DecRef();
+        wxPGChoicesData* data = (wxPGChoicesData*) it->second;
+        data->DecRef();
     }
 
     if ( m_pg )
@@ -6371,16 +6420,16 @@ wxPGProperty* wxPropertyGridPopulator::Add( const wxString& propClass,
     wxClassInfo* classInfo = wxClassInfo::FindClass(propClass);
     wxPGProperty* parent = GetCurParent();
 
-    if ( parent->HasFlag(wxPGFlags::Aggregate) )
+    if ( parent->HasFlag(wxPG_PROP_AGGREGATE) )
     {
         ProcessError(wxString::Format(wxS("new children cannot be added to '%s'"),parent->GetName()));
-        return nullptr;
+        return NULL;
     }
 
     if ( !classInfo || !classInfo->IsKindOf(wxCLASSINFO(wxPGProperty)) )
     {
         ProcessError(wxString::Format(wxS("'%s' is not valid property class"),propClass));
-        return nullptr;
+        return NULL;
     }
 
     wxPGProperty* property = (wxPGProperty*) classInfo->CreateObject();
@@ -6394,8 +6443,8 @@ wxPGProperty* wxPropertyGridPopulator::Add( const wxString& propClass,
     m_state->DoInsert(parent, -1, property);
 
     if ( propValue )
-        property->SetValueFromString( *propValue, wxPGPropValFormatFlags::FullValue|
-                                                  wxPGPropValFormatFlags::ProgrammaticValue );
+        property->SetValueFromString( *propValue, wxPG_FULL_VALUE|
+                                                  wxPG_PROGRAMMATIC_VALUE );
 
     return property;
 }
@@ -6404,22 +6453,9 @@ wxPGProperty* wxPropertyGridPopulator::Add( const wxString& propClass,
 
 void wxPropertyGridPopulator::AddChildren( wxPGProperty* property )
 {
-    // Preserve inherited attributes to be able to restore them later:
-    // attributes recursively set for the children of this property shouldn't
-    // be inherited by its siblings.
-    const auto inheritedAttributesOrig = m_inheritedAttributes;
-
-    // Apply inherited attributes to the property.
-    for ( const auto& it : m_inheritedAttributes )
-    {
-        property->SetAttribute(it.first, it.second);
-    }
-
     m_propHierarchy.push_back(property);
     DoScanForChildren();
     m_propHierarchy.pop_back();
-
-    m_inheritedAttributes = std::move(inheritedAttributesOrig);
 }
 
 // -----------------------------------------------------------------------
@@ -6427,93 +6463,100 @@ void wxPropertyGridPopulator::AddChildren( wxPGProperty* property )
 wxPGChoices wxPropertyGridPopulator::ParseChoices( const wxString& choicesString,
                                                    const wxString& idString )
 {
+    wxPGChoices choices;
+
     // Using id?
     if ( choicesString[0] == wxT('@') )
     {
         wxString ids = choicesString.substr(1);
-        auto it = m_dictIdChoices.find(ids);
+        wxPGHashMapS2P::iterator it = m_dictIdChoices.find(ids);
         if ( it == m_dictIdChoices.end() )
-        {
-            ProcessError(wxString::Format(wxS("No choices defined for id '%s'"), ids));
-            return wxPGChoices();
-        }
-
-        return wxPGChoices(it->second);
-    }
-
-    if ( !idString.empty() )
-    {
-        auto it = m_dictIdChoices.find(idString);
-        if ( it != m_dictIdChoices.end() )
-        {
-            return wxPGChoices(it->second);
-        }
-    }
-
-    // Parse choices string
-    wxPGChoices choices;
-    wxString label;
-    wxString value;
-    int state = 0;
-    bool labelValid = false;
-
-    for ( wxUniChar c : choicesString )
-    {
-        if ( state != 1 )
-        {
-            if ( c == wxS('"') )
-            {
-                if ( labelValid )
-                {
-                    long l;
-                    if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
-                    choices.Add(label, l);
-                }
-                labelValid = false;
-                //wxLogDebug(wxS("%s, %s"),label,value);
-                value.clear();
-                label.clear();
-                state = 1;
-            }
-            else if ( c == wxS('=') )
-            {
-                if ( labelValid )
-                {
-                    state = 2;
-                }
-            }
-            else if ( state == 2 && (wxIsalnum(c) || c == wxS('x')) )
-            {
-                value << c;
-            }
-        }
+            ProcessError(wxString::Format(wxS("No choices defined for id '%s'"),ids));
         else
+            choices.AssignData((wxPGChoicesData*)it->second);
+    }
+    else
+    {
+        bool found = false;
+        if ( !idString.empty() )
         {
-            if ( c == wxS('"') )
+            wxPGHashMapS2P::iterator it = m_dictIdChoices.find(idString);
+            if ( it != m_dictIdChoices.end() )
             {
-                state = 0;
-                labelValid = true;
+                choices.AssignData((wxPGChoicesData*)it->second);
+                found = true;
             }
-            else
-                label << c;
+        }
+
+        if ( !found )
+        {
+            // Parse choices string
+            wxString label;
+            wxString value;
+            int state = 0;
+            bool labelValid = false;
+
+            for (wxString::const_iterator it = choicesString.begin(); it != choicesString.end(); ++it )
+            {
+                wxUniChar c = *it;
+
+                if ( state != 1 )
+                {
+                    if ( c == wxS('"') )
+                    {
+                        if ( labelValid )
+                        {
+                            long l;
+                            if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
+                            choices.Add(label, l);
+                        }
+                        labelValid = false;
+                        //wxLogDebug(wxS("%s, %s"),label,value);
+                        value.clear();
+                        label.clear();
+                        state = 1;
+                    }
+                    else if ( c == wxS('=') )
+                    {
+                        if ( labelValid )
+                        {
+                            state = 2;
+                        }
+                    }
+                    else if ( state == 2 && (wxIsalnum(c) || c == wxS('x')) )
+                    {
+                        value << c;
+                    }
+                }
+                else
+                {
+                    if ( c == wxS('"') )
+                    {
+                        state = 0;
+                        labelValid = true;
+                    }
+                    else
+                        label << c;
+                }
+            }
+
+            if ( labelValid )
+            {
+                long l;
+                if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
+                choices.Add(label, l);
+            }
+
+            if ( !choices.IsOk() )
+            {
+                choices.EnsureData();
+            }
+
+            // Assign to id
+            if ( !idString.empty() )
+                m_dictIdChoices[idString] = choices.GetData();
         }
     }
-
-    if ( labelValid )
-    {
-        long l;
-        if ( !value.ToLong(&l, 0) ) l = wxPG_INVALID_VALUE;
-        choices.Add(label, l);
-    }
-
-    if ( !choices.IsOk() )
-    {
-        choices.EnsureData();
-    }
-
-    // Assign to id
-    if ( !idString.empty() )
-        m_dictIdChoices[idString] = choices.GetData();
 
     return choices;
 }
@@ -6541,8 +6584,7 @@ bool wxPropertyGridPopulator::ToLongPCT( const wxString& s, long* pval, long max
 
 bool wxPropertyGridPopulator::AddAttribute( const wxString& name,
                                             const wxString& type,
-                                            const wxString& value,
-                                            wxPGPropertyValuesFlags flags )
+                                            const wxString& value )
 {
     if ( m_propHierarchy.empty() )
         return false;
@@ -6589,11 +6631,6 @@ bool wxPropertyGridPopulator::AddAttribute( const wxString& name,
             ProcessError(wxString::Format(wxS("Invalid attribute type '%s'"),type));
             return false;
         }
-    }
-
-    if ( !!(flags & wxPGPropertyValuesFlags::Recurse) )
-    {
-        m_inheritedAttributes[name] = variant;
     }
 
     p->SetAttribute( name, variant );

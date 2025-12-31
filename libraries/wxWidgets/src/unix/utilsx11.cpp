@@ -2,12 +2,13 @@
 // Name:        src/unix/utilsx11.cpp
 // Purpose:     Miscellaneous X11 functions (for wxCore)
 // Author:      Mattia Barbon, Vaclav Slavik, Robert Roebling
+// Modified by:
 // Created:     25.03.02
 // Copyright:   (c) wxWidgets team
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#if defined(__WXX11__) || defined(__WXGTK__) || defined(__WXQT__)
+#if defined(__WXX11__) || defined(__WXGTK__) || defined(__WXMOTIF__)
 
 // for compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
@@ -24,8 +25,13 @@
 #include "wx/private/launchbrowser.h"
 
 #ifdef __WXGTK__
+#ifdef __WXGTK20__
 #include "wx/gtk/private/wrapgtk.h"
 #include "wx/gtk/private/backend.h"
+#else // GTK+ 1.x
+#include <gtk/gtk.h>
+#define GDK_WINDOWING_X11
+#endif
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #define wxHAS_X11_SUPPORT
@@ -44,7 +50,6 @@ GtkWidget* wxGetTopLevelGTK();
 #ifdef wxHAS_X11_SUPPORT
 
 #include "wx/unix/utilsx11.h"
-#include "wx/unix/private/x11ptr.h"
 
 #ifdef __VMS
 #pragma message disable nosimpint
@@ -64,7 +69,7 @@ static Atom _NET_WM_WINDOW_TYPE_NORMAL = 0;
 static Atom _KDE_NET_WM_WINDOW_TYPE_OVERRIDE = 0;
 static Atom _WIN_LAYER = 0;
 static Atom KWIN_RUNNING = 0;
-#ifndef __WXGTK__
+#ifndef __WXGTK20__
 static Atom _NET_SUPPORTING_WM_CHECK = 0;
 static Atom _NET_SUPPORTED = 0;
 #endif
@@ -280,7 +285,7 @@ static void wxWinHintsSetLayer(Display *display, Window rootWnd,
 
 
 
-#ifdef __WXGTK__
+#ifdef __WXGTK20__
 static bool wxQueryWMspecSupport(Display* WXUNUSED(display),
                                  Window WXUNUSED(rootWnd),
                                  Atom feature)
@@ -310,8 +315,8 @@ static bool wxQueryWMspecSupport(Display *display, Window rootWnd, Atom feature)
     //        the event loop.
 
     Atom type;
-    wxX11Ptr<Window> wins;
-    wxX11Ptr<Atom> atoms;
+    Window *wins;
+    Atom *atoms;
     int format;
     unsigned long after;
     unsigned long nwins, natoms;
@@ -320,24 +325,29 @@ static bool wxQueryWMspecSupport(Display *display, Window rootWnd, Atom feature)
     XGetWindowProperty(display, rootWnd,
                        _NET_SUPPORTING_WM_CHECK, 0, LONG_MAX,
                        False, XA_WINDOW, &type, &format, &nwins,
-                       &after, (unsigned char **)wins.Out());
+                       &after, (unsigned char **)&wins);
     if ( type != XA_WINDOW || nwins == 0 || wins[0] == None )
        return false;
+    XFree(wins);
 
     // Query for supported features:
     XGetWindowProperty(display, rootWnd,
                        _NET_SUPPORTED, 0, LONG_MAX,
                        False, XA_ATOM, &type, &format, &natoms,
-                       &after, (unsigned char **)atoms.Out());
-    if ( type != XA_ATOM || atoms == nullptr )
+                       &after, (unsigned char **)&atoms);
+    if ( type != XA_ATOM || atoms == NULL )
         return false;
 
     // Lookup the feature we want:
     for (unsigned i = 0; i < natoms; i++)
     {
         if ( atoms[i] == feature )
+        {
+            XFree(atoms);
             return true;
+        }
     }
+    XFree(atoms);
     return false;
 }
 #endif
@@ -392,20 +402,22 @@ static bool wxKwinRunning(Display *display, Window rootWnd)
 {
     wxMAKE_ATOM(KWIN_RUNNING, display);
 
-    wxX11Ptr<unsigned char> data;
+    unsigned char* data;
     Atom type;
     int format;
     unsigned long nitems, after;
     if (XGetWindowProperty(display, rootWnd,
                            KWIN_RUNNING, 0, 1, False, KWIN_RUNNING,
                            &type, &format, &nitems, &after,
-                           data.Out()) != Success)
+                           &data) != Success)
     {
         return false;
     }
 
-    return (type == KWIN_RUNNING &&
-                   nitems == 1 && data && ((const long*)data.get())[0] == 1);
+    bool retval = (type == KWIN_RUNNING &&
+                   nitems == 1 && data && ((long*)data)[0] == 1);
+    XFree(data);
+    return retval;
 }
 
 // KDE's kwin is Qt-centric so much than no normal method of fullscreen
@@ -2595,7 +2607,7 @@ static bool wxGetKeyStateX11(wxKeyCode key)
 
 static bool wxGetKeyStateGTK(wxKeyCode key)
 {
-    if (gtk_check_version(3,4,0) != nullptr)
+    if (gtk_check_version(3,4,0) != NULL)
         return false;
 
     GdkDisplay* display = gdk_window_get_display(wxGetTopLevelGDK());
@@ -2624,7 +2636,7 @@ static bool wxGetKeyStateGTK(wxKeyCode key)
 
 #if GTK_CHECK_VERSION(3,18,0)
         case WXK_SCROLL:
-            if (gtk_check_version(3,18,0) == nullptr)
+            if (gtk_check_version(3,18,0) == NULL)
                 return gdk_keymap_get_scroll_lock_state(keymap) != FALSE;
             wxFALLTHROUGH;
 #endif // GTK 3.18+
@@ -2649,7 +2661,7 @@ static bool wxGetKeyStateGTK(wxKeyCode key)
 bool wxGetKeyState(wxKeyCode key)
 {
 #ifdef wxHAS_GETKEYSTATE_GTK
-    if (!wxGTKImpl::IsX11(nullptr))
+    if (!wxGTKImpl::IsX11(NULL))
     {
         return wxGetKeyStateGTK(key);
     }
@@ -2683,7 +2695,7 @@ bool wxLaunchDefaultApplication(const wxString& document, int flags)
         const char* argv[3];
         argv[0] = xdg_open.fn_str();
         argv[1] = document.fn_str();
-        argv[2] = nullptr;
+        argv[2] = NULL;
         if (wxExecute(argv))
             return true;
     }
@@ -2701,7 +2713,7 @@ wxDoLaunchDefaultBrowser(const wxLaunchBrowserParams& params)
 #ifdef __WXGTK__
 #ifdef __WXGTK4__
     if (gtk_show_uri_on_window((GtkWindow*)wxGetTopLevelGTK(),
-            params.url.utf8_str(), GDK_CURRENT_TIME, nullptr))
+            params.url.utf8_str(), GDK_CURRENT_TIME, NULL))
     {
         return true;
     }
@@ -2710,7 +2722,7 @@ wxDoLaunchDefaultBrowser(const wxLaunchBrowserParams& params)
     {
         GdkScreen* screen = gdk_window_get_screen(wxGetTopLevelGDK());
         wxGCC_WARNING_SUPPRESS(deprecated-declarations)
-        if (gtk_show_uri(screen, params.url.utf8_str(), GDK_CURRENT_TIME, nullptr))
+        if (gtk_show_uri(screen, params.url.utf8_str(), GDK_CURRENT_TIME, NULL))
             return true;
         wxGCC_WARNING_RESTORE()
     }
@@ -2719,7 +2731,7 @@ wxDoLaunchDefaultBrowser(const wxLaunchBrowserParams& params)
 
     const char* argv[4];
     argv[1] = params.GetPathOrURL().fn_str();
-    argv[2] = nullptr;
+    argv[2] = NULL;
 
     // Our best best is to use xdg-open from freedesktop.org cross-desktop
     // compatibility suite xdg-utils
@@ -2761,7 +2773,7 @@ wxDoLaunchDefaultBrowser(const wxLaunchBrowserParams& params)
         argv[2] = argv[1];
         argv[0] = "kfmclient";
         argv[1] = "openURL";
-        argv[3] = nullptr;
+        argv[3] = NULL;
         if (wxExecute(argv))
             return true;
     }
@@ -2769,4 +2781,4 @@ wxDoLaunchDefaultBrowser(const wxLaunchBrowserParams& params)
     return false;
 }
 
-#endif // __WXX11__ || __WXGTK__
+#endif // __WXX11__ || __WXGTK__ || __WXMOTIF__

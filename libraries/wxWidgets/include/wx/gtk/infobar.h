@@ -16,21 +16,21 @@
 // wxInfoBar for GTK+
 // ----------------------------------------------------------------------------
 
-// notice that the native GTK+ implementation is only available since 2.18,
-// so we inherit from the generic one to be able to
+// notice that the native GTK+ implementation is only available since
+// (relatively recent) 2.18 so we inherit from the generic one to be able to
 // fall back to it if GTK+ version is determined to be too old during run-time
 class WXDLLIMPEXP_CORE wxInfoBar : public wxInfoBarGeneric
 {
 public:
     wxInfoBar() { Init(); }
 
-    wxInfoBar(wxWindow *parent, wxWindowID winid = wxID_ANY, long style = 0)
+    wxInfoBar(wxWindow *parent, wxWindowID winid = wxID_ANY)
     {
         Init();
-        Create(parent, winid, style);
+        Create(parent, winid);
     }
 
-    bool Create(wxWindow *parent, wxWindowID winid = wxID_ANY, long style = 0);
+    bool Create(wxWindow *parent, wxWindowID winid = wxID_ANY);
 
     virtual ~wxInfoBar();
 
@@ -38,18 +38,18 @@ public:
     // ----------------------------
 
     virtual void ShowMessage(const wxString& msg,
-                             int flags = wxICON_INFORMATION) override;
+                             int flags = wxICON_INFORMATION) wxOVERRIDE;
 
-    virtual void Dismiss() override;
+    virtual void Dismiss() wxOVERRIDE;
 
     virtual void AddButton(wxWindowID btnid,
-                           const wxString& label = wxString()) override;
+                           const wxString& label = wxString()) wxOVERRIDE;
 
-    virtual void RemoveButton(wxWindowID btnid) override;
+    virtual void RemoveButton(wxWindowID btnid) wxOVERRIDE;
 
-    virtual size_t GetButtonCount() const override;
-    virtual wxWindowID GetButtonId(size_t idx) const override;
-    virtual bool HasButtonId(wxWindowID btnid) const override;
+    virtual size_t GetButtonCount() const wxOVERRIDE;
+    virtual wxWindowID GetButtonId(size_t idx) const wxOVERRIDE;
+    virtual bool HasButtonId(wxWindowID btnid) const wxOVERRIDE;
 
     // implementation only
     // -------------------
@@ -57,12 +57,10 @@ public:
     void GTKResponse(int btnid);
 
 protected:
-    virtual void DoApplyWidgetStyle(GtkRcStyle *style) override;
+    virtual void DoApplyWidgetStyle(GtkRcStyle *style) wxOVERRIDE;
 
 private:
-    void Init() { m_impl = nullptr; }
-
-    virtual bool UseNative() const override;
+    void Init() { m_impl = NULL; }
 
     // add a button with the given id/label and return its widget
     GtkWidget *GTKAddButton(wxWindowID btnid,

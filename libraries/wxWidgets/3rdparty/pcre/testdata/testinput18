@@ -110,6 +110,9 @@
 //posix_nosub
     \=offset=70000
 
+/(?=(a\K))/
+    a
+     
 /^d(e)$/posix
     acdef\=posix_startend=2:4
     acde\=posix_startend=2 
@@ -134,14 +137,5 @@
 /((a)(b)?(c))/posix
     123ace
     123ace\=posix_startend=2:6
-
-//posix
-\= Expect errors
-    \=null_subject
-    abc\=null_subject
-    
-/(*LIMIT_HEAP=0)xx/posix
-\= Expect error
-    xxxx 
 
 # End of testdata/testinput18

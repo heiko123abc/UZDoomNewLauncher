@@ -109,11 +109,11 @@ namespace
 void
 MakeValidCIdent(wxString* str)
 {
-    const wxUniChar chUnderscore = wxT('_');
+    const wxChar chUnderscore = wxT('_');
 
     for ( wxString::iterator it = str->begin(); it != str->end(); ++it )
     {
-        const wxUniChar ch = *it;
+        const wxChar ch = *it;
         if ( wxIsdigit(ch) )
         {
             if ( it == str->begin() )

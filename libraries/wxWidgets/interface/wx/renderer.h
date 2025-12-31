@@ -204,12 +204,12 @@ public:
     virtual int DrawHeaderButton(wxWindow *win, wxDC& dc,
                                  const wxRect& rect, int flags = 0,
                                  wxHeaderSortIconType sortArrow = wxHDR_SORT_ICON_NONE,
-                                 wxHeaderButtonParams* params = nullptr);
+                                 wxHeaderButtonParams* params = NULL);
 
     virtual int DrawHeaderButtonContents(wxWindow *win, wxDC& dc,
                                          const wxRect& rect, int flags = 0,
                                          wxHeaderSortIconType sortArrow = wxHDR_SORT_ICON_NONE,
-                                         wxHeaderButtonParams* params = nullptr);
+                                         wxHeaderButtonParams* params = NULL);
 
     virtual int GetHeaderButtonHeight(wxWindow *win);
 
@@ -389,7 +389,7 @@ public:
     */
     virtual int DrawHeaderButton(wxWindow* win, wxDC& dc, const wxRect& rect,
                                  int flags = 0,
-                                 wxHeaderSortIconType sortArrow = wxHDR_SORT_ICON_NONE, wxHeaderButtonParams* params = nullptr) = 0;
+                                 wxHeaderSortIconType sortArrow = wxHDR_SORT_ICON_NONE, wxHeaderButtonParams* params = NULL) = 0;
 
     /**
         Draw the contents of a header control button (label, sort arrows,
@@ -404,7 +404,7 @@ public:
     */
     virtual int DrawHeaderButtonContents(wxWindow* win, wxDC& dc,
                                          const wxRect& rect, int flags = 0,
-                                         wxHeaderSortIconType sortArrow = wxHDR_SORT_ICON_NONE, wxHeaderButtonParams* params = nullptr) = 0;
+                                         wxHeaderSortIconType sortArrow = wxHDR_SORT_ICON_NONE, wxHeaderButtonParams* params = NULL) = 0;
 
     /**
         Draw a selection rectangle underneath the text as used e.g. in a
@@ -469,12 +469,9 @@ public:
     /**
         Returns the size of a collapse button.
 
-        @a dc parameter was of type wxDC until wxWidgets 3.3.0, which changed
-        it to wxReadOnlyDC as this function doesn't modify the DC contents.
-
         @since 3.1.0
     */
-    virtual wxSize GetCollapseButtonSize(wxWindow *win, wxReadOnlyDC& dc) = 0;
+    virtual wxSize GetCollapseButtonSize(wxWindow *win, wxDC& dc) = 0;
 
     /**
         Draw the border for sash window: this border must be such that the sash

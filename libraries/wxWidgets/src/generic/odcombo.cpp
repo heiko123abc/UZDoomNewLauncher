@@ -2,6 +2,7 @@
 // Name:        src/generic/odcombo.cpp
 // Purpose:     wxOwnerDrawnComboBox, wxVListBoxComboPopup
 // Author:      Jaakko Salli
+// Modified by:
 // Created:     Apr-30-2006
 // Copyright:   (c) 2005 Jaakko Salli
 // Licence:     wxWindows licence
@@ -93,6 +94,18 @@ bool wxVListBoxComboPopup::Create(wxWindow* parent)
 wxVListBoxComboPopup::~wxVListBoxComboPopup()
 {
     Clear();
+}
+
+void wxVListBoxComboPopup::SetFocus()
+{
+    // Suppress SetFocus() warning by simply not calling it. This combo popup
+    // has already been designed with the assumption that SetFocus() may not
+    // do anything useful, so it really doesn't need to be called.
+#ifdef __WXMSW__
+    //
+#else
+    wxVListBox::SetFocus();
+#endif
 }
 
 void wxVListBoxComboPopup::OnDPIChanged(wxDPIChangedEvent& event)
@@ -413,7 +426,11 @@ void wxVListBoxComboPopup::OnComboCharEvent( wxKeyEvent& event )
 {
     // unlike in OnComboKeyEvent, wxEVT_CHAR contains meaningful
     // printable character information, so pass it
+#if wxUSE_UNICODE
     const wxChar charcode = event.GetUnicodeKey();
+#else
+    const wxChar charcode = (wxChar)event.GetKeyCode();
+#endif
 
     if ( !HandleKey(event.GetKeyCode(), true, charcode) )
         event.Skip();
@@ -491,7 +508,11 @@ void wxVListBoxComboPopup::OnChar(wxKeyEvent& event)
     {
         // Process partial completion key codes here, but not the arrow keys as
         // the base class will do that for us
+#if wxUSE_UNICODE
         const wxChar charcode = event.GetUnicodeKey();
+#else
+        const wxChar charcode = (wxChar)event.GetKeyCode();
+#endif
         if ( wxIsprint(charcode) )
         {
             OnComboCharEvent(event);
@@ -517,7 +538,7 @@ void wxVListBoxComboPopup::Insert( const wxString& item, int pos )
 
     m_strings.Insert(item,pos);
     if ( (int)m_clientDatas.size() >= pos )
-        m_clientDatas.insert(m_clientDatas.begin()+pos, nullptr);
+        m_clientDatas.insert(m_clientDatas.begin()+pos, NULL);
 
     m_widths.insert(m_widths.begin()+pos, -1);
     m_widthsDirty = true;
@@ -594,7 +615,7 @@ void wxVListBoxComboPopup::SetItemClientData( unsigned int n,
 
 void* wxVListBoxComboPopup::GetItemClientData(unsigned int n) const
 {
-    return n < m_clientDatas.size() ? m_clientDatas[n] : nullptr;
+    return n < m_clientDatas.size() ? m_clientDatas[n] : NULL;
 }
 
 void wxVListBoxComboPopup::Delete( unsigned int item )
@@ -636,7 +657,7 @@ bool wxVListBoxComboPopup::FindItem(const wxString& item, wxString* trueItem)
     int idx = m_strings.Index(item, false);
     if ( idx == wxNOT_FOUND )
         return false;
-    if ( trueItem != nullptr )
+    if ( trueItem != NULL )
         *trueItem = m_strings[idx];
     return true;
 }
@@ -720,7 +741,7 @@ void wxVListBoxComboPopup::CalcWidths()
         // I think using wxDC::GetTextExtent is faster than
         // wxWindow::GetTextExtent (assuming same dc is used
         // for all calls, as we do here).
-        wxInfoDC dc(m_combo);
+        wxClientDC dc(m_combo);
         if ( !m_useFont.IsOk() )
             m_useFont = m_combo->GetFont();
         dc.SetFont(m_useFont);
@@ -741,7 +762,7 @@ void wxVListBoxComboPopup::CalcWidths()
                     if ( dirtyHandled < 1024 )
                     {
                         wxCoord y;
-                        dc.GetTextExtent(text, &x, &y, nullptr, nullptr);
+                        dc.GetTextExtent(text, &x, &y, 0, 0);
                         x += 4;
                     }
                     else
@@ -921,7 +942,7 @@ bool wxOwnerDrawnComboBox::Create(wxWindow *parent,
     //return Create(parent, id, value, pos, size, chs.GetCount(),
     //              chs.GetStrings(), style, validator, name);
     return Create(parent, id, value, pos, size, 0,
-                  nullptr, style, validator, name);
+                  NULL, style, validator, name);
 }
 
 bool wxOwnerDrawnComboBox::Create(wxWindow *parent,
@@ -1118,7 +1139,7 @@ void wxOwnerDrawnComboBox::DoSetItemClientData(unsigned int n, void* clientData)
 void* wxOwnerDrawnComboBox::DoGetItemClientData(unsigned int n) const
 {
     if ( !m_popupInterface )
-        return nullptr;
+        return NULL;
 
     return GetVListBoxComboPopup()->GetItemClientData(n);
 }

@@ -2,6 +2,7 @@
 // Name:        src/osx/fontutil.cpp
 // Purpose:     font-related helper functions for OS X
 // Author:      Vadim Zeitlin, Stefan Csomor
+// Modified by:
 // Created:     05.11.99
 // Copyright:   (c) 1999 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -33,11 +34,11 @@ bool wxNativeEncodingInfo::FromString( const wxString& s )
     wxStringTokenizer tokenizer(s, wxT(";"));
 
     facename = tokenizer.GetNextToken();
-    if ( facename.empty() )
+    if ( !facename )
         return false;
 
     wxString tmp = tokenizer.GetNextToken();
-    if ( tmp.empty() )
+    if ( !tmp )
     {
         // default charset
         charset = 0;

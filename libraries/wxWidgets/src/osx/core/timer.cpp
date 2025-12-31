@@ -2,6 +2,7 @@
 // Name:        src/osx/core/timer.cpp
 // Purpose:     wxTimer implementation using CoreFoundation
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     2008-07-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -24,9 +25,15 @@ struct wxOSXTimerInfo
     CFRunLoopTimerRef   m_timerRef;
 };
 
-void wxProcessTimer(CFRunLoopTimerRef WXUNUSED(theTimer), void *data)
+void wxProcessTimer(CFRunLoopTimerRef theTimer, void *data)
 {
-    if ( data == nullptr )
+    if ( data == NULL )
+        return;
+
+    // CFRunLoop can fire timer callbacks after CFRunLoopTimerInvalidate()
+    // has been called (e.g., if the callback was already queued when Stop() was called).
+    // Verify the timer is still valid before proceeding to avoid crashes.
+    if ( !CFRunLoopTimerIsValid(theTimer) )
         return;
 
     wxOSXTimerImpl* timer = (wxOSXTimerImpl*)data;
@@ -66,7 +73,7 @@ bool wxOSXTimerImpl::Start( int milliseconds, bool mode )
     (void)wxTimerImpl::Start(milliseconds, mode);
 
     wxCHECK_MSG( m_milli > 0, false, wxT("invalid value for timer timeout") );
-    wxCHECK_MSG( m_info->m_timerRef == nullptr, false, wxT("attempting to restart a timer") );
+    wxCHECK_MSG( m_info->m_timerRef == NULL, false, wxT("attempting to restart a timer") );
 
     CFRunLoopTimerContext ctx ;
     memset( &ctx, 0 , sizeof(ctx) );
@@ -79,9 +86,9 @@ bool wxOSXTimerImpl::Start( int milliseconds, bool mode )
         IsOneShot() ? 0 : CFTimeInterval( m_milli / 1000.0 ) ,
         0, 0, wxProcessTimer, &ctx);
 
-    wxASSERT_MSG( m_info->m_timerRef != nullptr, wxT("unable to create timer"));
+    wxASSERT_MSG( m_info->m_timerRef != NULL, wxT("unable to create timer"));
 
-    CFRunLoopRef runLoop = nullptr;
+    CFRunLoopRef runLoop = 0;
 #if wxOSX_USE_IPHONE
     runLoop = CFRunLoopGetMain();
 #else

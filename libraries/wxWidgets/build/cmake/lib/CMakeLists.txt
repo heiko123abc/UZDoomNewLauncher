@@ -23,7 +23,7 @@ endif()
 # Define third party libraries
 set(LIBS_THIRDPARTY regex zlib expat)
 if(wxUSE_GUI)
-    list(APPEND LIBS_THIRDPARTY jpeg png tiff nanosvg webp)
+    list(APPEND LIBS_THIRDPARTY jpeg png tiff nanosvg)
 endif()
 foreach(LIB IN LISTS LIBS_THIRDPARTY)
     include(${LIB}.cmake)
@@ -31,21 +31,22 @@ endforeach()
 
 # add_opt_lib()
 # Add library which may have been disabled by wxUSE_...
-macro(add_opt_lib name)
-    set(add_lib ON)
-    foreach(var_name ${ARGN})
-        if(NOT ${var_name})
-            set(add_lib OFF)
-        endif()
-    endforeach()
-    if(add_lib)
+macro(add_opt_lib name var_name)
+    if(${var_name})
         list(APPEND LIBS ${name})
     endif()
 endmacro()
 
 # Define base libraries
 set(LIBS base)
-add_opt_lib(net wxUSE_SOCKETS)
+
+# wxNet should be built if either wxUSE_SOCKETS or wxUSE_WEBREQUEST is on.
+if(wxUSE_SOCKETS OR wxUSE_WEBREQUEST)
+    set(wxUSE_NET ON)
+else()
+    set(wxUSE_NET OFF)
+endif()
+add_opt_lib(net wxUSE_NET)
 
 # Define UI libraries
 if(wxUSE_GUI)
@@ -66,7 +67,6 @@ if(wxUSE_GUI)
     add_opt_lib(media wxUSE_MEDIACTRL)
     add_opt_lib(gl wxUSE_OPENGL)
     add_opt_lib(qa wxUSE_DEBUGREPORT)
-    add_opt_lib(webview_chromium wxUSE_WEBVIEW wxUSE_WEBVIEW_CHROMIUM)
 endif() # wxUSE_GUI
 
 # Include XML library last

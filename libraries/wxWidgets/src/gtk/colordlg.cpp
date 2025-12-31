@@ -2,6 +2,7 @@
 // Name:        src/gtk/colordlg.cpp
 // Purpose:     Native wxColourDialog for GTK+
 // Author:      Vaclav Slavik
+// Modified by:
 // Created:     2004/06/04
 // Copyright:   (c) Vaclav Slavik, 2004
 // Licence:     wxWindows licence
@@ -20,6 +21,7 @@
 #endif
 
 #include "wx/gtk/private.h"
+#include "wx/gtk/private/dialogcount.h"
 
 extern "C" {
 static void response(GtkDialog*, int response_id, wxColourDialog* win)
@@ -42,7 +44,7 @@ bool wxColourDialog::Create(wxWindow *parent, const wxColourData *data)
 
     m_parent = GetParentForModalDialog(parent, 0);
     GtkWindow * const parentGTK = m_parent ? GTK_WINDOW(m_parent->m_widget)
-                                           : nullptr;
+                                           : NULL;
 
     wxString title(_("Choose colour"));
 #ifdef __WXGTK4__
@@ -51,7 +53,7 @@ bool wxColourDialog::Create(wxWindow *parent, const wxColourData *data)
     gtk_color_chooser_set_use_alpha(GTK_COLOR_CHOOSER(m_widget), m_data.GetChooseAlpha());
 #else
     wxGCC_WARNING_SUPPRESS(deprecated-declarations)
-    m_widget = gtk_color_selection_dialog_new(title.utf8_str());
+    m_widget = gtk_color_selection_dialog_new(wxGTK_CONV(title));
 
     g_object_ref(m_widget);
 
@@ -125,7 +127,7 @@ void wxColourDialog::ColourDataToDialog()
     wxGtkString pal(gtk_color_selection_palette_to_string(colors, n_colors));
 
     GtkSettings *settings = gtk_widget_get_settings(GTK_WIDGET(sel));
-    g_object_set(settings, "gtk-color-palette", pal.c_str(), nullptr);
+    g_object_set(settings, "gtk-color-palette", pal.c_str(), NULL);
     wxGCC_WARNING_RESTORE()
 #endif // !__WXGTK4__
 }
@@ -160,19 +162,21 @@ void wxColourDialog::DialogToColourData()
     // Extract custom palette:
 
     GtkSettings *settings = gtk_widget_get_settings(GTK_WIDGET(sel));
-    wxGlibPtr<gchar> pal;
-    g_object_get(settings, "gtk-color-palette", pal.Out(), nullptr);
+    gchar *pal;
+    g_object_get(settings, "gtk-color-palette", &pal, NULL);
 
-    wxGlibPtr<GdkColor> colors;
+    GdkColor *colors;
     gint n_colors;
-    if (gtk_color_selection_palette_from_string(pal, colors.Out(), &n_colors))
+    if (gtk_color_selection_palette_from_string(pal, &colors, &n_colors))
     {
         for (int i = 0; i < n_colors && i < wxColourData::NUM_CUSTOM; i++)
         {
             m_data.SetCustomColour(i, wxColour(colors[i]));
         }
+        g_free(colors);
     }
 
+    g_free(pal);
     wxGCC_WARNING_RESTORE()
 #endif // !__WXGTK4__
 }

@@ -32,7 +32,7 @@ elseif(APPLE)
     set(wxPLATFORM OSX)
 elseif(UNIX)
     set(wxDEFAULT_TOOLKIT gtk3)
-    set(wxTOOLKIT_OPTIONS gtk2 gtk3 gtk4 qt)
+    set(wxTOOLKIT_OPTIONS gtk2 gtk3 gtk4 motif qt)
     set(wxPLATFORM UNIX)
 else()
     message(FATAL_ERROR "Unsupported platform")
@@ -67,6 +67,7 @@ endif()
 if(wxUSE_GUI)
 set(wxTOOLKIT_INCLUDE_DIRS)
 set(wxTOOLKIT_LIBRARIES)
+set(wxTOOLKIT_LIBRARY_DIRS)
 set(wxTOOLKIT_VERSION)
 
 if(WXGTK)
@@ -81,6 +82,7 @@ if(WXGTK)
     find_package(${gtk_lib} REQUIRED)
     list(APPEND wxTOOLKIT_INCLUDE_DIRS ${${gtk_lib}_INCLUDE_DIRS})
     list(APPEND wxTOOLKIT_LIBRARIES ${${gtk_lib}_LIBRARIES})
+    list(APPEND wxTOOLKIT_LIBRARY_DIRS ${${gtk_lib}_LIBRARY_DIRS})
     list(APPEND wxTOOLKIT_DEFINITIONS ${${gtk_lib}_DEFINITIONS})
     list(APPEND wxTOOLKIT_DEFINITIONS __WXGTK__)
     set(wxTOOLKIT_VERSION ${${gtk_lib}_VERSION})
@@ -115,14 +117,15 @@ if(WXGTK)
     endif()
 endif()
 
-# We need X11 for non-GTK Unix ports (X11) and for GTK with X11
+# We need X11 for non-GTK Unix ports (X11, Motif) and for GTK with X11
 # support, but not for Wayland-only GTK (necessarily 3 or later), which is why
 # we have to do this after find_package(GTKx) above, as this is what sets
 # wxHAVE_GDK_X11.
-if(UNIX AND NOT WIN32 AND (WXX11 OR WXGTK2 OR (WXGTK AND wxHAVE_GDK_X11)))
+if(UNIX AND NOT WIN32 AND (WXX11 OR WXMOTIF OR WXGTK2 OR (WXGTK AND wxHAVE_GDK_X11)))
     find_package(X11 REQUIRED)
     list(APPEND wxTOOLKIT_INCLUDE_DIRS ${X11_INCLUDE_DIR})
     list(APPEND wxTOOLKIT_LIBRARIES ${X11_LIBRARIES})
+    mark_as_advanced(X11_xcb_xkb_INCLUDE_PATH)
 endif()
 
 if(WXQT)

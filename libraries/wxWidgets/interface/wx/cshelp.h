@@ -61,11 +61,9 @@ public:
     static wxHelpProvider* Get();
 
     /**
-        Get the help string for the given window.
-
-        The interpretation of the returned string is help provider dependent,
-        but empty string always means that no help is associated with this
-        window.
+        This version associates the given text with all windows with this id.
+        May be used to set the same help string for all Cancel buttons in
+        the application, for example.
     */
     virtual wxString GetHelp(const wxWindow* window) = 0;
 
@@ -144,7 +142,7 @@ public:
         Note that the instance doesn't own the help controller. The help
         controller should be deleted separately.
     */
-    wxHelpControllerHelpProvider(wxHelpControllerBase* hc = nullptr);
+    wxHelpControllerHelpProvider(wxHelpControllerBase* hc = NULL);
 
     /**
         Returns the help controller associated with this help provider.
@@ -201,7 +199,7 @@ public:
 
         If @a window is @NULL, the top window is used.
     */
-    wxContextHelp(wxWindow* window = nullptr, bool doNow = true);
+    wxContextHelp(wxWindow* window = NULL, bool doNow = true);
 
     /**
         Destroys the context help object.

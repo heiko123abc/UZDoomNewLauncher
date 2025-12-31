@@ -2,6 +2,7 @@
 // Name:        wx/qt/frame.h
 // Purpose:     wxFrame class interface
 // Author:      Peter Most
+// Modified by:
 // Created:     09.08.09
 // Copyright:   (c) Peter Most
 // Licence:     wxWindows licence
@@ -13,13 +14,12 @@
 #include "wx/frame.h"
 
 class QMainWindow;
-class QToolBar;
+class QScrollArea;
 
 class WXDLLIMPEXP_CORE wxFrame : public wxFrameBase
 {
 public:
-    wxFrame() = default;
-
+    wxFrame() { Init(); }
     wxFrame(wxWindow *parent,
                wxWindowID id,
                const wxString& title,
@@ -28,6 +28,8 @@ public:
                long style = wxDEFAULT_FRAME_STYLE,
                const wxString& name = wxASCII_STR(wxFrameNameStr))
     {
+        Init();
+
         Create( parent, id, title, pos, size, style, name );
     }
     virtual ~wxFrame();
@@ -40,33 +42,36 @@ public:
                 long style = wxDEFAULT_FRAME_STYLE,
                 const wxString& name = wxASCII_STR(wxFrameNameStr));
 
-    virtual void SetMenuBar(wxMenuBar *menubar) override;
+    virtual void SetMenuBar(wxMenuBar *menubar) wxOVERRIDE;
+    virtual void SetStatusBar(wxStatusBar *statusBar ) wxOVERRIDE;
+    virtual void SetToolBar(wxToolBar *toolbar) wxOVERRIDE;
 
-#if wxUSE_STATUSBAR
-    virtual void SetStatusBar(wxStatusBar *statusBar ) override;
-#endif // wxUSE_STATUSBAR
+    virtual void SetWindowStyleFlag( long style ) wxOVERRIDE;
 
-#if wxUSE_TOOLBAR
-    virtual void SetToolBar(wxToolBar *toolbar) override;
-#endif // wxUSE_TOOLBAR
-
-    virtual void SetWindowStyleFlag( long style ) override;
-
-    virtual void AddChild( wxWindowBase *child ) override;
-    virtual void RemoveChild( wxWindowBase *child ) override;
+    virtual void AddChild( wxWindowBase *child ) wxOVERRIDE;
+    virtual void RemoveChild( wxWindowBase *child ) wxOVERRIDE;
 
     QMainWindow *GetQMainWindow() const;
+    virtual QScrollArea *QtGetScrollBarsContainer() const wxOVERRIDE;
 
 protected:
-    virtual wxPoint GetClientAreaOrigin() const override;
+    virtual void DoGetClientSize(int *width, int *height) const wxOVERRIDE;
+    virtual void DoSetClientSize(int width, int height) wxOVERRIDE;
 
-    virtual QWidget* QtGetParentWidget() const override;
+    virtual QWidget* QtGetParentWidget() const wxOVERRIDE;
 
 private:
-    // Currently active native toolbar.
-    QToolBar* m_qtToolBar = nullptr;
+    // Common part of all ctors.
+    void Init()
+    {
+        m_qtToolBar = NULL;
+    }
 
-    wxDECLARE_DYNAMIC_CLASS(wxFrame);
+
+    // Currently active native toolbar.
+    class QToolBar* m_qtToolBar;
+
+    wxDECLARE_DYNAMIC_CLASS( wxFrame );
 };
 
 

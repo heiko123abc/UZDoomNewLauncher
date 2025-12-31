@@ -287,8 +287,7 @@ enum wxLocaleForm
         11.0 and 12.2 inclusive are affected by a bug when changing C locale can
         break display of the application menus. Because of this, it is
         recommended to use wxUILocale instead of this class for the
-        applications targeting macOS. In general, this class should only be used
-        if requiring C runtime functions (@c strtod) to be localized.
+        applications targeting macOS.
 
     In wxWidgets this class manages current locale. It also initializes and
     activates wxTranslations object that manages message catalogs.
@@ -391,10 +390,7 @@ public:
     bool AddCatalog(const wxString& domain, wxLanguage msgIdLanguage);
 
     /**
-        Calls wxTranslations::AddCatalog(const wxString&, const wxString&).
-
-        @deprecated This overload shouldn't be used any longer as @a
-        msgIdCharset is just ignored, please omit it.
+        Calls wxTranslations::AddCatalog(const wxString&, wxLanguage, const wxString&).
     */
     bool AddCatalog(const wxString& domain, wxLanguage msgIdLanguage,
                     const wxString& msgIdCharset);
@@ -657,7 +653,7 @@ public:
 
 
 /**
-   Get the current locale object (note that it may be @NULL!)
+   Get the current locale object (note that it may be NULL!)
 */
 wxLocale* wxGetLocale();
 

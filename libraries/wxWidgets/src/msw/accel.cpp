@@ -2,6 +2,7 @@
 // Name:        src/msw/accel.cpp
 // Purpose:     wxAcceleratorTable
 // Author:      Julian Smart
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -30,8 +31,6 @@
 #include "wx/msw/private.h"
 #include "wx/msw/private/keyboard.h"
 
-#include <vector>
-
 wxIMPLEMENT_DYNAMIC_CLASS(wxAcceleratorTable, wxObject);
 
 // ----------------------------------------------------------------------------
@@ -42,13 +41,13 @@ class WXDLLEXPORT wxAcceleratorRefData: public wxObjectRefData
 {
     friend class WXDLLIMPEXP_FWD_CORE wxAcceleratorTable;
 public:
-    explicit wxAcceleratorRefData(HACCEL hAccel);
+    wxAcceleratorRefData();
     virtual ~wxAcceleratorRefData();
 
-    HACCEL GetHACCEL() const { return m_hAccel; }
-
+    inline HACCEL GetHACCEL() const { return m_hAccel; }
 protected:
-    const HACCEL m_hAccel;
+    HACCEL      m_hAccel;
+    bool        m_ok;
 
     wxDECLARE_NO_COPY_CLASS(wxAcceleratorRefData);
 };
@@ -63,9 +62,10 @@ protected:
 
 #define M_ACCELDATA ((wxAcceleratorRefData *)m_refData)
 
-wxAcceleratorRefData::wxAcceleratorRefData(HACCEL hAccel)
-    : m_hAccel(hAccel)
+wxAcceleratorRefData::wxAcceleratorRefData()
 {
+    m_ok = false;
+    m_hAccel = 0;
 }
 
 wxAcceleratorRefData::~wxAcceleratorRefData()
@@ -83,23 +83,19 @@ wxAcceleratorRefData::~wxAcceleratorRefData()
 // Load from .rc resource
 wxAcceleratorTable::wxAcceleratorTable(const wxString& resource)
 {
+    m_refData = new wxAcceleratorRefData;
+
     HACCEL hAccel = ::LoadAccelerators(wxGetInstance(), resource.t_str());
-    if ( hAccel )
-        m_refData = new wxAcceleratorRefData(hAccel);
+    M_ACCELDATA->m_hAccel = hAccel;
+    M_ACCELDATA->m_ok = hAccel != 0;
 }
 
 // Create from an array
 wxAcceleratorTable::wxAcceleratorTable(int n, const wxAcceleratorEntry entries[])
 {
-    if ( n == 0 )
-    {
-        // This is valid but useless.
-        return;
-    }
+    m_refData = new wxAcceleratorRefData;
 
-    wxCHECK_RET( n > 0, "Invalid number of accelerator entries" );
-
-    std::vector<ACCEL> arr(n);
+    ACCEL* arr = new ACCEL[n];
     for ( int i = 0; i < n; i++ )
     {
         int flags = entries[i].GetFlags();
@@ -119,25 +115,23 @@ wxAcceleratorTable::wxAcceleratorTable(int n, const wxAcceleratorEntry entries[]
         arr[i].cmd = (WORD)entries[i].GetCommand();
     }
 
-    const HACCEL hAccel = ::CreateAcceleratorTable(&arr[0], n);
-    if ( hAccel )
-        m_refData = new wxAcceleratorRefData(hAccel);
+    M_ACCELDATA->m_hAccel = ::CreateAcceleratorTable(arr, n);
+    delete[] arr;
+
+    M_ACCELDATA->m_ok = (M_ACCELDATA->m_hAccel != 0);
 }
 
 bool wxAcceleratorTable::IsOk() const
 {
-    return m_refData != nullptr;
+    return (M_ACCELDATA && (M_ACCELDATA->m_ok));
 }
 
 void wxAcceleratorTable::SetHACCEL(WXHACCEL hAccel)
 {
-    // This should really do AllocExclusive() to reuse the existing object if
-    // it is not shared, but for now keep things simple and just always create
-    // a new wxAcceleratorRefData object.
-    UnRef();
+    if (!M_ACCELDATA)
+        m_refData = new wxAcceleratorRefData;
 
-    if ( hAccel )
-        m_refData = new wxAcceleratorRefData(hAccel);
+    M_ACCELDATA->m_hAccel = (HACCEL) hAccel;
 }
 
 WXHACCEL wxAcceleratorTable::GetHACCEL() const

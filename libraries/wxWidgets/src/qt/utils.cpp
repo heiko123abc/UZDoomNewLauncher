@@ -11,6 +11,7 @@
 
 #include <QtGui/QCursor>
 #include <QtWidgets/QApplication>
+#include <QtWidgets/QDesktopWidget>
 #include <QtGui/QDesktopServices>
 #include <QtCore/QUrl>
 
@@ -20,7 +21,6 @@
     #include "wx/window.h"
 #endif // WX_PRECOMP
 
-#include "wx/apptrait.h"
 #include "wx/utils.h"
 #include "wx/qt/private/utils.h"
 #include "wx/qt/private/converter.h"
@@ -38,20 +38,23 @@ void wxQtFillMouseButtons( Qt::MouseButtons buttons, wxMouseState *state )
 {
     state->SetLeftDown( buttons.testFlag( Qt::LeftButton ) );
     state->SetRightDown( buttons.testFlag( Qt::RightButton ) );
-    state->SetMiddleDown( buttons.testFlag( Qt::MiddleButton ) );
+    state->SetMiddleDown( buttons.testFlag( Qt::MidButton ) );
     state->SetAux1Down( buttons.testFlag( Qt::XButton1 ) );
     state->SetAux2Down( buttons.testFlag( Qt::XButton2 ) );
 }
 
 #if wxUSE_GUI
+wxPoint wxGetMousePosition()
+{
+    return wxQtConvertPoint( QCursor::pos() );
+}
+
 void wxGetMousePosition( int *x, int *y )
 {
-    const auto position = QCursor::pos();
+    wxPoint position = wxGetMousePosition();
 
-    if ( x )
-        *x = position.x();
-    if ( y )
-        *y = position.y();
+    *x = position.x;
+    *y = position.y;
 }
 #endif
 
@@ -74,6 +77,13 @@ wxWindow *wxFindWindowAtPoint(const wxPoint& pt)
      * a wxQtWidget/wxQtFrame to the window, but they have
      * no standard interface to return that. */
     return wxGenericFindWindowAtPoint( pt );
+}
+
+wxWindow *wxFindWindowAtPointer(wxPoint& pt)
+{
+    pt = wxQtConvertPoint( QCursor::pos() );
+
+    return wxFindWindowAtPoint( pt );
 }
 
 bool wxGetKeyState(wxKeyCode key)
@@ -116,16 +126,10 @@ wxWindow *wxGetActiveWindow()
         node = node->GetPrevious();
     }
 
-    return nullptr;
+    return NULL;
 }
 
 bool wxLaunchDefaultApplication(const wxString& path, int WXUNUSED( flags ) )
 {
     return QDesktopServices::openUrl( QUrl::fromLocalFile( wxQtConvertString( path ) ) );
-}
-
-wxString wxGUIAppTraits::GetPlatformDescription() const
-{
-    return wxString::Format("Compile-time QT version is %s.\n",
-                            QT_VERSION_STR);
 }

@@ -2,6 +2,7 @@
 // Name:        samples/except/except.cpp
 // Purpose:     shows how C++ exceptions can be used in wxWidgets
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     2003-09-17
 // Copyright:   (c) 2003-2005 Vadim Zeitlin
 // Licence:     wxWindows licence
@@ -60,12 +61,8 @@
 
 static void DoCrash()
 {
-    wxGCC_WARNING_SUPPRESS(nonnull)
-
-    char *p = nullptr;
+    char *p = 0;
     strcpy(p, "Let's crash");
-
-    wxGCC_WARNING_RESTORE(nonnull)
 }
 
 // ----------------------------------------------------------------------------
@@ -85,11 +82,11 @@ public:
     // ----------------------------
 
     // program startup
-    virtual bool OnInit() override;
+    virtual bool OnInit() wxOVERRIDE;
 
     // 2nd-level exception handling: we get all the exceptions occurring in any
     // event handler here
-    virtual bool OnExceptionInMainLoop() override;
+    virtual bool OnExceptionInMainLoop() wxOVERRIDE;
 
     // 2nd-level exception handling helpers: if we can't deal with the
     // exception immediately, we may also store it and rethrow it later, when
@@ -98,16 +95,16 @@ public:
     // Notice that overriding these methods is not necessary when using C++11
     // as they have a perfectly serviceable implementation inside the library
     // itself in this case.
-    virtual bool StoreCurrentException() override;
-    virtual void RethrowStoredException() override;
+    virtual bool StoreCurrentException() wxOVERRIDE;
+    virtual void RethrowStoredException() wxOVERRIDE;
 
     // 3rd, and final, level exception handling: whenever an unhandled
     // exception is caught, this function is called
-    virtual void OnUnhandledException() override;
+    virtual void OnUnhandledException() wxOVERRIDE;
 
     // and now for something different: this function is called in case of a
     // crash (e.g. dereferencing null pointer, division by 0, ...)
-    virtual void OnFatalException() override;
+    virtual void OnFatalException() wxOVERRIDE;
 
     // you can override this function to do something different (e.g. log the
     // assert to file) whenever an assertion fails
@@ -115,19 +112,13 @@ public:
                                  int line,
                                  const wxChar *func,
                                  const wxChar *cond,
-                                 const wxChar *msg) override;
-
-
-    // Dynamically bound event handler to throw an exception for testing.
-    void OnIdle(wxIdleEvent& event);
+                                 const wxChar *msg) wxOVERRIDE;
 
 private:
     // This stores the number of times StoreCurrentException() was called,
     // typically at most 1.
     int m_numStoredExceptions;
 };
-
-wxDECLARE_APP(MyApp);
 
 // Define a new frame type: this is going to be our main frame
 class MyFrame : public wxFrame
@@ -146,7 +137,6 @@ public:
     void OnThrowObject(wxCommandEvent& event);
     void OnThrowUnhandled(wxCommandEvent& event);
     void OnThrowFromYield(wxCommandEvent& event);
-    void OnThrowFromIdle(wxCommandEvent& event);
 
     void OnCrash(wxCommandEvent& event);
     void OnTrap(wxCommandEvent& event);
@@ -158,7 +148,7 @@ protected:
 
     // 1st-level exception handling: we overload ProcessEvent() to be able to
     // catch exceptions which occur in MyFrame methods here
-    virtual bool ProcessEvent(wxEvent& event) override;
+    virtual bool ProcessEvent(wxEvent& event) wxOVERRIDE;
 
     // provoke assert in main or worker thread
     //
@@ -222,7 +212,6 @@ enum
     Except_ThrowObject,
     Except_ThrowUnhandled,
     Except_ThrowFromYield,
-    Except_ThrowFromIdle,
     Except_Crash,
     Except_Trap,
 #if wxUSE_ON_FATAL_EXCEPTION
@@ -254,7 +243,6 @@ wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(Except_ThrowObject, MyFrame::OnThrowObject)
     EVT_MENU(Except_ThrowUnhandled, MyFrame::OnThrowUnhandled)
     EVT_MENU(Except_ThrowFromYield, MyFrame::OnThrowFromYield)
-    EVT_MENU(Except_ThrowFromIdle, MyFrame::OnThrowFromIdle)
     EVT_MENU(Except_Crash, MyFrame::OnCrash)
     EVT_MENU(Except_Trap, MyFrame::OnTrap)
 #if wxUSE_ON_FATAL_EXCEPTION
@@ -406,21 +394,13 @@ void MyApp::OnAssertFailure(const wxChar *file,
     }
 }
 
-void MyApp::OnIdle(wxIdleEvent& WXUNUSED(event))
-{
-    // Don't call this handler repeatedly, this would most likely crash.
-    Unbind(wxEVT_IDLE, &MyApp::OnIdle, this);
-
-    throw MyException("Exception thrown from idle event handler");
-}
-
 // ============================================================================
 // MyFrame implementation
 // ============================================================================
 
 // frame constructor
 MyFrame::MyFrame()
-       : wxFrame(nullptr, wxID_ANY, "Except wxWidgets App",
+       : wxFrame(NULL, wxID_ANY, "Except wxWidgets App",
                  wxPoint(50, 50), wxSize(450, 340))
 {
     // set the frame icon
@@ -438,8 +418,6 @@ MyFrame::MyFrame()
                         "Throw &unhandled exception\tCtrl-U");
     menuFile->Append(Except_ThrowFromYield,
                         "Throw from wx&Yield()\tCtrl-Y");
-    menuFile->Append(Except_ThrowFromIdle,
-                        "Throw from &idle handler\tCtrl-J");
     menuFile->Append(Except_Crash, "&Crash\tCtrl-C");
     menuFile->Append(Except_Trap, "&Trap\tCtrl-T",
                      "Break into the debugger (if one is running)");
@@ -563,12 +541,6 @@ void MyFrame::OnThrowFromYield(wxCommandEvent& WXUNUSED(event))
 #endif // wxUSE_UIACTIONSIMULATOR/!wxUSE_UIACTIONSIMULATOR
 }
 
-void MyFrame::OnThrowFromIdle(wxCommandEvent& WXUNUSED(event))
-{
-    auto& app = wxGetApp();
-    app.Bind(wxEVT_IDLE, &MyApp::OnIdle, &app);
-}
-
 void MyFrame::OnCrash(wxCommandEvent& WXUNUSED(event))
 {
     DoCrash();
@@ -608,11 +580,11 @@ void MyFrame::OnShowAssertInThread(wxCommandEvent& WXUNUSED(event))
         }
 
     protected:
-        virtual void *Entry() override
+        virtual void *Entry() wxOVERRIDE
         {
             wxFAIL_MSG("Test assert in another thread.");
 
-            return nullptr;
+            return 0;
         }
     };
 

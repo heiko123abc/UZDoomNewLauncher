@@ -15,7 +15,14 @@ if(POLICY CMP0072)
 endif()
 
 # determine target from compiler, platform and library type
-if(WIN32 AND NOT CYGWIN AND NOT MSYS)
+if(MSVC)
+    set(WIN32_MSVC_NAMING 1)
+elseif(WIN32 AND NOT CYGWIN AND NOT MSYS AND NOT CMAKE_CROSSCOMPILING)
+    set(WIN32_MSVC_NAMING 1)
+else()
+    set(WIN32_MSVC_NAMING 0)
+endif()
+if(WIN32_MSVC_NAMING)
     if(${CMAKE_CXX_COMPILER_ID} STREQUAL MSVC)
         set(wxCOMPILER_PREFIX "vc")
     elseif(${CMAKE_CXX_COMPILER_ID} STREQUAL GNU)
@@ -70,6 +77,23 @@ macro(wx_inherit_property source dest name)
     endforeach()
 endmacro()
 
+macro(wx_copy_target ns name libname)
+    get_target_property(target_type wx::${libname} TYPE)
+    if(target_type STREQUAL STATIC_LIBRARY)
+        add_library(${ns}::${name} STATIC IMPORTED)
+    else()
+        add_library(${ns}::${name} SHARED IMPORTED)
+    endif()
+    wx_inherit_property(wx::${libname} ${ns}::${name} IMPORTED_CONFIGURATIONS)
+    wx_inherit_property(wx::${libname} ${ns}::${name} INTERFACE_COMPILE_DEFINITIONS)
+    wx_inherit_property(wx::${libname} ${ns}::${name} INTERFACE_INCLUDE_DIRECTORIES)
+    wx_inherit_property(wx::${libname} ${ns}::${name} INTERFACE_LINK_LIBRARIES)
+    wx_inherit_property(wx::${libname} ${ns}::${name} IMPORTED_LINK_INTERFACE_LANGUAGES)
+    wx_inherit_property(wx::${libname} ${ns}::${name} IMPORTED_LOCATION)
+    wx_inherit_property(wx::${libname} ${ns}::${name} IMPORTED_IMPLIB)
+    wx_inherit_property(wx::${libname} ${ns}::${name} IMPORTED_LINK_DEPENDENT_LIBRARIES)
+endmacro()
+
 # for compatibility with FindwxWidgets
 set(wxWidgets_LIBRARIES)
 
@@ -109,24 +133,15 @@ foreach(libname @wxLIB_TARGETS@)
         endif()
 
         # add an alias from wx::<lib> to wx::wx<lib>
-        if(CMAKE_VERSION VERSION_LESS "3.18")
-            # CMake <3.18 does not support alias to non-global imported target, create a copy of the library
-            get_target_property(target_type wx::${libname} TYPE)
-            if(target_type STREQUAL STATIC_LIBRARY)
-                add_library(wx::${name} STATIC IMPORTED)
+        if(NOT TARGET wx::${name})
+            if(CMAKE_VERSION VERSION_LESS "3.18")
+                # CMake <3.18 does not support alias to non-global imported target, create a copy of the library
+                wx_copy_target(wx ${name} ${libname})
+                wx_copy_target(wxWidgets ${name} ${libname})
             else()
-                add_library(wx::${name} SHARED IMPORTED)
+                add_library(wx::${name} ALIAS wx::${libname})
+                add_library(wxWidgets::${name} ALIAS wx::${libname})
             endif()
-            wx_inherit_property(wx::${libname} wx::${name} IMPORTED_CONFIGURATIONS)
-            wx_inherit_property(wx::${libname} wx::${name} INTERFACE_COMPILE_DEFINITIONS)
-            wx_inherit_property(wx::${libname} wx::${name} INTERFACE_INCLUDE_DIRECTORIES)
-            wx_inherit_property(wx::${libname} wx::${name} INTERFACE_LINK_LIBRARIES)
-            wx_inherit_property(wx::${libname} wx::${name} IMPORTED_LINK_INTERFACE_LANGUAGES)
-            wx_inherit_property(wx::${libname} wx::${name} IMPORTED_LOCATION)
-            wx_inherit_property(wx::${libname} wx::${name} IMPORTED_IMPLIB)
-            wx_inherit_property(wx::${libname} wx::${name} IMPORTED_LINK_DEPENDENT_LIBRARIES)
-        else()
-            add_library(wx::${name} ALIAS wx::${libname})
         endif()
 
         # add to FindwxWidgets variable
@@ -139,20 +154,22 @@ foreach(libname @wxLIB_TARGETS@)
     endif()
 endforeach()
 
+include(CMakeFindDependencyMacro)
+
 if(TARGET wx::wxnet AND @wxUSE_WEBREQUEST_CURL@)
     # make sure CURL targets are available:
     # The link interface of target "wx::wxnet" contains: CURL::libcurl_shared
-    find_package(CURL QUIET)
+    find_dependency(CURL)
 endif()
 
-if(TARGET wx::wxgl)
+if(TARGET wx::wxgl AND NOT (APPLE AND IOS))
     # make sure OpenGL targets are available:
     # The link interface of target "wx::wxgl" contains: OpenGL::GLU
-    find_package(OpenGL QUIET)
+    find_dependency(OpenGL)
 endif()
 
 # make sure Threads targets are available
-find_package(Threads QUIET)
+find_dependency(Threads)
 
 # if no components are specified in find_package, check all of them
 if(NOT @PROJECT_NAME@_FIND_COMPONENTS)

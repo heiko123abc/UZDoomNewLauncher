@@ -23,8 +23,8 @@ class CheckBoxTestCase : public CppUnit::TestCase
 public:
     CheckBoxTestCase() { }
 
-    void setUp() override;
-    void tearDown() override;
+    void setUp() wxOVERRIDE;
+    void tearDown() wxOVERRIDE;
 
 private:
     CPPUNIT_TEST_SUITE( CheckBoxTestCase );

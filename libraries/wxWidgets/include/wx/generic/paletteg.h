@@ -32,15 +32,19 @@ public:
     wxPalette();
     wxPalette( int n, const unsigned char *red, const unsigned char *green, const unsigned char *blue );
 
+    wxDECLARE_DEFAULT_COPY(wxPalette)
+
+    virtual ~wxPalette();
+
     bool Create( int n, const unsigned char *red, const unsigned char *green, const unsigned char *blue);
     int GetPixel( unsigned char red, unsigned char green, unsigned char blue ) const;
     bool GetRGB( int pixel, unsigned char *red, unsigned char *green, unsigned char *blue ) const;
 
-    virtual int GetColoursCount() const override;
+    virtual int GetColoursCount() const wxOVERRIDE;
 
 protected:
-    virtual wxGDIRefData *CreateGDIRefData() const override;
-    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const override;
+    virtual wxGDIRefData *CreateGDIRefData() const wxOVERRIDE;
+    virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const wxOVERRIDE;
 
 private:
     wxDECLARE_DYNAMIC_CLASS(wxPalette);

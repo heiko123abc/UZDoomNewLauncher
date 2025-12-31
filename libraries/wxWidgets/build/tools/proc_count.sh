@@ -1,7 +1,7 @@
 # This script outputs the number of available processors/cores plus one.
 
 case `uname` in
-    Linux|MSYS*|MINGW*)
+    Linux)
         wxPROC_COUNT=`nproc`
         ;;
 

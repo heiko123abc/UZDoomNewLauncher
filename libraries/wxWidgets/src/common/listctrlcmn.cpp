@@ -80,6 +80,7 @@ wxFLAGS_MEMBER(wxBORDER)
 // standard window styles
 wxFLAGS_MEMBER(wxTAB_TRAVERSAL)
 wxFLAGS_MEMBER(wxCLIP_CHILDREN)
+wxFLAGS_MEMBER(wxTRANSPARENT_WINDOW)
 wxFLAGS_MEMBER(wxWANTS_CHARS)
 wxFLAGS_MEMBER(wxFULL_REPAINT_ON_RESIZE)
 wxFLAGS_MEMBER(wxALWAYS_SHOW_SB )
@@ -184,7 +185,7 @@ wxSize wxListCtrlBase::DoGetBestClientSize() const
         return wxControl::DoGetBestClientSize();
 
     int totalWidth;
-    wxInfoDC dc(const_cast<wxListCtrlBase*>(this));
+    wxClientDC dc(const_cast<wxListCtrlBase*>(this));
 
     // In report mode, we use only the column headers, not items, to determine
     // the best width. The reason for this is that it's easier (we can't just
@@ -230,9 +231,9 @@ void wxListCtrlBase::EnableAlternateRowColours(bool enable)
         // background colour.
         const wxColour bgColour = GetBackgroundColour();
 
-        // Depending on the background, alternate row colour should be a bit
-        // darker or brighter.
-        int alpha = bgColour.GetRGB() > 0x808080 ? 97 : 110;
+        // Depending on the background, alternate row color
+        // will be 3% more dark or 50% brighter.
+        int alpha = bgColour.GetRGB() > 0x808080 ? 97 : 150;
         SetAlternateRowColour(bgColour.ChangeLightness(alpha));
     }
     else // Disable striping by setting invalid alternative colour.
@@ -245,7 +246,7 @@ wxItemAttr *wxListCtrlBase::OnGetItemAttr(long item) const
 {
     return (m_alternateRowColour.GetBackgroundColour().IsOk() && (item % 2))
         ? wxConstCast(&m_alternateRowColour, wxItemAttr)
-        : nullptr; // no attributes by default
+        : NULL; // no attributes by default
 }
 
 wxString wxListCtrlBase::OnGetItemText(long WXUNUSED(item), long WXUNUSED(col)) const
@@ -319,7 +320,7 @@ wxWithImages* wxListCtrlBase::GetImages(int which)
     {
         return &m_imagesState;
     }
-    return nullptr;
+    return NULL;
 }
 
 const wxWithImages* wxListCtrlBase::GetImages(int which) const
@@ -330,13 +331,13 @@ const wxWithImages* wxListCtrlBase::GetImages(int which) const
 wxImageList* wxListCtrlBase::GetUpdatedImageList(int which)
 {
     wxWithImages* const images = GetImages(which);
-    return images ? images->GetUpdatedImageListFor(this) : nullptr;
+    return images ? images->GetUpdatedImageListFor(this) : NULL;
 }
 
 wxImageList *wxListCtrlBase::GetImageList(int which) const
 {
     const wxWithImages* const images = GetImages(which);
-    return images ? images->GetImageList() : nullptr;
+    return images ? images->GetImageList() : NULL;
 }
 
 void wxListCtrlBase::SetImageList(wxImageList *imageList, int which)

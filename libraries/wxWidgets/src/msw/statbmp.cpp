@@ -2,6 +2,7 @@
 // Name:        src/msw/statbmp.cpp
 // Purpose:     wxStaticBitmap
 // Author:      Julian Smart
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -164,7 +165,6 @@ void wxStaticBitmap::Free()
     if ( m_ownsCurrentHandle )
     {
         ::DeleteObject(m_currentHandle);
-        m_currentHandle = 0;
         m_ownsCurrentHandle = false;
     }
 }
@@ -221,19 +221,6 @@ void wxStaticBitmap::DoPaintManually(wxPaintEvent& WXUNUSED(event))
                   (size.GetWidth() - bmp.GetWidth()) / 2,
                   (size.GetHeight() - bmp.GetHeight()) / 2,
                   true /* use mask */);
-}
-
-void wxStaticBitmap::MSWReplaceImageHandle(WXHANDLE handle)
-{
-    HGDIOBJ oldHandle = (HGDIOBJ)::SendMessage(GetHwnd(), STM_SETIMAGE,
-                  m_icon.IsOk() ? IMAGE_ICON : IMAGE_BITMAP, (LPARAM)handle);
-    // detect if this is still the handle we passed before or
-    // if the static-control made a copy of the bitmap!
-    if (oldHandle != 0 && oldHandle != (HGDIOBJ) m_currentHandle)
-    {
-        // the static control made a copy and we are responsible for deleting it
-        ::DeleteObject((HGDIOBJ) oldHandle);
-    }
 }
 
 void wxStaticBitmap::DoUpdateImage(const wxSize& sizeOld, bool wasIcon)
@@ -296,7 +283,31 @@ void wxStaticBitmap::DoUpdateImage(const wxSize& sizeOld, bool wasIcon)
             .TurnOn(isIcon ? SS_ICON : SS_BITMAP);
     }
 
-    MSWReplaceImageHandle(m_currentHandle);
+
+    // Update the handle used by the native control.
+    const WPARAM imageType = m_icon.IsOk() ? IMAGE_ICON : IMAGE_BITMAP;
+
+    const HGDIOBJ currentHandle = (HGDIOBJ)m_currentHandle;
+    const HGDIOBJ oldHandle = (HGDIOBJ)
+        ::SendMessage(GetHwnd(), STM_SETIMAGE, imageType, (LPARAM)currentHandle);
+
+    // detect if this is still the handle we passed before or
+    // if the static-control made a copy of the bitmap!
+    if ( oldHandle != 0 && oldHandle != currentHandle )
+    {
+        // the static control made a copy and we are responsible for deleting it
+        ::DeleteObject(oldHandle);
+    }
+
+    // Also check if we need to keep our current handle, it may be unnecessary
+    // if the native control doesn't actually use it.
+    const HGDIOBJ newHandle = (HGDIOBJ)
+        ::SendMessage(GetHwnd(), STM_GETIMAGE, imageType, 0);
+    if ( newHandle != currentHandle )
+    {
+        // The control made a copy of the image and we don't need to keep it.
+        Free();
+    }
 
     if ( sizeNew != sizeOld )
     {

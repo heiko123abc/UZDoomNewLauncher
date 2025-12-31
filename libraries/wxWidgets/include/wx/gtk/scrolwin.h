@@ -20,24 +20,21 @@ class WXDLLIMPEXP_CORE wxScrollHelper : public wxScrollHelperBase
     typedef wxScrollHelperBase base_type;
 public:
     // default ctor doesn't do anything
-    wxScrollHelper(wxWindow *win) : wxScrollHelperBase(win)
-    {
-        m_win->SetScrollHelper(this);
-    }
+    wxScrollHelper(wxWindow *win) : wxScrollHelperBase(win) { }
 
     // implement the base class methods
     virtual void SetScrollbars(int pixelsPerUnitX, int pixelsPerUnitY,
                                int noUnitsX, int noUnitsY,
                                int xPos = 0, int yPos = 0,
-                               bool noRefresh = false) override;
-    virtual void AdjustScrollbars() override;
+                               bool noRefresh = false) wxOVERRIDE;
+    virtual void AdjustScrollbars() wxOVERRIDE;
 
-    virtual bool IsScrollbarShown(int orient) const override;
+    virtual bool IsScrollbarShown(int orient) const wxOVERRIDE;
 
 protected:
-    virtual void DoScroll(int x, int y) override;
+    virtual void DoScroll(int x, int y) wxOVERRIDE;
     virtual void DoShowScrollbars(wxScrollbarVisibility horz,
-                                  wxScrollbarVisibility vert) override;
+                                  wxScrollbarVisibility vert) wxOVERRIDE;
 
 private:
     // this does (each) half of AdjustScrollbars() work

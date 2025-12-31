@@ -6,7 +6,7 @@
 #                      \___/_/\_\ .__/ \__,_|\__|
 #                               |_| XML parser
 #
-# Copyright (c) 2017-2024 Sebastian Pipping <sebastian@pipping.org>
+# Copyright (c) 2017-2021 Sebastian Pipping <sebastian@pipping.org>
 # Copyright (c) 2018      Marco Maggi <marco.maggi-ipsu@poste.it>
 # Copyright (c) 2019      Mohammed Khajapasha <mohammed.khajapasha@intel.com>
 # Licensed under the MIT license:
@@ -51,9 +51,11 @@ _get_build_dir() {
 
     local char_part=
     if ${unicode_enabled}; then
-        char_part=__wchar_t
-    elif ${with_unsigned_char}; then
-        char_part=__uchar
+        if ${with_unsigned_char}; then
+            char_part=__ushort
+        else
+            char_part=__wchar_t
+        fi
     else
         char_part=__char
     fi
@@ -68,17 +70,7 @@ _get_build_dir() {
         m32_part=__m32
     fi
 
-    local ge_part=
-    if ${with_ge}; then
-        ge_part=__ge
-    fi
-
-    local dtd_part=
-    if ${with_dtd}; then
-        dtd_part=__dtd
-    fi
-
-    echo "build__${version}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}${ge_part}${dtd_part}${xml_attr_part}${m32_part}"
+    echo "build__${version}__xml_context_${xml_context}${libbsd_part}${mingw_part}${char_part}${xml_attr_part}${m32_part}"
 }
 
 
@@ -105,8 +97,6 @@ _call_cmake() {
     ${with_libbsd} && cmake_args+=( -DEXPAT_WITH_LIBBSD=ON )
     ${with_mingw} && cmake_args+=( -DCMAKE_TOOLCHAIN_FILE="${abs_source_dir}"/cmake/mingw-toolchain.cmake )
     ${with_m32} && cmake_args+=( -D_EXPAT_M32=ON )
-    ${with_ge} || cmake_args+=( -DEXPAT_GE=OFF )
-    ${with_dtd} || cmake_args+=( -DEXPAT_DTD=OFF )
 
     (
         set -x
@@ -129,8 +119,8 @@ _copy_missing_mingw_libaries() {
     # * coverage GCC flags make them needed
     # * With WINEDLLPATH Wine looks for .dll.so in these folders, not .dll
     local target="$1"
-    local mingw_gcc_dll_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/{libgcc_s_sjlj-1.dll,libstdc++-6.dll} | head -n1)")"
-    for dll in libgcc_s_dw2-1.dll libgcc_s_sjlj-1.dll libstdc++-6.dll; do
+    local mingw_gcc_dll_dir="$(dirname "$(ls -1 /usr/lib*/gcc/i686-w64-mingw32/*/libgcc_s_sjlj-1.dll | head -n1)")"
+    for dll in libgcc_s_sjlj-1.dll libstdc++-6.dll; do
         (
             set -x
             ln -s "${mingw_gcc_dll_dir}"/${dll} "${target}"/${dll}
@@ -149,7 +139,7 @@ _copy_missing_mingw_libaries() {
         done
     fi
 
-    for dll in libexpat{,w}-*.dll; do
+    for dll in libexpat{,w}.dll; do
         (
             set -x
             ln -s "${abs_build_dir}"/${dll} "${target}"/${dll}
@@ -171,7 +161,7 @@ _run() {
     ${with_unsigned_char} && BASE_FLAGS="${BASE_FLAGS} -funsigned-char"
 
     local CFLAGS="-std=c99 ${BASE_FLAGS}"
-    local CXXFLAGS="-std=c++11 ${BASE_FLAGS}"
+    local CXXFLAGS="-std=c++98 ${BASE_FLAGS}"
 
     (
         set -e
@@ -196,10 +186,7 @@ _run() {
         fi
 
         set -x
-        make CTEST_OUTPUT_ON_FAILURE=1 test
-        if ${with_dtd}; then
-            make run-xmltest
-        fi
+        make CTEST_OUTPUT_ON_FAILURE=1 test run-xmltest
 
         lcov -c -d "${capture_dir}" -o "${coverage_info}-test" &>> run.log
         lcov \
@@ -229,7 +216,7 @@ _merge_coverage_info() {
 
     mkdir -p "${coverage_dir}"
     (
-        local lcov_merge_args=( -q -q )
+        local lcov_merge_args=( -q )
         for build_dir in "${build_dirs[@]}"; do
             lcov_merge_args+=( -a "${build_dir}/${coverage_info}" )
         done
@@ -243,16 +230,12 @@ _merge_coverage_info() {
 
 _clean_coverage_info() {
     local coverage_dir="$1"
-    local pattern
-    for pattern in \
-            '/usr/**mingw**/include/*' \
-            '*/CMakeFiles/*' \
-            '*/examples/*' \
-            '*/tests/*' \
-        ; do
+    local dir
+    for dir in CMakeFiles examples tests ; do
+        local pattern="*/${dir}/*"
         (
             set -x
-            lcov -q -q -o "${coverage_dir}/${coverage_info}" -r "${coverage_dir}/${coverage_info}" "${pattern}"
+            lcov -q -o "${coverage_dir}/${coverage_info}" -r "${coverage_dir}/${coverage_info}" "${pattern}"
         ) |& tee "${coverage_dir}/clean.log"
     done
 }
@@ -271,13 +254,13 @@ _show_summary() {
     local coverage_dir="$1"
     (
         set -x
-        lcov -q -q -l "${coverage_dir}/${coverage_info}"
+        lcov -q -l "${coverage_dir}/${coverage_info}"
     ) | grep -v '^\['
 }
 
 
 _main() {
-    version="$(git describe --tags 2>/dev/null || echo HEAD)"
+    version="$(git describe --tags)"
     coverage_info=coverage.info
 
     local build_dirs=()
@@ -306,8 +289,6 @@ _main() {
     with_unsigned_char=false
     with_libbsd=false
     with_m32=false
-    with_dtd=true
-    with_ge=true
     for with_mingw in true false ; do
         for unicode_enabled in true false ; do
             if ${unicode_enabled} && ! ${with_mingw} ; then
@@ -326,8 +307,6 @@ _main() {
     with_libbsd=true _build_case
     with_unsigned_char=true _build_case
     with_m32=true _build_case
-    with_dtd=false with_ge=true _build_case
-    with_dtd=false with_ge=false _build_case
 
     echo
     echo 'Merging coverage files...'

@@ -2,6 +2,7 @@
 // Name:        src/x11/cursor.cpp
 // Purpose:     wxCursor class
 // Author:      Julian Smart
+// Modified by:
 // Created:     17/09/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -48,8 +49,8 @@ private:
 
 wxCursorRefData::wxCursorRefData()
 {
-    m_cursor = nullptr;
-    m_display = nullptr;
+    m_cursor = NULL;
+    m_display = NULL;
 }
 
 wxCursorRefData::~wxCursorRefData()
@@ -67,12 +68,6 @@ wxIMPLEMENT_DYNAMIC_CLASS(wxCursor,wxObject);
 wxCursor::wxCursor()
 {
 
-}
-
-wxCursor::wxCursor(const wxBitmap& WXUNUSED(bitmap),
-                   int WXUNUSED(hotSpotX), int WXUNUSED(hotSpotY))
-{
-    wxFAIL_MSG( "wxCursor creation from bitmaps not implemented" );
 }
 
 void wxCursor::InitFromStock( wxStockCursor cursorId )
@@ -152,6 +147,10 @@ wxCursor::wxCursor(const char* const* WXUNUSED(xpmData))
 }
 #endif
 
+wxCursor::~wxCursor()
+{
+}
+
 wxGDIRefData *wxCursor::CreateGDIRefData() const
 {
     return new wxCursorRefData;
@@ -178,6 +177,16 @@ WXCursor wxCursor::GetCursor() const
 
 static wxCursor  gs_savedCursor;
 static int       gs_busyCount = 0;
+
+const wxCursor &wxBusyCursor::GetStoredCursor()
+{
+    return gs_savedCursor;
+}
+
+const wxCursor wxBusyCursor::GetBusyCursor()
+{
+    return wxCursor(wxCURSOR_WATCH);
+}
 
 void wxEndBusyCursor()
 {
@@ -212,7 +221,7 @@ bool wxIsBusy()
     return gs_busyCount > 0;
 }
 
-void wxSetCursor( const wxCursorBundle& cursors )
+void wxSetCursor( const wxCursor& cursor )
 {
-    g_globalCursor = cursors.GetCursorForMainWindow();
+    g_globalCursor = cursor;
 }

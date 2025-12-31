@@ -8,8 +8,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_CHECKBOX
-
 #include "wx/checkbox.h"
 #include "wx/qt/private/utils.h"
 #include "wx/qt/private/converter.h"
@@ -47,6 +45,12 @@ void wxQtCheckBox::clicked( bool checked )
     }
 }
 
+
+wxCheckBox::wxCheckBox() :
+    m_qtCheckBox(NULL)
+{
+}
+
 wxCheckBox::wxCheckBox( wxWindow *parent, wxWindowID id, const wxString& label,
         const wxPoint& pos, const wxSize& size, long style, const wxValidator& validator,
         const wxString& name )
@@ -58,38 +62,33 @@ bool wxCheckBox::Create(wxWindow *parent, wxWindowID id, const wxString& label,
             const wxPoint& pos, const wxSize& size, long style, const wxValidator& validator,
             const wxString& name )
 {
-    m_qtWindow = new wxQtCheckBox( parent, this );
-
-    GetQCheckBox()->setText( wxQtConvertString( label ) );
+    m_qtCheckBox = new wxQtCheckBox( parent, this );
+    m_qtCheckBox->setText( wxQtConvertString( label ) );
 
     // Do the initialization here as WXValidateStyle may fail in unit tests
-    bool ok = wxCheckBoxBase::Create( parent, id, pos, size, style, validator, name );
+    bool ok = QtCreateControl( parent, id, pos, size, style, validator, name );
 
     WXValidateStyle(&style);
 
     if ( style & wxCHK_2STATE )
-        GetQCheckBox()->setTristate( false );
+        m_qtCheckBox->setTristate( false );
     else if ( style & wxCHK_3STATE )
-        GetQCheckBox()->setTristate( true );
+        m_qtCheckBox->setTristate( true );
     if ( style & wxALIGN_RIGHT )
-        GetQCheckBox()->setLayoutDirection( Qt::RightToLeft );
+        m_qtCheckBox->setLayoutDirection( Qt::RightToLeft );
 
     return ok;
 }
 
-QCheckBox* wxCheckBox::GetQCheckBox() const
-{
-    return static_cast<QCheckBox*>(m_qtWindow);
-}
 
 void wxCheckBox::SetValue(bool value)
 {
-    GetQCheckBox()->setChecked( value );
+    m_qtCheckBox->setChecked( value );
 }
 
 bool wxCheckBox::GetValue() const
 {
-    return GetQCheckBox()->isChecked();
+    return m_qtCheckBox->isChecked();
 }
 
 void wxCheckBox::DoSet3StateValue(wxCheckBoxState state)
@@ -97,22 +96,22 @@ void wxCheckBox::DoSet3StateValue(wxCheckBoxState state)
     switch (state)
     {
     case wxCHK_UNCHECKED:
-        GetQCheckBox()->setCheckState(Qt::Unchecked);
+        m_qtCheckBox->setCheckState(Qt::Unchecked);
         break;
 
     case wxCHK_CHECKED:
-        GetQCheckBox()->setCheckState(Qt::Checked);
+        m_qtCheckBox->setCheckState(Qt::Checked);
         break;
 
     case wxCHK_UNDETERMINED:
-        GetQCheckBox()->setCheckState(Qt::PartiallyChecked);
+        m_qtCheckBox->setCheckState(Qt::PartiallyChecked);
         break;
     }
 }
 
 wxCheckBoxState wxCheckBox::DoGet3StateValue() const
 {
-    switch (GetQCheckBox()->checkState())
+    switch (m_qtCheckBox->checkState())
     {
     case Qt::Unchecked:
         return wxCHK_UNCHECKED;
@@ -128,16 +127,18 @@ wxCheckBoxState wxCheckBox::DoGet3StateValue() const
     return wxCHK_UNDETERMINED;
 }
 
+QWidget *wxCheckBox::GetHandle() const
+{
+    return m_qtCheckBox;
+}
+
 wxString wxCheckBox::GetLabel() const
 {
-    return wxQtConvertString( GetQCheckBox()->text() );
+    return wxQtConvertString( m_qtCheckBox->text() );
 }
 
 void wxCheckBox::SetLabel(const wxString& label)
 {
-    wxCheckBoxBase::SetLabel( label );
-
-    GetQCheckBox()->setText( wxQtConvertString(label) );
+    m_qtCheckBox->setText( wxQtConvertString(label) );
 }
 
-#endif // wxUSE_CHECKBOX

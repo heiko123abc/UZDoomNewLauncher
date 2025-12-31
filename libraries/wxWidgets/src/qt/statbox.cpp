@@ -8,8 +8,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_STATBOX
-
 #include "wx/statbox.h"
 #include "wx/window.h"
 #include "wx/qt/private/converter.h"
@@ -24,6 +22,11 @@ public:
         wxQtEventSignalHandler< QGroupBox, wxStaticBox >( parent, handler ){}
 };
 
+
+wxStaticBox::wxStaticBox() :
+    m_qtGroupBox(NULL)
+{
+}
 
 wxStaticBox::wxStaticBox(wxWindow *parent, wxWindowID id,
             const wxString& label,
@@ -42,28 +45,25 @@ bool wxStaticBox::Create(wxWindow *parent, wxWindowID id,
             long style,
             const wxString& name)
 {
-    m_qtWindow = new wxQtGroupBox( parent, this );
+    m_qtGroupBox = new wxQtGroupBox( parent, this );
+    m_qtGroupBox->setTitle( wxQtConvertString( label ) );
 
-    GetQGroupBox()->setTitle( wxQtConvertString( label ) );
-
-    return wxStaticBoxBase::Create( parent, id, pos, size, style, wxDefaultValidator, name );
+    return QtCreateControl( parent, id, pos, size, style, wxDefaultValidator, name );
 }
 
-QGroupBox* wxStaticBox::GetQGroupBox() const
+QWidget *wxStaticBox::GetHandle() const
 {
-    return static_cast<QGroupBox*>(m_qtWindow);
+    return m_qtGroupBox;
 }
 
 void wxStaticBox::SetLabel(const wxString& label)
 {
-    wxStaticBoxBase::SetLabel( label );
-
-    GetQGroupBox()->setTitle( wxQtConvertString( label ) );
+    m_qtGroupBox->setTitle(wxQtConvertString(label));
 }
 
 wxString wxStaticBox::GetLabel() const
 {
-    return wxQtConvertString( GetQGroupBox()->title() );
+    return wxQtConvertString(m_qtGroupBox->title());
 }
 
 void wxStaticBox::GetBordersForSizer(int *borderTop, int *borderOther) const
@@ -73,5 +73,3 @@ void wxStaticBox::GetBordersForSizer(int *borderTop, int *borderOther) const
     // need extra space for the label:
     *borderTop += GetCharHeight();
 }
-
-#endif // wxUSE_STATBOX

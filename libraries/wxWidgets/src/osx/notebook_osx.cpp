@@ -2,6 +2,7 @@
 // Name:        src/osx/notebook_osx.cpp
 // Purpose:     implementation of wxNotebook
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     1998-01-01
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -40,9 +41,9 @@ bool wxNotebook::Create( wxWindow *parent,
     const wxSize& size,
     long style,
     const wxString& name )
-{
+{    
     DontCreatePeer();
-
+    
     if (! (style & wxBK_ALIGN_MASK))
         style |= wxBK_TOP;
 
@@ -118,11 +119,9 @@ bool wxNotebook::SetPageText(size_t nPage, const wxString& strText)
 {
     wxCHECK_MSG( IS_VALID_PAGE(nPage), false, wxT("SetPageText: invalid notebook page") );
 
-    if ( m_pagesData[nPage].text != strText )
-    {
-        m_pagesData[nPage].text = strText;
-        MacSetupTabs();
-    }
+    wxNotebookPage *page = m_pages[nPage];
+    page->SetLabel(wxStripMenuCodes(strText));
+    MacSetupTabs();
 
     return true;
 }
@@ -131,14 +130,16 @@ wxString wxNotebook::GetPageText(size_t nPage) const
 {
     wxCHECK_MSG( IS_VALID_PAGE(nPage), wxEmptyString, wxT("GetPageText: invalid notebook page") );
 
-    return m_pagesData[nPage].text;
+    wxNotebookPage *page = m_pages[nPage];
+
+    return page->GetLabel();
 }
 
 int wxNotebook::GetPageImage(size_t nPage) const
 {
     wxCHECK_MSG( IS_VALID_PAGE(nPage), wxNOT_FOUND, wxT("GetPageImage: invalid notebook page") );
 
-    return m_pagesData[nPage].image;
+    return m_images[nPage];
 }
 
 bool wxNotebook::SetPageImage(size_t nPage, int nImage)
@@ -148,12 +149,12 @@ bool wxNotebook::SetPageImage(size_t nPage, int nImage)
     wxCHECK_MSG( HasImageList() && nImage < GetImageList()->GetImageCount(), false,
         wxT("SetPageImage: invalid image index") );
 
-    if ( nImage != m_pagesData[nPage].image )
+    if ( nImage != m_images[nPage] )
     {
         // if the item didn't have an icon before or, on the contrary, did have
         // it but has lost it now, its size will change - but if the icon just
         // changes, it won't
-        m_pagesData[nPage].image = nImage;
+        m_images[nPage] = nImage;
 
         MacSetupTabs() ;
     }
@@ -168,12 +169,12 @@ bool wxNotebook::SetPageImage(size_t nPage, int nImage)
 // remove one page from the notebook, without deleting the window
 wxNotebookPage* wxNotebook::DoRemovePage(size_t nPage)
 {
-    wxCHECK_MSG( IS_VALID_PAGE(nPage), nullptr,
+    wxCHECK_MSG( IS_VALID_PAGE(nPage), NULL,
         wxT("DoRemovePage: invalid notebook page") );
 
     wxNotebookPage* page = m_pages[nPage] ;
     m_pages.erase(m_pages.begin() + nPage);
-    m_pagesData.erase(m_pagesData.begin() + nPage);
+    m_images.RemoveAt(nPage);
 
     MacSetupTabs();
 
@@ -200,7 +201,7 @@ bool wxNotebook::DeleteAllPages()
 {
     wxBookCtrlBase::DeleteAllPages();
 
-    m_pagesData.clear();
+    m_images.clear();
     MacSetupTabs();
 
     return true;
@@ -221,7 +222,9 @@ bool wxNotebook::InsertPage(size_t nPage,
     // don't show pages by default (we'll need to adjust their size first)
     pPage->Show( false ) ;
 
-    m_pagesData.insert( m_pagesData.begin() + nPage, {strText, imageId} );
+    pPage->SetLabel( wxStripMenuCodes(strText) );
+
+    m_images.Insert( imageId, nPage );
 
     MacSetupTabs();
 

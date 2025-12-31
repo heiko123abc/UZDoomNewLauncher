@@ -69,7 +69,6 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="..\..\build\msw\wx_setup.props" />
     <Import Project="..\..\build\msw\wx_local.props" Condition="Exists('..\..\build\msw\wx_local.props')" />
-    <Import Project="..\samples.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLL Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -151,7 +150,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -188,7 +187,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -229,7 +228,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -266,7 +265,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -307,7 +306,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -344,7 +343,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -385,7 +384,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -422,7 +421,7 @@
       <AdditionalIncludeDirectories>.\..\..\lib\$(wxOutDirName)\$(wxIncSubDir);.\..\..\include;.;.\..\..\samples;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxwebp$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregexu$(wxSuffixDebug).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(wxToolkitLibNamePrefix)core.lib;$(wxBaseLibNamePrefix).lib;wxtiff$(wxSuffixDebug).lib;wxjpeg$(wxSuffixDebug).lib;wxpng$(wxSuffixDebug).lib;wxzlib$(wxSuffixDebug).lib;wxregex$(wxSuffix).lib;wxexpat$(wxSuffixDebug).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>.\..\..\lib\$(wxOutDirName);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>

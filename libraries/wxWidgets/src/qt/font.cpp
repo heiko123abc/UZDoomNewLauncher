@@ -18,7 +18,7 @@
 #include "wx/qt/private/converter.h"
 
 // Older versions of QT don't define all the QFont::Weight enum values, so just
-// do it ourselves here for all cases instead.
+// do it ourselves here for all case instead.
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 5, 0))
 #define wxQFontEnumOrInt(a, b) a
 #else
@@ -366,7 +366,7 @@ wxGDIRefData *wxFont::CreateGDIRefData() const
 
 wxGDIRefData *wxFont::CloneGDIRefData(const wxGDIRefData *data) const
 {
-    return new wxFontRefData(*static_cast<const wxFontRefData*>(data));
+    return new wxFontRefData(*(wxFontRefData *)data);
 }
 
 QFont wxFont::GetHandle() const
@@ -383,26 +383,8 @@ wxFontFamily wxFont::DoGetFamily() const
 // wxNativeFontInfo
 // ----------------------------------------------------------------------------
 
-wxNativeFontInfo::wxNativeFontInfo()
-    : m_qtFont(*new QFont)
+void wxNativeFontInfo::Init()
 {
-}
-
-wxNativeFontInfo::wxNativeFontInfo(const wxNativeFontInfo& that)
-    : m_qtFont(*new QFont(that.m_qtFont))
-{
-}
-
-wxNativeFontInfo::~wxNativeFontInfo()
-{
-    delete &m_qtFont;
-}
-
-wxNativeFontInfo& wxNativeFontInfo::operator=(const wxNativeFontInfo& that)
-{
-    if (this != &that)
-        m_qtFont = that.m_qtFont;
-    return *this;
 }
 
 double wxNativeFontInfo::GetFractionalPointSize() const
@@ -412,19 +394,7 @@ double wxNativeFontInfo::GetFractionalPointSize() const
 
 wxSize wxNativeFontInfo::GetPixelSize() const
 {
-    // Note that QFont::pixelSize() returns -1 if the size was set with setPointSize().
-    // If so, fall back to QFontInfo::pixelSize() which returns the pixel size of the
-    // matched window system font.
-
-    int pixelSize = m_qtFont.pixelSize();
-
-    if ( pixelSize < 0 )
-    {
-        QFontInfo fontInfo(m_qtFont);
-        pixelSize = fontInfo.pixelSize();
-    }
-
-    return wxSize(0, pixelSize);
+    return wxSize(0, m_qtFont.pixelSize());
 }
 
 wxFontStyle wxNativeFontInfo::GetStyle() const
@@ -540,7 +510,7 @@ void wxNativeFontInfo::SetPixelSize(const wxSize& size)
 
 void wxNativeFontInfo::SetStyle(wxFontStyle style)
 {
-    QFont::Style qtStyle wxDUMMY_INITIALIZE(QFont::StyleNormal);
+    QFont::Style qtStyle;
 
     switch ( style )
     {
@@ -566,13 +536,7 @@ void wxNativeFontInfo::SetStyle(wxFontStyle style)
 
 void wxNativeFontInfo::SetNumericWeight(int weight)
 {
-#if QT_VERSION_MAJOR >= 6
-    const auto qtWeight = static_cast<QFont::Weight>(ConvertFontWeight(weight));
-#else
-    const auto qtWeight = ConvertFontWeight(weight);
-#endif
-
-    m_qtFont.setWeight(qtWeight);
+    m_qtFont.setWeight(ConvertFontWeight(weight));
 }
 
 void wxNativeFontInfo::SetUnderlined(bool underlined)
@@ -601,7 +565,7 @@ void wxNativeFontInfo::SetFamily(wxFontFamily family)
 
 void wxNativeFontInfo::SetEncoding(wxFontEncoding WXUNUSED(encoding))
 {
-    wxMISSING_IMPLEMENTATION( __func__ );
+    wxMISSING_IMPLEMENTATION( __FUNCTION__ );
 }
 
 bool wxNativeFontInfo::FromString(const wxString& s)

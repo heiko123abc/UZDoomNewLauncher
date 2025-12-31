@@ -41,6 +41,10 @@ Please send problems concerning installation, feature requests,
 bug reports or comments to the wxWidgets users list. Information
 on how to subscribe is available from www.wxwidgets.org.
 
+wxWidgets/X11 doesn't come with any guarantee whatsoever. It might
+crash your hard disk or destroy your monitor. It doesn't claim to be
+suitable for any special or general purpose.
+
 Status
 ======
 
@@ -57,6 +61,7 @@ Some remaining issues:
 - wxToggleButton implementation missing
 - wxSpinCtrl implementation missing
 - tooltips implementation missing
+- code common to the Motif and X11 ports needs to be merged
 - need thread safety in event loop
 
   Regards,

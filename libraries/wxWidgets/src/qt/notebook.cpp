@@ -8,8 +8,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_NOTEBOOK
-
 #include "wx/notebook.h"
 #include "wx/qt/private/utils.h"
 #include "wx/qt/private/converter.h"
@@ -53,6 +51,11 @@ void wxQtTabWidget::currentChanged(int index)
 }
 
 
+wxNotebook::wxNotebook() :
+    m_qtTabWidget(NULL)
+{
+}
+
 wxNotebook::wxNotebook(wxWindow *parent,
          wxWindowID id,
          const wxPoint& pos,
@@ -70,24 +73,9 @@ bool wxNotebook::Create(wxWindow *parent,
           long style,
           const wxString& name)
 {
-    m_qtWindow = new wxQtTabWidget( parent, this );
+    m_qtTabWidget = new wxQtTabWidget( parent, this );
 
-    if ( !wxControl::Create( parent, id, pos, size, style, wxDefaultValidator, name ) )
-        return false;
-
-    if ( m_windowStyle & wxBK_RIGHT )
-        GetQTabWidget()->setTabPosition( QTabWidget::East );
-    else if ( m_windowStyle & wxBK_LEFT )
-        GetQTabWidget()->setTabPosition( QTabWidget::West );
-    else if ( m_windowStyle & wxBK_BOTTOM )
-        GetQTabWidget()->setTabPosition( QTabWidget::South );
-
-    return true;
-}
-
-QTabWidget* wxNotebook::GetQTabWidget() const
-{
-    return static_cast<QTabWidget*>(m_qtWindow);
+    return QtCreateControl( parent, id, pos, size, style, wxDefaultValidator, name );
 }
 
 void wxNotebook::SetPadding(const wxSize& WXUNUSED(padding))
@@ -101,14 +89,14 @@ void wxNotebook::SetTabSize(const wxSize& WXUNUSED(sz))
 
 bool wxNotebook::SetPageText(size_t n, const wxString &text)
 {
-    GetQTabWidget()->setTabText( n, wxQtConvertString( text ));
+    m_qtTabWidget->setTabText( n, wxQtConvertString( text ));
 
     return true;
 }
 
 wxString wxNotebook::GetPageText(size_t n) const
 {
-    return wxQtConvertString( GetQTabWidget()->tabText( n ));
+    return wxQtConvertString( m_qtTabWidget->tabText( n ));
 }
 
 int wxNotebook::GetPageImage(size_t n) const
@@ -128,41 +116,29 @@ bool wxNotebook::SetPageImage(size_t n, int imageId)
         wxCHECK_MSG(HasImageList(), false, "invalid notebook imagelist");
         const wxBitmap bitmap = GetImageList()->GetBitmap(imageId);
         // set the new image:
-        GetQTabWidget()->setTabIcon( n, QIcon( *bitmap.GetHandle() ));
+        m_qtTabWidget->setTabIcon( n, QIcon( *bitmap.GetHandle() ));
     }
     else
     {
         // remove the image using and empty qt icon:
-        GetQTabWidget()->setTabIcon( n, QIcon() );
+        m_qtTabWidget->setTabIcon( n, QIcon() );
     }
     m_images[n] = imageId;
     return true;
-}
-
-void wxNotebook::OnImagesChanged()
-{
-    if ( HasImages() )
-    {
-        wxImageList* const imageList = GetUpdatedImageListFor(this);
-
-        const wxBitmap bitmap = imageList->GetBitmap(0);
-        GetQTabWidget()->setIconSize(wxQtConvertSize(bitmap.GetLogicalSize()));
-        GetQTabWidget()->update();
-    }
 }
 
 bool wxNotebook::InsertPage(size_t n, wxWindow *page, const wxString& text,
     bool bSelect, int imageId)
 {
     // disable firing qt signals until wx structures are filled
-    GetQTabWidget()->blockSignals(true);
+    m_qtTabWidget->blockSignals(true);
 
     if (imageId != -1)
     {
         if (HasImageList())
         {
             const wxBitmap bitmap = GetImageList()->GetBitmap(imageId);
-            GetQTabWidget()->insertTab( n, page->GetHandle(), QIcon( *bitmap.GetHandle() ), wxQtConvertString( text ));
+            m_qtTabWidget->insertTab( n, page->GetHandle(), QIcon( *bitmap.GetHandle() ), wxQtConvertString( text ));
         }
         else
         {
@@ -171,14 +147,14 @@ bool wxNotebook::InsertPage(size_t n, wxWindow *page, const wxString& text,
     }
     else
     {
-        GetQTabWidget()->insertTab( n, page->GetHandle(), wxQtConvertString( text ));
+        m_qtTabWidget->insertTab( n, page->GetHandle(), wxQtConvertString( text ));
     }
 
     m_pages.insert(m_pages.begin() + n, page);
     m_images.insert(m_images.begin() + n, imageId);
 
     // reenable firing qt signals as internal wx initialization was completed
-    GetQTabWidget()->blockSignals(false);
+    m_qtTabWidget->blockSignals(false);
 
     DoSetSelectionAfterInsertion(n, bSelect);
 
@@ -187,7 +163,7 @@ bool wxNotebook::InsertPage(size_t n, wxWindow *page, const wxString& text,
 
 wxSize wxNotebook::CalcSizeFromPage(const wxSize& sizePage) const
 {
-    QTabBar *tabBar = GetQTabWidget()->tabBar();
+    QTabBar *tabBar = m_qtTabWidget->tabBar();
     const QSize &tabBarSize = tabBar->size();
     return wxSize(sizePage.GetWidth(),
         sizePage.GetHeight() + tabBarSize.height());
@@ -197,16 +173,20 @@ bool wxNotebook::DeleteAllPages()
 {
     // Nothing to do if the notebook was not created yet,
     // and return true just like other ports do.
-    if ( !GetQTabWidget() )
+    if ( !m_qtTabWidget )
         return true;
 
     // Block signals to not receive selection changed updates
     // which are sent by Qt after the selected page was deleted.
-    wxQtEnsureSignalsBlocked blocker(GetQTabWidget());
+    m_qtTabWidget->blockSignals(true);
 
     // Pages will be deleted one by one in the base class.
     // There's no need to explicitly clear() the Qt control.
-    return wxNotebookBase::DeleteAllPages();
+    bool deleted = wxNotebookBase::DeleteAllPages();
+
+    m_qtTabWidget->blockSignals(false);
+
+    return deleted;
 }
 
 int wxNotebook::SetSelection(size_t page)
@@ -216,7 +196,7 @@ int wxNotebook::SetSelection(size_t page)
     int selOld = GetSelection();
 
     // change the QTabWidget selected page:
-    GetQTabWidget()->setCurrentIndex( page );
+    m_qtTabWidget->setCurrentIndex( page );
     m_selection = page;
 
     return selOld;
@@ -226,19 +206,26 @@ int wxNotebook::ChangeSelection(size_t nPage)
 {
     // ChangeSelection() is not supposed to generate events, unlike
     // SetSelection().
-    wxQtEnsureSignalsBlocked blocker(GetQTabWidget());
+    m_qtTabWidget->blockSignals(true);
 
-    return SetSelection(nPage);
+    const int selOld = SetSelection(nPage);
+
+    m_qtTabWidget->blockSignals(false);
+
+    return selOld;
 }
 
 wxWindow *wxNotebook::DoRemovePage(size_t page)
 {
-    QWidget *qtWidget = GetQTabWidget()->widget( page );
-    GetQTabWidget()->removeTab( page );
+    QWidget *qtWidget = m_qtTabWidget->widget( page );
+    m_qtTabWidget->removeTab( page );
     wxNotebookBase::DoRemovePage(page);
     m_images.erase( m_images.begin() + page );
 
     return QtRetrieveWindowPointer( qtWidget );
 }
 
-#endif // wxUSE_NOTEBOOK
+QWidget *wxNotebook::GetHandle() const
+{
+    return m_qtTabWidget;
+}

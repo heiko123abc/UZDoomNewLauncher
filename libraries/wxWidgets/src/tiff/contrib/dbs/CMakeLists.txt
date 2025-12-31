@@ -22,17 +22,25 @@
 # LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 # OF THIS SOFTWARE.
 
+include_directories(${PROJECT_SOURCE_DIR}/libtiff
+                    ${PROJECT_BINARY_DIR}/libtiff
+                    ${CMAKE_CURRENT_BINARY_DIR})
+
 add_executable(tiff-bi tiff-bi.c)
-target_link_libraries(tiff-bi tiff tiff_port)
+target_link_libraries(tiff-bi tiff port)
 
 add_executable(tiff-grayscale tiff-grayscale.c)
-target_link_libraries(tiff-grayscale tiff tiff_port CMath::CMath)
+target_link_libraries(tiff-grayscale tiff port)
 
 add_executable(tiff-palette tiff-palette.c)
-target_link_libraries(tiff-palette tiff tiff_port)
+target_link_libraries(tiff-palette tiff port)
 
 add_executable(tiff-rgb tiff-rgb.c)
-target_link_libraries(tiff-rgb tiff tiff_port CMath::CMath)
+target_link_libraries(tiff-rgb tiff port)
+
+add_subdirectory(xtiff)
+
+extra_dist(README)
 
 if(WEBP_SUPPORT AND EMSCRIPTEN)
   # Emscripten is pretty finnicky about linker flags.

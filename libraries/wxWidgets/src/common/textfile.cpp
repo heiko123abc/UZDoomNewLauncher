@@ -2,6 +2,7 @@
 // Name:        src/common/textfile.cpp
 // Purpose:     implementation of wxTextFile class
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     03.04.98
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -103,7 +104,7 @@ bool wxTextFile::OnRead(const wxMBConv& conv)
     const wxString::const_iterator end = str.end();
     for ( wxString::const_iterator p = lineStart; p != end; ++p )
     {
-        const wxUniChar ch = *p;
+        const wxChar ch = *p;
         if ( ch == '\r' || ch == '\n' )
         {
             // Determine the kind of line ending this is.

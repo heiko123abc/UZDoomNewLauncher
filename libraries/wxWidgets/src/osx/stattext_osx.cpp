@@ -2,6 +2,7 @@
 // Name:        src/osx/stattext_osx.cpp
 // Purpose:     wxStaticText
 // Author:      Stefan Csomor
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Stefan Csomor
 // Licence:     wxWindows licence
@@ -33,9 +34,9 @@ bool wxStaticText::Create( wxWindow *parent,
     const wxSize& size,
     long style,
     const wxString& name )
-{
+{    
     DontCreatePeer();
-
+    
     if ( !wxControl::Create( parent, id, pos, size, style, wxDefaultValidator, name ) )
         return false;
 
@@ -100,7 +101,7 @@ bool wxStaticText::SetFont(const wxFont& font)
 void wxStaticText::WXSetVisibleLabel(const wxString& label)
 {
     m_label = RemoveMnemonics(label);
-    GetPeer()->SetLabel(m_label);
+    GetPeer()->SetLabel(m_label , GetFont().GetEncoding() );
 }
 
 #if wxUSE_MARKUP && wxOSX_USE_COCOA

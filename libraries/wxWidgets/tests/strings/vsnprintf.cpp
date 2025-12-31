@@ -109,7 +109,7 @@ TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::C", "[vsnprintf]")
     CMP("hi!", "%c%c%c", wxT('h'), wxT('i'), wxT('!'));
 
     // NOTE:
-    // the NUL characters _can_ be passed to %c to e.g. create strings
+    // the NULL characters _can_ be passed to %c to e.g. create strings
     // with embedded NULs (because strings are not always supposed to be
     // NUL-terminated).
 
@@ -151,24 +151,24 @@ TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::P", "[vsnprintf]")
         (!defined(__USE_MINGW_ANSI_STDIO) || !__USE_MINGW_ANSI_STDIO))
     #if SIZEOF_VOID_P == 4
         CMP("00ABCDEF", "%p", (void*)0xABCDEF);
-        CMP("00000000", "%p", (void*)nullptr);
+        CMP("00000000", "%p", (void*)NULL);
     #elif SIZEOF_VOID_P == 8
         CMP("0000ABCDEFABCDEF", "%p", (void*)0xABCDEFABCDEF);
-        CMP("0000000000000000", "%p", (void*)nullptr);
+        CMP("0000000000000000", "%p", (void*)NULL);
     #endif
 #elif defined(__MINGW32__)
     #if SIZEOF_VOID_P == 4
         CMP("00abcdef", "%p", (void*)0xABCDEF);
-        CMP("00000000", "%p", (void*)nullptr);
+        CMP("00000000", "%p", (void*)NULL);
     #elif SIZEOF_VOID_P == 8
         CMP("0000abcdefabcdef", "%p", (void*)0xABCDEFABCDEF);
-        CMP("0000000000000000", "%p", (void*)nullptr);
+        CMP("0000000000000000", "%p", (void*)NULL);
     #endif
 #elif defined(__GNUG__)
-    // glibc prints pointers as %#x except for null pointers which are printed
+    // glibc prints pointers as %#x except for NULL pointers which are printed
     // as '(nil)'.
     CMP("0xabcdef", "%p", (void*)0xABCDEF);
-    CMP("(nil)", "%p", (void*)nullptr);
+    CMP("(nil)", "%p", (void*)NULL);
 #endif
 }
 
@@ -250,17 +250,18 @@ TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::S", "[vsnprintf]")
     CMP("abcde", "%.5s", wxT("abcdefghi"));
 
     // do the same tests but with Unicode characters:
+#if wxUSE_UNICODE
 
     // Unicode code points from U+03B1 to U+03B9 are the greek letters alpha-iota;
     // UTF8 encoding of such code points is 0xCEB1 to 0xCEB9
 
-#define ALPHA       "α"
+#define ALPHA       "\xCE\xB1"
         // alpha
-#define ABC         "αβγ"
+#define ABC         "\xCE\xB1\xCE\xB2\xCE\xB3"
         // alpha+beta+gamma
-#define ABCDE       "αβγδε"
+#define ABCDE       "\xCE\xB1\xCE\xB2\xCE\xB3\xCE\xB4\xCE\xB5"
         // alpha+beta+gamma+delta+epsilon
-#define ABCDEFGHI   "αβγδεζηθι"
+#define ABCDEFGHI   "\xCE\xB1\xCE\xB2\xCE\xB3\xCE\xB4\xCE\xB5\xCE\xB6\xCE\xB7\xCE\xB8\xCE\xB9"
         // alpha+beta+gamma+delta+epsilon+zeta+eta+theta+iota
 
     // the 'expected' and 'arg' parameters of this macro are supposed to be
@@ -279,8 +280,9 @@ TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::S", "[vsnprintf]")
     CMP_UTF8(ABC "  ",     "%-5s", ABC);
     CMP_UTF8(ABCDEFGHI,    "%-5s", ABCDEFGHI);
     CMP_UTF8(ABCDE,        "%.5s", ABCDEFGHI);
+#endif // wxUSE_UNICODE
 
-    // test a string which has a NUL character after "ab";
+    // test a string which has a NULL character after "ab";
     // obviously it should be handled exactly like just as "ab"
     CMP("   ab", "%5s", wxT("ab\0cdefghi"));
 }
@@ -314,6 +316,7 @@ TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::Percent", "[vsnprintf]")
     // Compare(wxT("%"), wxT("%%%"));
 }
 
+#ifdef wxLongLong_t
 TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::LongLong", "[vsnprintf]")
 {
     CMP("123456789", "%lld", (wxLongLong_t)123456789);
@@ -326,6 +329,7 @@ TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::LongLong", "[vsnprintf]")
     CMP("123456789abcdef", "%I64x", wxLL(0x123456789abcdef));
 #endif
 }
+#endif
 
 TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::WrongFormatStrings", "[vsnprintf]")
 {
@@ -395,11 +399,13 @@ void VsnprintfTestCase::DoBigToSmallBuffer(T *buffer, int size)
 
 TEST_CASE_METHOD(VsnprintfTestCase, "Vsnprintf::BigToSmallBuffer", "[vsnprintf]")
 {
+#if wxUSE_UNICODE
     wchar_t bufw[1024], bufw2[16], bufw3[4], bufw4;
     DoBigToSmallBuffer(bufw, 1024);
     DoBigToSmallBuffer(bufw2, 16);
     DoBigToSmallBuffer(bufw3, 4);
     DoBigToSmallBuffer(&bufw4, 1);
+#endif // wxUSE_UNICODE
 
     char bufa[1024], bufa2[16], bufa3[4], bufa4;
     DoBigToSmallBuffer(bufa, 1024);

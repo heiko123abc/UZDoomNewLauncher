@@ -25,7 +25,6 @@
 #endif // WX_PRECOMP
 
 wxModalDialogHook::Hooks wxModalDialogHook::ms_hooks;
-int wxModalDialogHook::ms_countOpen = 0;
 
 // ============================================================================
 // wxModalDialogHook implementation
@@ -38,9 +37,11 @@ int wxModalDialogHook::ms_countOpen = 0;
 void wxModalDialogHook::Register()
 {
 #if wxDEBUG_LEVEL
-    for ( auto hook : ms_hooks )
+    for ( Hooks::const_iterator it = ms_hooks.begin();
+          it != ms_hooks.end();
+          ++it)
     {
-        if ( hook == this )
+        if ( *it == this )
         {
             wxFAIL_MSG( wxS("Registering already registered hook?") );
             return;
@@ -61,7 +62,9 @@ void wxModalDialogHook::Unregister()
 
 bool wxModalDialogHook::DoUnregister()
 {
-    for ( auto it = ms_hooks.begin(); it != ms_hooks.end(); ++it )
+    for ( Hooks::iterator it = ms_hooks.begin();
+          it != ms_hooks.end();
+          ++it )
     {
         if ( *it == this )
         {
@@ -86,9 +89,9 @@ int wxModalDialogHook::CallEnter(wxDialog* dialog)
     // the call to their Exit(), so do it here for symmetry as well.
     const Hooks hooks = ms_hooks;
 
-    for ( auto hook : hooks )
+    for ( Hooks::const_iterator it = hooks.begin(); it != hooks.end(); ++it )
     {
-        const int rc = hook->Enter(dialog);
+        const int rc = (*it)->Enter(dialog);
         if ( rc != wxID_NONE )
         {
             // Skip calling all the rest of the hooks if one of them preempts
@@ -97,21 +100,17 @@ int wxModalDialogHook::CallEnter(wxDialog* dialog)
         }
     }
 
-    ms_countOpen++;
-
     return wxID_NONE;
 }
 
 /* static */
 void wxModalDialogHook::CallExit(wxDialog* dialog)
 {
-    ms_countOpen--;
-
     // See comment in CallEnter() for the reasons for making a copy here.
     const Hooks hooks = ms_hooks;
 
-    for ( auto hook : hooks )
+    for ( Hooks::const_iterator it = hooks.begin(); it != hooks.end(); ++it )
     {
-        hook->Exit(dialog);
+        (*it)->Exit(dialog);
     }
 }

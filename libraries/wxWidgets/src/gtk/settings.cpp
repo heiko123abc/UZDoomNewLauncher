@@ -13,12 +13,10 @@
 #include "wx/settings.h"
 
 #ifndef WX_PRECOMP
-    #include "wx/log.h"
     #include "wx/toplevel.h"
     #include "wx/module.h"
 #endif
 
-#include "wx/display.h"
 #include "wx/fontutil.h"
 #include "wx/fontenum.h"
 
@@ -28,13 +26,7 @@
 #include "wx/gtk/private/stylecontext.h"
 #include "wx/gtk/private/value.h"
 
-#ifdef __WXGTK3__
-    #include "wx/gtk/private/appearance.h"
-    #include "wx/gtk/private/glibptr.h"
-    #include "wx/gtk/private/variant.h"
-#endif
-
-bool wxGetFrameExtents(GdkWindow* window, wxTopLevelWindow::DecorSize* decorSize);
+bool wxGetFrameExtents(GdkWindow* window, int* left, int* right, int* top, int* bottom);
 
 // ----------------------------------------------------------------------------
 // wxSystemSettings implementation
@@ -47,7 +39,7 @@ static GtkWidget* gs_tlw_parent;
 static GtkContainer* ContainerWidget()
 {
     static GtkContainer* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = GTK_CONTAINER(gtk_fixed_new());
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
@@ -60,9 +52,9 @@ static GtkContainer* ContainerWidget()
 static GtkWidget* ScrollBarWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
-        s_widget = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, nullptr);
+        s_widget = gtk_scrollbar_new(GTK_ORIENTATION_VERTICAL, NULL);
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
         gtk_container_add(ContainerWidget(), s_widget);
 #ifndef __WXGTK3__
@@ -85,13 +77,13 @@ static void style_set(GtkWidget*, GtkStyle*, void*)
 static GtkWidget* ButtonWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = gtk_button_new();
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
         gtk_container_add(ContainerWidget(), s_widget);
         gtk_widget_ensure_style(s_widget);
-        g_signal_connect(s_widget, "style_set", G_CALLBACK(style_set), nullptr);
+        g_signal_connect(s_widget, "style_set", G_CALLBACK(style_set), NULL);
     }
     return s_widget;
 }
@@ -99,7 +91,7 @@ static GtkWidget* ButtonWidget()
 static GtkWidget* ListWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = gtk_tree_view_new_with_model(
             GTK_TREE_MODEL(gtk_list_store_new(1, G_TYPE_INT)));
@@ -113,7 +105,7 @@ static GtkWidget* ListWidget()
 static GtkWidget* TextCtrlWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = gtk_text_view_new();
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
@@ -126,7 +118,7 @@ static GtkWidget* TextCtrlWidget()
 static GtkWidget* MenuItemWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = gtk_menu_item_new();
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
@@ -139,7 +131,7 @@ static GtkWidget* MenuItemWidget()
 static GtkWidget* MenuBarWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = gtk_menu_bar_new();
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
@@ -152,7 +144,7 @@ static GtkWidget* MenuBarWidget()
 static GtkWidget* ToolTipWidget()
 {
     static GtkWidget* s_widget;
-    if (s_widget == nullptr)
+    if (s_widget == NULL)
     {
         s_widget = gtk_window_new(GTK_WINDOW_POPUP);
         g_object_add_weak_pointer(G_OBJECT(s_widget), (void**)&s_widget);
@@ -191,182 +183,31 @@ static void notify_gtk_font_name(GObject*, GParamSpec*, void*)
 }
 }
 
-namespace
+static bool UpdatePreferDark(GVariant* value)
 {
+    // 0: No preference, 1: Prefer dark appearance, 2: Prefer light appearance
+    gboolean preferDark = g_variant_get_uint32(value) == 1;
 
-constexpr const char* TRACE_DARKMODE = "darkmode";
-
-// This corresponds to the current system value.
-gboolean gs_systemPrefersDark = FALSE;
-
-// This remembers the last value passed to wxApp::SetAppearance() call.
-wxGTKImpl::ColorScheme gs_appScheme = wxGTKImpl::ColorScheme::NoPreference;
-
-
-// Convert raw value to ColorScheme, return NoPreference for unknown values.
-wxGTKImpl::ColorScheme AsColorScheme(guint32 colorScheme)
-{
-    switch ( colorScheme )
-    {
-        case static_cast<guint32>(wxGTKImpl::ColorScheme::NoPreference):
-        case static_cast<guint32>(wxGTKImpl::ColorScheme::PreferDark):
-        case static_cast<guint32>(wxGTKImpl::ColorScheme::PreferLight):
-            return static_cast<wxGTKImpl::ColorScheme>(colorScheme);
-    }
-
-    wxLogTrace(TRACE_DARKMODE, "Unknown color scheme value %u", colorScheme);
-    return wxGTKImpl::ColorScheme::NoPreference;
-}
-
-// Convert ColorScheme to raw "prefer-dark" value.
-gboolean GetPreferDark(wxGTKImpl::ColorScheme colorScheme)
-{
-    switch ( colorScheme )
-    {
-        case wxGTKImpl::ColorScheme::NoPreference:
-        case wxGTKImpl::ColorScheme::PreferLight:
-            return FALSE;
-
-        case wxGTKImpl::ColorScheme::PreferDark:
-            return TRUE;
-    }
-
-    wxFAIL_MSG("Invalid color scheme value");
-    return FALSE;
-}
-
-// UpdateColorScheme() should normally be used instead of this function to
-// avoid changing the preferences unnecessarily and update any
-// appearance-dependent cached settings, but it's enough to call this one on
-// startup, before we have anything cached.
-void UpdatePreferDark(gboolean preferDark)
-{
-    wxLogTrace(TRACE_DARKMODE, "Turning dark mode preference %s",
-               preferDark ? "on" : "off");
-
-    g_object_set(gtk_settings_get_default(),
-        "gtk-application-prefer-dark-theme", preferDark, nullptr);
-}
-
-void DoUpdateColorScheme(wxGTKImpl::ColorScheme colorScheme)
-{
-    GtkSettings* const settings = gtk_settings_get_default();
-    // This shouldn't happen, but don't bother doing anything else if it does.
-    if (!settings)
-    {
-        wxLogTrace(TRACE_DARKMODE, "Failed to get GTK settings");
-        return;
-    }
-
-    wxGlibPtr<char> themeName;
-    gboolean preferDarkPrev = FALSE;
+    GtkSettings* settings = gtk_settings_get_default();
+    char* themeName;
+    gboolean preferDarkPrev;
     g_object_get(settings,
-        "gtk-theme-name", themeName.Out(),
-        "gtk-application-prefer-dark-theme", &preferDarkPrev, nullptr);
+        "gtk-theme-name", &themeName,
+        "gtk-application-prefer-dark-theme", &preferDarkPrev, NULL);
 
-    // This is not supposed to happen neither, but don't crash if it does.
-    if (!themeName)
+    // We don't need to enable prefer-dark if the theme is already dark
+    if (strstr(themeName, "-dark") || strstr(themeName, "-Dark"))
+        preferDark = false;
+    g_free(themeName);
+
+    const bool changed = preferDark != preferDarkPrev;
+    if (changed)
     {
-        wxLogTrace(TRACE_DARKMODE, "Failed to get GTK theme name");
-        return;
+        g_object_set(settings,
+            "gtk-application-prefer-dark-theme", preferDark, NULL);
     }
-
-    const wxString theme = wxString::FromUTF8(themeName);
-
-    wxLogTrace(TRACE_DARKMODE, "Current GTK theme is \"%s\"", theme);
-
-    // Check if the current theme is a dark variant.
-    constexpr const char* darkVariant = "-dark";
-    constexpr const char* darkVariantU = "-Dark";
-    constexpr size_t lenDark = 5; // strlen(darkVariant) == strlen(darkVariantU)
-    auto posDark = theme.find(darkVariant);
-    if ( posDark == wxString::npos )
-        posDark = theme.find(darkVariantU);
-
-    if ( posDark != wxString::npos )
-        preferDarkPrev = TRUE;
-
-    gboolean preferDark = FALSE;
-    switch ( colorScheme )
-    {
-        case wxGTKImpl::ColorScheme::NoPreference:
-            preferDark = gs_systemPrefersDark;
-            break;
-
-        case wxGTKImpl::ColorScheme::PreferDark:
-            preferDark = TRUE;
-            break;
-
-        case wxGTKImpl::ColorScheme::PreferLight:
-            preferDark = FALSE;
-            break;
-    }
-
-    if ( preferDark == preferDarkPrev )
-    {
-        wxLogTrace(TRACE_DARKMODE, "Dark mode preference didn't change");
-        return;
-    }
-
-    UpdatePreferDark(preferDark);
-
-    if ( posDark != wxString::npos )
-    {
-        // We need to stop using the dark theme variant when switching to the
-        // light application appearance as otherwise it would remain dark.
-        wxString themeNew = theme;
-        themeNew.erase(posDark, lenDark);
-
-        wxLogTrace(TRACE_DARKMODE, "Switching to theme \"%s\"", themeNew);
-
-        g_object_set(gtk_settings_get_default(),
-            "gtk-theme-name", themeNew.utf8_str().data(), nullptr);
-    }
-
-    for (int i = wxSYS_COLOUR_MAX; i--;)
-        gs_systemColorCache[i].UnRef();
-
-    for (auto* win: wxTopLevelWindows)
-    {
-        wxSysColourChangedEvent event;
-        event.SetEventObject(win);
-        win->HandleWindowEvent(event);
-    }
+    return changed;
 }
-
-// Global GDBusProxy for org.freedesktop.portal.Settings initialized by
-// wxSystemSettingsModule.
-GDBusProxy* gs_proxyPortalSettings = nullptr;
-
-} // anonymous namespace
-
-// Functions declared in wx/gtk/private/appearance.h and used by wxApp.
-namespace wxGTKImpl
-{
-
-bool UpdateColorScheme(ColorScheme colorScheme)
-{
-    // It's possible that we didn't initialize it because GTK_THEME is
-    // explicitly set, so it's not an error -- but we can't change the
-    // appearance in this case (it's overridden by the theme), so don't
-    // bother doing anything.
-    if ( !gs_proxyPortalSettings )
-        return false;
-
-    if ( colorScheme == gs_appScheme )
-    {
-        // Don't do anything if the preference didn't change.
-        return true;
-    }
-
-    gs_appScheme = colorScheme;
-
-    DoUpdateColorScheme(colorScheme);
-
-    return true;
-}
-
-} // namespace wxGTKImpl
 
 // "g-signal" from GDBusProxy
 extern "C" {
@@ -378,32 +219,29 @@ proxy_g_signal(GDBusProxy*, const char*, const char* signal_name, GVariant* para
 
     const char* nameSpace;
     const char* key;
-    wxGtkVariant value;
-    g_variant_get(parameters, "(&s&sv)", &nameSpace, &key, value.ByRef());
-    if (strcmp(nameSpace, "org.freedesktop.appearance") != 0 ||
-        strcmp(key, "color-scheme") != 0)
-        return;
-
-    const auto colorScheme = AsColorScheme(value.GetUint32());
-
-    // Update gs_systemPrefersDark in any case as we want to keep track of it
-    // even when using app-specified color scheme because this can change later.
-    gs_systemPrefersDark = GetPreferDark(colorScheme);
-
-    if ( gs_appScheme == wxGTKImpl::ColorScheme::NoPreference )
+    GVariant* value;
+    g_variant_get(parameters, "(&s&sv)", &nameSpace, &key, &value);
+    if (strcmp(nameSpace, "org.freedesktop.appearance") == 0 &&
+        strcmp(key, "color-scheme") == 0)
     {
-        wxLogTrace(TRACE_DARKMODE, "System color scheme changed to %u", colorScheme);
+        if (UpdatePreferDark(value))
+        {
+            for (int i = wxSYS_COLOUR_MAX; i--;)
+                gs_systemColorCache[i].UnRef();
 
-        DoUpdateColorScheme(colorScheme);
+            for ( wxWindowList::compatibility_iterator node = wxTopLevelWindows.GetFirst();
+                  node;
+                  node = node->GetNext() )
+            {
+                wxWindow* const win = node->GetData();
+
+                wxSysColourChangedEvent event;
+                event.SetEventObject(win);
+                win->HandleWindowEvent(event);
+            }
+        }
     }
-    else
-    {
-        // Application-set scheme should remain in effect even if the system
-        // scheme changes.
-        wxLogTrace(TRACE_DARKMODE,
-                   "Ignoring new system color scheme %u due to app-set scheme %u",
-                   colorScheme, gs_appScheme);
-    }
+    g_variant_unref(value);
 }
 }
 
@@ -438,17 +276,17 @@ wxGtkStyleContext::wxGtkStyleContext(double scale)
     : m_path(gtk_widget_path_new())
     , m_scale(int(scale))
 {
-    m_context = nullptr;
+    m_context = NULL;
 }
 
 wxGtkStyleContext& wxGtkStyleContext::Add(GType type, const char* objectName, ...)
 {
-    if (m_context == nullptr && type != GTK_TYPE_WINDOW)
+    if (m_context == NULL && type != GTK_TYPE_WINDOW)
         AddWindow();
 
     gtk_widget_path_append_type(m_path, type);
 #if GTK_CHECK_VERSION(3,20,0)
-    if (gtk_check_version(3,20,0) == nullptr)
+    if (gtk_check_version(3,20,0) == NULL)
         gtk_widget_path_iter_set_object_name(m_path, -1, objectName);
 #endif
     va_list args;
@@ -460,14 +298,14 @@ wxGtkStyleContext& wxGtkStyleContext::Add(GType type, const char* objectName, ..
 
     GtkStyleContext* sc = gtk_style_context_new();
 #if GTK_CHECK_VERSION(3,10,0)
-    if (gtk_check_version(3,10,0) == nullptr)
+    if (gtk_check_version(3,10,0) == NULL)
         gtk_style_context_set_scale(sc, m_scale);
 #endif
     gtk_style_context_set_path(sc, m_path);
     if (m_context)
     {
 #if GTK_CHECK_VERSION(3,4,0)
-        if (gtk_check_version(3,4,0) == nullptr)
+        if (gtk_check_version(3,4,0) == NULL)
             gtk_style_context_set_parent(sc, m_context);
 #endif
         g_object_unref(m_context);
@@ -478,15 +316,15 @@ wxGtkStyleContext& wxGtkStyleContext::Add(GType type, const char* objectName, ..
 
 wxGtkStyleContext& wxGtkStyleContext::Add(const char* objectName)
 {
-    return Add(G_TYPE_NONE, objectName, nullptr);
+    return Add(G_TYPE_NONE, objectName, NULL);
 }
 
 wxGtkStyleContext::~wxGtkStyleContext()
 {
     gtk_widget_path_free(m_path);
-    if (m_context == nullptr)
+    if (m_context == NULL)
         return;
-    if (gtk_check_version(3,16,0) == nullptr || gtk_check_version(3,4,0))
+    if (gtk_check_version(3,16,0) == NULL || gtk_check_version(3,4,0))
     {
         g_object_unref(m_context);
         return;
@@ -499,7 +337,7 @@ wxGtkStyleContext::~wxGtkStyleContext()
         if (parent)
         {
             g_object_ref(parent);
-            gtk_style_context_set_parent(sc, nullptr);
+            gtk_style_context_set_parent(sc, NULL);
         }
         g_object_unref(sc);
         sc = parent;
@@ -509,40 +347,40 @@ wxGtkStyleContext::~wxGtkStyleContext()
 
 wxGtkStyleContext& wxGtkStyleContext::AddButton()
 {
-    return Add(GTK_TYPE_BUTTON, "button", "button", nullptr);
+    return Add(GTK_TYPE_BUTTON, "button", "button", NULL);
 }
 
 wxGtkStyleContext& wxGtkStyleContext::AddCheckButton()
 {
-    return Add(GTK_TYPE_CHECK_BUTTON, "checkbutton", nullptr);
+    return Add(GTK_TYPE_CHECK_BUTTON, "checkbutton", NULL);
 }
 
 #if GTK_CHECK_VERSION(3,10,0)
 wxGtkStyleContext& wxGtkStyleContext::AddHeaderbar()
 {
-    return Add(GTK_TYPE_HEADER_BAR, "headerbar", "titlebar", "header-bar", nullptr);
+    return Add(GTK_TYPE_HEADER_BAR, "headerbar", "titlebar", "header-bar", NULL);
 }
 #endif
 
 wxGtkStyleContext& wxGtkStyleContext::AddLabel()
 {
-    return Add(GTK_TYPE_LABEL, "label", nullptr);
+    return Add(GTK_TYPE_LABEL, "label", NULL);
 }
 
 wxGtkStyleContext& wxGtkStyleContext::AddMenu()
 {
-    return AddWindow("popup").Add(GTK_TYPE_MENU, "menu", "menu", nullptr);
+    return AddWindow("popup").Add(GTK_TYPE_MENU, "menu", "menu", NULL);
 }
 
 wxGtkStyleContext& wxGtkStyleContext::AddMenuItem()
 {
-    return AddMenu().Add(GTK_TYPE_MENU_ITEM, "menuitem", "menuitem", nullptr);
+    return AddMenu().Add(GTK_TYPE_MENU_ITEM, "menuitem", "menuitem", NULL);
 }
 
 wxGtkStyleContext& wxGtkStyleContext::AddTextview(const char* child1, const char* child2)
 {
-    Add(GTK_TYPE_TEXT_VIEW, "textview", "view", nullptr);
-    if (child1 && gtk_check_version(3,20,0) == nullptr)
+    Add(GTK_TYPE_TEXT_VIEW, "textview", "view", NULL);
+    if (child1 && gtk_check_version(3,20,0) == NULL)
     {
         Add(child1);
         if (child2)
@@ -553,7 +391,7 @@ wxGtkStyleContext& wxGtkStyleContext::AddTextview(const char* child1, const char
 
 wxGtkStyleContext& wxGtkStyleContext::AddTreeview()
 {
-    return Add(GTK_TYPE_TREE_VIEW, "treeview", "view", nullptr);
+    return Add(GTK_TYPE_TREE_VIEW, "treeview", "view", NULL);
 }
 
 #if GTK_CHECK_VERSION(3,20,0)
@@ -582,11 +420,11 @@ wxGtkStyleContext& wxGtkStyleContext::AddTreeviewHeaderButton(int pos)
 
 wxGtkStyleContext& wxGtkStyleContext::AddTooltip()
 {
-    wxASSERT(m_context == nullptr);
+    wxASSERT(m_context == NULL);
     GtkWidgetPath* path = m_path;
     gtk_widget_path_append_type(path, GTK_TYPE_WINDOW);
 #if GTK_CHECK_VERSION(3,20,0)
-    if (gtk_check_version(3,20,0) == nullptr)
+    if (gtk_check_version(3,20,0) == NULL)
         gtk_widget_path_iter_set_object_name(path, -1, "tooltip");
 #endif
     gtk_widget_path_iter_add_class(path, -1, "background");
@@ -599,16 +437,16 @@ wxGtkStyleContext& wxGtkStyleContext::AddTooltip()
 
 wxGtkStyleContext& wxGtkStyleContext::AddWindow(const char* className2)
 {
-    return Add(GTK_TYPE_WINDOW, "window", "background", className2, nullptr);
+    return Add(GTK_TYPE_WINDOW, "window", "background", className2, NULL);
 }
 
-static void bg(GtkStyleContext* sc, wxColour& color, int state)
+void wxGtkStyleContext::Bg(wxColour& color, int state) const
 {
     GdkRGBA* rgba;
-    cairo_pattern_t* pattern = nullptr;
-    gtk_style_context_set_state(sc, GtkStateFlags(state));
-    gtk_style_context_get(sc, GtkStateFlags(state),
-        "background-color", &rgba, "background-image", &pattern, nullptr);
+    cairo_pattern_t* pattern = NULL;
+    gtk_style_context_set_state(m_context, GtkStateFlags(state));
+    gtk_style_context_get(m_context, GtkStateFlags(state),
+        "background-color", &rgba, "background-image", &pattern, NULL);
     color = wxColour(*rgba);
     gdk_rgba_free(rgba);
 
@@ -627,11 +465,11 @@ static void bg(GtkStyleContext* sc, wxColour& color, int state)
             if (count > 0)
             {
                 double r, g, b, a;
-                cairo_pattern_get_color_stop_rgba(pattern, 0, nullptr, &r, &g, &b, &a);
+                cairo_pattern_get_color_stop_rgba(pattern, 0, NULL, &r, &g, &b, &a);
                 if (count > 1)
                 {
                     double r2, g2, b2, a2;
-                    cairo_pattern_get_color_stop_rgba(pattern, count - 1, nullptr, &r2, &g2, &b2, &a2);
+                    cairo_pattern_get_color_stop_rgba(pattern, count - 1, NULL, &r2, &g2, &b2, &a2);
                     r = (r + r2) / 2;
                     g = (g + g2) / 2;
                     b = (b + b2) / 2;
@@ -680,26 +518,12 @@ static void bg(GtkStyleContext* sc, wxColour& color, int state)
         }
         cairo_pattern_destroy(pattern);
     }
-}
 
-void wxGtkStyleContext::Bg(wxColour& color, int state) const
-{
-    for (GtkStyleContext* sc = m_context; sc; )
+    if (color.Alpha() == 0)
     {
-        bg(sc, color, state);
-        if (color.Alpha())
-            break;
-#if GTK_CHECK_VERSION(3,4,0)
-        if (gtk_check_version(3,4,0) == nullptr)
-            sc = gtk_style_context_get_parent(sc);
-        else
-#endif
-        {
-            // Try TLW as last resort, but not if we're already doing it
-            if (gtk_widget_path_length(m_path) > 1)
-                wxGtkStyleContext().AddWindow().Bg(color, state);
-            break;
-        }
+        // Try TLW as last resort, but not if we're already doing it
+        if (gtk_widget_path_length(m_path) > 1)
+            wxGtkStyleContext().AddWindow().Bg(color, state);
     }
 }
 
@@ -718,7 +542,7 @@ void wxGtkStyleContext::Fg(wxColour& color, int state) const
 void wxGtkStyleContext::Border(wxColour& color) const
 {
     GdkRGBA* rgba;
-    gtk_style_context_get(m_context, GTK_STATE_FLAG_NORMAL, "border-color", &rgba, nullptr);
+    gtk_style_context_get(m_context, GTK_STATE_FLAG_NORMAL, "border-color", &rgba, NULL);
     color = wxColour(*rgba);
     gdk_rgba_free(rgba);
 }
@@ -739,7 +563,7 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
     {
         once = true;
         g_signal_connect(gtk_settings_get_default(), "notify::gtk-theme-name",
-            G_CALLBACK(notify_gtk_theme_name), nullptr);
+            G_CALLBACK(notify_gtk_theme_name), NULL);
     }
 
     wxGtkStyleContext sc;
@@ -751,7 +575,7 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
     case wxSYS_COLOUR_GRADIENTACTIVECAPTION:
     case wxSYS_COLOUR_GRADIENTINACTIVECAPTION:
 #if GTK_CHECK_VERSION(3,10,0)
-        if (gtk_check_version(3,10,0) == nullptr)
+        if (gtk_check_version(3,10,0) == NULL)
         {
             int state = GTK_STATE_FLAG_NORMAL;
             if (index == wxSYS_COLOUR_INACTIVECAPTION ||
@@ -792,7 +616,7 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
         break;
     case wxSYS_COLOUR_CAPTIONTEXT:
 #if GTK_CHECK_VERSION(3,10,0)
-        if (gtk_check_version(3,10,0) == nullptr)
+        if (gtk_check_version(3,10,0) == NULL)
         {
             sc.AddHeaderbar().AddLabel().Fg(color);
             break;
@@ -804,7 +628,7 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
         break;
     case wxSYS_COLOUR_INACTIVECAPTIONTEXT:
 #if GTK_CHECK_VERSION(3,10,0)
-        if (gtk_check_version(3,10,0) == nullptr)
+        if (gtk_check_version(3,10,0) == NULL)
         {
             sc.AddHeaderbar().AddLabel().Fg(color, GTK_STATE_FLAG_BACKDROP);
             break;
@@ -815,7 +639,7 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
         sc.AddLabel().Fg(color, GTK_STATE_FLAG_INSENSITIVE);
         break;
     case wxSYS_COLOUR_HOTLIGHT:
-        sc.Add(GTK_TYPE_LINK_BUTTON, "button", "link", nullptr);
+        sc.Add(GTK_TYPE_LINK_BUTTON, "button", "link", NULL);
         if (wx_is_at_least_gtk3(12))
             sc.Fg(color, GTK_STATE_FLAG_LINK);
 #ifndef __WXGTK4__
@@ -852,7 +676,7 @@ wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
         sc.AddMenu().Bg(color);
         break;
     case wxSYS_COLOUR_MENUBAR:
-        sc.Add(GTK_TYPE_MENU_BAR, "menubar", "menubar", nullptr).Bg(color);
+        sc.Add(GTK_TYPE_MENU_BAR, "menubar", "menubar", NULL).Bg(color);
         break;
     case wxSYS_COLOUR_MENUHILIGHT:
         sc.AddMenuItem().Bg(color, GTK_STATE_FLAG_PRELIGHT);
@@ -1008,10 +832,10 @@ wxColour wxSystemSettingsNative::GetColour( wxSystemColour index )
         case wxSYS_COLOUR_HOTLIGHT:
             {
                 GdkColor c = { 0, 0, 0, 0xeeee };
-                if (gtk_check_version(2,10,0) == nullptr)
+                if (gtk_check_version(2,10,0) == NULL)
                 {
-                    GdkColor* linkColor = nullptr;
-                    gtk_widget_style_get(ButtonWidget(), "link-color", &linkColor, nullptr);
+                    GdkColor* linkColor = NULL;
+                    gtk_widget_style_get(ButtonWidget(), "link-color", &linkColor, NULL);
                     if (linkColor)
                     {
                         c = *linkColor;
@@ -1058,7 +882,7 @@ wxFont wxSystemSettingsNative::GetFont( wxSystemFont index )
                 {
                     once = true;
                     g_signal_connect(gtk_settings_get_default(), "notify::gtk-font-name",
-                        G_CALLBACK(notify_gtk_font_name), nullptr);
+                        G_CALLBACK(notify_gtk_font_name), NULL);
                 }
                 ContainerWidget();
                 int scale = 1;
@@ -1069,7 +893,7 @@ wxFont wxSystemSettingsNative::GetFont( wxSystemFont index )
                 wxGtkStyleContext sc(scale);
                 sc.AddButton().AddLabel();
                 gtk_style_context_get(sc, GTK_STATE_FLAG_NORMAL,
-                    GTK_STYLE_PROPERTY_FONT, &info.description, nullptr);
+                    GTK_STYLE_PROPERTY_FONT, &info.description, NULL);
 #else
                 info.description = ButtonStyle()->font_desc;
 #endif
@@ -1086,7 +910,7 @@ wxFont wxSystemSettingsNative::GetFont( wxSystemFont index )
 #endif // wxUSE_FONTENUM
 
 #ifndef __WXGTK3__
-                info.description = nullptr;
+                info.description = NULL;
 #endif
             }
             font = gs_fontSystem;
@@ -1102,7 +926,7 @@ wxFont wxSystemSettingsNative::GetFont( wxSystemFont index )
 }
 
 // helper: return the GtkSettings either for the screen the current window is
-// on or for the default screen if window is null
+// on or for the default screen if window is NULL
 static GtkSettings *GetSettingsForWindowScreen(GdkWindow *window)
 {
     return window ? gtk_settings_get_for_screen(gdk_window_get_screen(window))
@@ -1147,7 +971,7 @@ static GdkRectangle GetMonitorGeom(GdkWindow* window)
 static int GetNodeWidth(wxGtkStyleContext& sc)
 {
     int width;
-    gtk_style_context_get(sc, GTK_STATE_FLAG_NORMAL, "min-width", &width, nullptr);
+    gtk_style_context_get(sc, GTK_STATE_FLAG_NORMAL, "min-width", &width, NULL);
     GtkBorder border;
     gtk_style_context_get_padding(sc, GTK_STATE_FLAG_NORMAL, &border);
     width += border.left + border.right;
@@ -1171,7 +995,7 @@ static int GetScrollbarWidth()
 #else
         wxGtkStyleContext sc;
 #endif
-        sc.Add(GTK_TYPE_SCROLLBAR, "scrollbar", "scrollbar", "vertical", "right", nullptr);
+        sc.Add(GTK_TYPE_SCROLLBAR, "scrollbar", "scrollbar", "vertical", "right", NULL);
         width = GetNodeWidth(sc);
 
         sc.Add("contents");
@@ -1188,7 +1012,7 @@ static int GetScrollbarWidth()
     {
         int slider_width, trough_border;
         gtk_widget_style_get(ScrollBarWidget(),
-            "slider-width", &slider_width, "trough-border", &trough_border, nullptr);
+            "slider-width", &slider_width, "trough-border", &trough_border, NULL);
         width = slider_width + (2 * trough_border);
     }
     return width;
@@ -1196,7 +1020,7 @@ static int GetScrollbarWidth()
 
 int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win )
 {
-    GdkWindow *window = nullptr;
+    GdkWindow *window = NULL;
     if (win)
         window = gtk_widget_get_window(win->GetHandle());
 
@@ -1218,17 +1042,17 @@ int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win
                     // Get the frame extents from the windowmanager.
                     // In most cases the top extent is the titlebar, so we use the bottom extent
                     // for the heights.
-                    wxTopLevelWindow::DecorSize decorSize;
-                    if (wxGetFrameExtents(window, &decorSize))
+                    int right, bottom;
+                    if (wxGetFrameExtents(window, NULL, &right, NULL, &bottom))
                     {
                         switch (index)
                         {
                             case wxSYS_BORDER_X:
                             case wxSYS_EDGE_X:
                             case wxSYS_FRAMESIZE_X:
-                                return decorSize.right;
+                                return right; // width of right extent
                             default:
-                                return decorSize.bottom;
+                                return bottom; // height of bottom extent
                         }
                     }
                 }
@@ -1238,30 +1062,22 @@ int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win
 
         case wxSYS_CURSOR_X:
         case wxSYS_CURSOR_Y:
-            {
-                gint cursor_size = 0;
-                g_object_get(GetSettingsForWindowScreen(window),
-                                "gtk-cursor-theme-size", &cursor_size, nullptr);
-                if (cursor_size)
-                    return cursor_size;
-
                 return gdk_display_get_default_cursor_size(
                             window ? gdk_window_get_display(window)
                                    : gdk_display_get_default());
-            }
 
         case wxSYS_DCLICK_X:
         case wxSYS_DCLICK_Y:
             gint dclick_distance;
             g_object_get(GetSettingsForWindowScreen(window),
-                            "gtk-double-click-distance", &dclick_distance, nullptr);
+                            "gtk-double-click-distance", &dclick_distance, NULL);
 
             return dclick_distance * 2;
 
         case wxSYS_DCLICK_MSEC:
             gint dclick;
             g_object_get(GetSettingsForWindowScreen(window),
-                            "gtk-double-click-time", &dclick, nullptr);
+                            "gtk-double-click-time", &dclick, NULL);
             return dclick;
 
         case wxSYS_CARET_ON_MSEC:
@@ -1272,7 +1088,7 @@ int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win
                 g_object_get(GetSettingsForWindowScreen(window),
                                 "gtk-cursor-blink", &should_blink,
                                 "gtk-cursor-blink-time", &blink_time,
-                                nullptr);
+                                NULL);
                 if (!should_blink)
                     return 0;
 
@@ -1289,7 +1105,7 @@ int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win
                 g_object_get(GetSettingsForWindowScreen(window),
                                 "gtk-cursor-blink", &should_blink,
                                 "gtk-cursor-blink-timeout", &timeout,
-                                nullptr);
+                                NULL);
                 if (!should_blink)
                     return 0;
 
@@ -1308,7 +1124,7 @@ int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win
         case wxSYS_DRAG_Y:
             gint drag_threshold;
             g_object_get(GetSettingsForWindowScreen(window),
-                            "gtk-dnd-drag-threshold", &drag_threshold, nullptr);
+                            "gtk-dnd-drag-threshold", &drag_threshold, NULL);
 
             // The correct thing here would be to double the value
             // since that is what the API wants. But the values
@@ -1366,10 +1182,10 @@ int wxSystemSettingsNative::GetMetric( wxSystemMetric index, const wxWindow* win
             // titlebar is, but this might lead to interesting behaviours in used code.
             // Reconsider when we have a way to report to the user on which side it is.
             {
-                wxTopLevelWindow::DecorSize decorSize;
-                if (wxGetFrameExtents(window, &decorSize))
+                int top;
+                if (wxGetFrameExtents(window, NULL, NULL, &top, NULL))
                 {
-                    return decorSize.top;
+                    return top; // top frame extent
                 }
             }
 
@@ -1405,9 +1221,12 @@ bool wxSystemSettingsNative::HasFeature(wxSystemFeature index)
 class wxSystemSettingsModule: public wxModule
 {
 public:
-    virtual bool OnInit() override;
-    virtual void OnExit() override;
+    virtual bool OnInit() wxOVERRIDE;
+    virtual void OnExit() wxOVERRIDE;
 
+#ifdef __WXGTK3__
+    GDBusProxy* m_proxy;
+#endif
     wxDECLARE_DYNAMIC_CLASS(wxSystemSettingsModule);
 };
 wxIMPLEMENT_DYNAMIC_CLASS(wxSystemSettingsModule, wxModule);
@@ -1424,41 +1243,38 @@ bool wxSystemSettingsModule::OnInit()
     // change the theme, we propagate it to the GtkSettings
     // 'gtk-application-prefer-dark-theme' property to get a dark theme.
 
+    m_proxy = NULL;
+
     // If this is not a GUI app
     if (!g_type_class_peek(GTK_TYPE_WIDGET))
         return true;
 
     // GTK_THEME environment variable overrides other settings
-    if (getenv("GTK_THEME") == nullptr)
+    if (getenv("GTK_THEME") == NULL)
     {
-        gs_proxyPortalSettings = g_dbus_proxy_new_for_bus_sync(
-            G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+        m_proxy = g_dbus_proxy_new_for_bus_sync(
+            G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, NULL,
             "org.freedesktop.portal.Desktop",
             "/org/freedesktop/portal/desktop",
             "org.freedesktop.portal.Settings",
-            nullptr, nullptr);
+            NULL, NULL);
     }
-    if (gs_proxyPortalSettings)
+    if (m_proxy)
     {
-        g_signal_connect(gs_proxyPortalSettings, "g-signal", G_CALLBACK(proxy_g_signal), nullptr);
+        g_signal_connect(m_proxy, "g-signal", G_CALLBACK(proxy_g_signal), NULL);
 
-        wxGtkVariant ret(g_dbus_proxy_call_sync(gs_proxyPortalSettings, "Read",
+        GVariant* ret = g_dbus_proxy_call_sync(m_proxy, "Read",
             g_variant_new("(ss)", "org.freedesktop.appearance", "color-scheme"),
-            G_DBUS_CALL_FLAGS_NONE, -1, nullptr, nullptr));
+            G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
         if (ret)
         {
-            wxGtkVariant child;
-            ret.Get("(v)", child.ByRef());
-
-            const auto colorScheme = child.GetVariant().GetUint32();
-            wxLogTrace(TRACE_DARKMODE, "Initial color scheme is %u", colorScheme);
-
-            gs_systemPrefersDark = GetPreferDark(AsColorScheme(colorScheme));
-
-            // We only need to do anything here if the color-scheme is dark, as
-            // we use the light one by default anyhow.
-            if ( gs_systemPrefersDark )
-                UpdatePreferDark(TRUE);
+            GVariant* child;
+            g_variant_get(ret, "(v)", &child);
+            GVariant* value = g_variant_get_variant(child);
+            UpdatePreferDark(value);
+            g_variant_unref(value);
+            g_variant_unref(child);
+            g_variant_unref(ret);
         }
     }
 #endif // __WXGTK3__
@@ -1472,19 +1288,16 @@ void wxSystemSettingsModule::OnExit()
     if (settings)
     {
         g_signal_handlers_disconnect_by_func(settings,
-            (void*)notify_gtk_theme_name, nullptr);
+            (void*)notify_gtk_theme_name, NULL);
         g_signal_handlers_disconnect_by_func(settings,
-            (void*)notify_gtk_font_name, nullptr);
+            (void*)notify_gtk_font_name, NULL);
     }
-    if (gs_proxyPortalSettings)
-    {
-        g_object_unref(gs_proxyPortalSettings);
-        gs_proxyPortalSettings = nullptr;
-    }
+    if (m_proxy)
+        g_object_unref(m_proxy);
 #endif
     if (gs_tlw_parent)
     {
         gtk_widget_destroy(gs_tlw_parent);
-        gs_tlw_parent = nullptr;
+        gs_tlw_parent = NULL;
     }
 }

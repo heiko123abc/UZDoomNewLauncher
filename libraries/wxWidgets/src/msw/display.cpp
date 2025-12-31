@@ -41,7 +41,7 @@ int wxGetHDCDepth(HDC hdc)
 class wxDisplayImplSingleMSW : public wxDisplayImplSingle
 {
 public:
-    virtual wxRect GetGeometry() const override
+    virtual wxRect GetGeometry() const wxOVERRIDE
     {
         ScreenHDC dc;
 
@@ -50,7 +50,7 @@ public:
                       ::GetDeviceCaps(dc, VERTRES));
     }
 
-    virtual wxRect GetClientArea() const override
+    virtual wxRect GetClientArea() const wxOVERRIDE
     {
         RECT rc;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
@@ -60,7 +60,7 @@ public:
         return rectClient;
     }
 
-    virtual int GetDepth() const override
+    virtual int GetDepth() const wxOVERRIDE
     {
         return wxGetHDCDepth(ScreenHDC());
     }
@@ -69,7 +69,7 @@ public:
 class wxDisplayFactorySingleMSW : public wxDisplayFactorySingle
 {
 protected:
-    virtual wxDisplayImpl *CreateSingleDisplay() override
+    virtual wxDisplayImpl *CreateSingleDisplay() wxOVERRIDE
     {
         return new wxDisplayImplSingleMSW;
     }
@@ -127,22 +127,18 @@ public:
     {
     }
 
-    virtual wxRect GetGeometry() const override;
-    virtual wxRect GetClientArea() const override;
-    virtual int GetDepth() const override;
-    virtual wxSize GetPPI() const override;
-    virtual double GetScaleFactor() const override;
+    virtual wxRect GetGeometry() const wxOVERRIDE;
+    virtual wxRect GetClientArea() const wxOVERRIDE;
+    virtual int GetDepth() const wxOVERRIDE;
+    virtual wxSize GetPPI() const wxOVERRIDE;
+    virtual double GetScaleFactor() const wxOVERRIDE;
 
-    virtual wxString GetName() const override;
-    virtual bool IsPrimary() const override;
+    virtual wxString GetName() const wxOVERRIDE;
+    virtual bool IsPrimary() const wxOVERRIDE;
 
-    virtual wxVideoMode GetCurrentMode() const override;
-    virtual wxArrayVideoModes GetModes(const wxVideoMode& mode) const override;
-    virtual bool ChangeMode(const wxVideoMode& mode) override;
-
-    // Check if this display is still found in the given vector and update both
-    // its properties and the index to the new values if it is.
-    bool DoRefreshOnDisplayChange(const wxVector<wxDisplayInfo>& displays);
+    virtual wxVideoMode GetCurrentMode() const wxOVERRIDE;
+    virtual wxArrayVideoModes GetModes(const wxVideoMode& mode) const wxOVERRIDE;
+    virtual bool ChangeMode(const wxVideoMode& mode) wxOVERRIDE;
 
 protected:
     // convert a DEVMODE to our wxVideoMode
@@ -181,27 +177,15 @@ public:
 
     bool IsOk() const { return !m_displays.empty(); }
 
-    virtual wxDisplayImpl *CreateDisplay(unsigned n) override;
-    virtual unsigned GetCount() override { return unsigned(m_displays.size()); }
-    virtual int GetFromPoint(const wxPoint& pt) override;
-    virtual int GetFromRect(const wxRect& rect) override;
-    virtual int GetFromWindow(const wxWindow *window) override;
+    virtual wxDisplayImpl *CreateDisplay(unsigned n) wxOVERRIDE;
+    virtual unsigned GetCount() wxOVERRIDE { return unsigned(m_displays.size()); }
+    virtual int GetFromPoint(const wxPoint& pt) wxOVERRIDE;
+    virtual int GetFromWindow(const wxWindow *window) wxOVERRIDE;
 
-    void UpdateOnDisplayChange() override
+    void InvalidateCache() wxOVERRIDE
     {
-        // Update m_displays first, before calling the base class version which
-        // will call our RefreshOnDisplayChange() that uses it.
+        wxDisplayFactory::InvalidateCache();
         DoRefreshMonitors();
-        wxDisplayFactory::UpdateOnDisplayChange();
-    }
-
-    virtual bool RefreshOnDisplayChange(wxDisplayImpl& impl) const override
-    {
-        // All wxDisplayImpl in a program using this factory are of type
-        // wxDisplayMSW, so the cast is safe.
-        auto& implMSW = static_cast<wxDisplayMSW&>(impl);
-
-        return implMSW.DoRefreshOnDisplayChange(m_displays);
     }
 
     // Declare the second argument as int to avoid problems with older SDKs not
@@ -233,7 +217,7 @@ private:
     {
         GetDpiForMonitorData()
         {
-            m_pfnGetDpiForMonitor = nullptr;
+            m_pfnGetDpiForMonitor = NULL;
             m_initialized = false;
         }
 
@@ -258,7 +242,7 @@ private:
             if ( m_dllShcore.IsLoaded() )
             {
                 m_dllShcore.Unload();
-                m_pfnGetDpiForMonitor = nullptr;
+                m_pfnGetDpiForMonitor = NULL;
             }
         }
 
@@ -359,12 +343,12 @@ wxVideoMode wxDisplayMSW::GetCurrentMode() const
 {
     wxVideoMode mode;
 
-    // The first parameter of EnumDisplaySettings() must be null according
+    // The first parameter of EnumDisplaySettings() must be NULL according
     // to MSDN, in order to specify the current display on the computer
     // on which the calling thread is running.
     const wxString name = GetName();
     const wxChar * const deviceName = name.empty()
-                                          ? nullptr
+                                          ? (const wxChar*)NULL
                                           : (const wxChar*)name.c_str();
 
     DEVMODE dm;
@@ -387,12 +371,12 @@ wxArrayVideoModes wxDisplayMSW::GetModes(const wxVideoMode& modeMatch) const
 {
     wxArrayVideoModes modes;
 
-    // The first parameter of EnumDisplaySettings() must be null according
+    // The first parameter of EnumDisplaySettings() must be NULL according
     // to MSDN, in order to specify the current display on the computer
     // on which the calling thread is running.
     const wxString name = GetName();
     const wxChar * const deviceName = name.empty()
-                                            ? nullptr
+                                            ? (const wxChar*)NULL
                                             : (const wxChar*)name.c_str();
 
     DEVMODE dm;
@@ -432,7 +416,7 @@ bool wxDisplayMSW::ChangeMode(const wxVideoMode& mode)
     if ( mode == wxDefaultVideoMode )
     {
         // reset the video mode to default
-        pDevMode = nullptr;
+        pDevMode = NULL;
         flags = 0;
     }
     else // change to the given mode
@@ -469,10 +453,10 @@ bool wxDisplayMSW::ChangeMode(const wxVideoMode& mode)
     switch ( ::ChangeDisplaySettingsEx
              (
                 GetName().t_str(),  // display name
-                pDevMode,           // dev mode or nullptr to reset
+                pDevMode,           // dev mode or NULL to reset
                 wxRESERVED_PARAM,
                 flags,
-                nullptr             // pointer to video parameters (not used)
+                NULL                // pointer to video parameters (not used)
              ) )
     {
         case DISP_CHANGE_SUCCESSFUL:
@@ -502,30 +486,6 @@ bool wxDisplayMSW::ChangeMode(const wxVideoMode& mode)
     return false;
 }
 
-bool
-wxDisplayMSW::DoRefreshOnDisplayChange(const wxVector<wxDisplayInfo>& displays)
-{
-    // Try to find this display in the list of the currently available ones.
-    for ( size_t n = 0; n < displays.size(); ++n )
-    {
-        if ( m_info.hmon == displays[n].hmon )
-        {
-            // We did find it, update it just in case its characteristics have
-            // changed.
-            m_info = displays[n];
-
-            // And, importantly, also update its index which could have changed
-            // due to a previous monitor disconnection.
-            m_index = n;
-
-            return true;
-        }
-    }
-
-    // This display is not connected any more, so mark it as such.
-    Disconnect();
-    return false;
-}
 
 // ----------------------------------------------------------------------------
 // wxDisplayFactoryMSW implementation
@@ -547,8 +507,8 @@ wxDisplayWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 wxDisplayFactoryMSW::wxDisplayFactoryMSW()
 {
-    m_hiddenHwnd = nullptr;
-    m_hiddenClass = nullptr;
+    m_hiddenHwnd = NULL;
+    m_hiddenClass = NULL;
 
     DoRefreshMonitors();
 
@@ -605,10 +565,10 @@ void wxDisplayFactoryMSW::DoRefreshMonitors()
 {
     m_displays.clear();
 
-    // Note that we pass nullptr as first parameter here because using screen HDC
+    // Note that we pass NULL as first parameter here because using screen HDC
     // doesn't work reliably: notably, it doesn't enumerate any displays if
     // this code is executed while a UAC prompt is shown or during log-off.
-    if ( !::EnumDisplayMonitors(nullptr, nullptr, MultimonEnumProc, (LPARAM)this) )
+    if ( !::EnumDisplayMonitors(NULL, NULL, MultimonEnumProc, (LPARAM)this) )
     {
         wxLogLastError(wxT("EnumDisplayMonitors"));
     }
@@ -619,7 +579,7 @@ BOOL CALLBACK
 wxDisplayFactoryMSW::MultimonEnumProc(
     HMONITOR hMonitor,              // handle to display monitor
     HDC /* hdcMonitor */,           // handle to monitor-appropriate device context:
-                                    // not set due to our use of EnumDisplayMonitors(nullptr, ...)
+                                    // not set due to our use of EnumDisplayMonitors(NULL, ...)
     LPRECT WXUNUSED(lprcMonitor),   // pointer to monitor intersection rectangle
     LPARAM dwData)                  // data passed from EnumDisplayMonitors (this)
 {
@@ -631,7 +591,7 @@ wxDisplayFactoryMSW::MultimonEnumProc(
         wxLogLastError(wxT("GetMonitorInfo"));
     }
 
-    HDC hdcMonitor = ::CreateDC(nullptr, monInfo.szDevice, nullptr, nullptr);
+    HDC hdcMonitor = ::CreateDC(NULL, monInfo.szDevice, NULL, NULL);
     const int hdcDepth = wxGetHDCDepth(hdcMonitor);
     ::DeleteDC(hdcMonitor);
 
@@ -643,12 +603,12 @@ wxDisplayFactoryMSW::MultimonEnumProc(
 
 wxDisplayImpl *wxDisplayFactoryMSW::CreateDisplay(unsigned n)
 {
-    wxCHECK_MSG( n < m_displays.size(), nullptr, wxT("An invalid index was passed to wxDisplay") );
+    wxCHECK_MSG( n < m_displays.size(), NULL, wxT("An invalid index was passed to wxDisplay") );
 
     return new wxDisplayMSW(n, m_displays[n]);
 }
 
-// helper for all GetFromXXX() functions
+// helper for GetFromPoint() and GetFromWindow()
 int wxDisplayFactoryMSW::FindDisplayFromHMONITOR(HMONITOR hmon) const
 {
     if ( hmon )
@@ -674,21 +634,17 @@ int wxDisplayFactoryMSW::GetFromPoint(const wxPoint& pt)
                                                        MONITOR_DEFAULTTONULL));
 }
 
-int wxDisplayFactoryMSW::GetFromRect(const wxRect& rect)
-{
-    RECT rc;
-    wxCopyRectToRECT(rect, rc);
-    return FindDisplayFromHMONITOR(::MonitorFromRect(&rc,
-                                                      MONITOR_DEFAULTTONULL));
-}
-
 int wxDisplayFactoryMSW::GetFromWindow(const wxWindow *window)
 {
 #ifdef __WXMSW__
     return FindDisplayFromHMONITOR(::MonitorFromWindow(GetHwndOf(window),
                                                         MONITOR_DEFAULTTONULL));
 #else
-    return GetFromRect(window->GetScreenRect());
+    const wxSize halfsize = window->GetSize() / 2;
+    wxPoint pt = window->GetScreenPosition();
+    pt.x += halfsize.x;
+    pt.y += halfsize.y;
+    return GetFromPoint(pt);
 #endif
 }
 

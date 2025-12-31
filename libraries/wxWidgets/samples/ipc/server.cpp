@@ -66,7 +66,7 @@ bool MyApp::OnInit()
         return false;
 
     // Create the main frame window
-    m_frame = new MyFrame(nullptr, "Server");
+    m_frame = new MyFrame(NULL, "Server");
     m_frame->Show(true);
 
     return true;
@@ -86,7 +86,7 @@ MyFrame::MyFrame(wxFrame *frame, const wxString& title)
 
     SetIcon(wxICON(sample));
 
-    m_server = nullptr;
+    m_server = NULL;
 
     wxPanel * const panel = new wxPanel(this);
 
@@ -118,7 +118,7 @@ MyFrame::MyFrame(wxFrame *frame, const wxString& title)
     sizerCmds->Add(btn, 0, wxGROW|wxALIGN_CENTER_VERTICAL|wxALL, 5);
     sizerCmds->AddSpacer(20);
 
-    sizerMain->Add(sizerCmds, wxSizerFlags().Expand().Border(wxALL));
+    sizerMain->Add(sizerCmds, wxSizerFlags().Expand().Border(wxALL, 5));
 
     wxStaticBoxSizer * const
         sizerLog = new wxStaticBoxSizer(wxVERTICAL, panel, "Server &log");
@@ -128,13 +128,12 @@ MyFrame::MyFrame(wxFrame *frame, const wxString& title)
                                     panel,
                                     wxID_ANY,
                                     "",
-                                    wxDefaultPosition,
-                                    FromDIP(wxSize(500, 140)),
+                                    wxDefaultPosition, wxSize(500, 140),
                                     wxTE_MULTILINE
                                  );
-    sizerLog->Add(textLog, wxSizerFlags(1).Expand().Border(wxALL));
+    sizerLog->Add(textLog, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
-    sizerMain->Add(sizerLog, wxSizerFlags(1).Expand().Border(wxALL));
+    sizerMain->Add(sizerLog, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
     panel->SetSizer(sizerMain);
     sizerMain->SetSizeHints(panel);
@@ -149,8 +148,8 @@ MyFrame::MyFrame(wxFrame *frame, const wxString& title)
 
 void MyFrame::UpdateUI()
 {
-    GetStart()->Enable(m_server == nullptr);
-    GetServername()->Enable(m_server == nullptr);
+    GetStart()->Enable(m_server == NULL);
+    GetServername()->Enable(m_server == NULL);
     GetAdvise()->Enable(m_server && m_server->CanAdvise());
     GetDisconnect()->Enable(m_server && m_server->IsConnected());
 }
@@ -225,7 +224,7 @@ void MyFrame::OnAdvise(wxCommandEvent& WXUNUSED(event))
 
 MyServer::MyServer() : wxServer()
 {
-    m_connection = nullptr;
+    m_connection = NULL;
 }
 
 MyServer::~MyServer()
@@ -247,7 +246,7 @@ wxConnectionBase *MyServer::OnAcceptConnection(const wxString& topic)
     //else: unknown topic
 
     wxLogMessage("Unknown topic, connection refused");
-    return nullptr;
+    return NULL;
 }
 
 void MyServer::Disconnect()
@@ -342,7 +341,7 @@ MyConnection::OnRequest(const wxString& topic,
     if ( !*size )
     {
         wxLogMessage("Unknown request for \"%s\"", item);
-        return nullptr;
+        return NULL;
     }
 
     // store the data pointer to which we return in a member variable to ensure

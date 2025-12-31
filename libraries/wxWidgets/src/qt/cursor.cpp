@@ -19,10 +19,8 @@
 #include "wx/cursor.h"
 #include "wx/qt/private/converter.h"
 
-void wxSetCursor( const wxCursorBundle& cursors )
+void wxSetCursor(const wxCursor& cursor)
 {
-    const wxCursor& cursor = cursors.GetCursorForMainWindow();
-
     if (cursor.GetHandle().shape() == Qt::ArrowCursor)
         QApplication::restoreOverrideCursor();
     else
@@ -36,7 +34,7 @@ void wxBeginBusyCursor(const wxCursor *cursor)
 
 bool wxIsBusy()
 {
-    return QApplication::overrideCursor() != nullptr;
+    return QApplication::overrideCursor() != 0;
 }
 
 void wxEndBusyCursor()
@@ -52,8 +50,7 @@ class wxCursorRefData: public wxGDIRefData
 {
 public:
     wxCursorRefData() {}
-    wxCursorRefData( const wxCursorRefData& data )
-        : wxGDIRefData(), m_qtCursor(data.m_qtCursor) {}
+    wxCursorRefData( const wxCursorRefData& data ) : m_qtCursor(data.m_qtCursor) {}
     wxCursorRefData( QCursor &c ) : m_qtCursor(c) {}
 
     QCursor m_qtCursor;
@@ -61,11 +58,6 @@ public:
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxCursor, wxGDIObject);
 
-
-wxCursor::wxCursor(const wxBitmap& bitmap, int hotSpotX, int hotSpotY)
-{
-    InitFromBitmap(bitmap, hotSpotX, hotSpotY);
-}
 
 wxCursor::wxCursor(const wxString& cursor_file,
                    wxBitmapType type,
@@ -117,7 +109,7 @@ void wxCursor::InitFromStock( wxStockCursor cursorId )
     {
     case wxCURSOR_BLANK:
     {
-        GetHandle() = QCursor();
+        GetHandle() = QBitmap();
         return;
     }
 //    case wxCURSOR_ARROW:
@@ -161,25 +153,16 @@ void wxCursor::InitFromStock( wxStockCursor cursorId )
     GetHandle().setShape(qt_cur);
 }
 
-void wxCursor::InitFromBitmap(const wxBitmap& bmp, int hotSpotX, int hotSpotY)
-{
-    AllocExclusive();
-
-    GetHandle() = QCursor(*bmp.GetHandle(), hotSpotX, hotSpotY);
-}
-
 #if wxUSE_IMAGE
 
 void wxCursor::InitFromImage( const wxImage & image )
 {
-    wxBitmap bmp(image);
-    bmp.QtBlendMaskWithAlpha();
-
-    InitFromBitmap(bmp,
-                   image.HasOption(wxIMAGE_OPTION_CUR_HOTSPOT_X) ?
-                   image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_X) : 0,
-                   image.HasOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y) ?
-                   image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_Y) : 0);
+    AllocExclusive();
+    GetHandle() = QCursor(*wxBitmap(image).GetHandle(),
+                           image.HasOption(wxIMAGE_OPTION_CUR_HOTSPOT_X) ?
+                           image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_X) : -1,
+                           image.HasOption(wxIMAGE_OPTION_CUR_HOTSPOT_Y) ?
+                           image.GetOptionInt(wxIMAGE_OPTION_CUR_HOTSPOT_Y) : -1);
 }
 
 #endif // wxUSE_IMAGE
@@ -191,5 +174,5 @@ wxGDIRefData *wxCursor::CreateGDIRefData() const
 
 wxGDIRefData *wxCursor::CloneGDIRefData(const wxGDIRefData *data) const
 {
-    return new wxCursorRefData(*static_cast<const wxCursorRefData*>(data));
+    return new wxCursorRefData(*(wxCursorRefData *)data);
 }

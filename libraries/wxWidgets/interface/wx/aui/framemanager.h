@@ -39,31 +39,18 @@ enum wxAuiManagerOption
     wxAUI_MGR_VENETIAN_BLINDS_HINT     = 1 << 4,
     /// The possible location for docking is indicated by a rectangular outline.
     wxAUI_MGR_RECTANGLE_HINT           = 1 << 5,
-    /**
-        The translucent area where the pane could be docked appears gradually.
-
-        Note that this flag was included in the default flags until wxWidgets
-        3.3.0 but this is not the case in the newer versions. If you'd like to
-        still show the hint progressively, you need to explicitly add it to
-        wxAUI_MGR_DEFAULT.
-     */
+    /// The translucent area where the pane could be docked appears gradually.
     wxAUI_MGR_HINT_FADE                = 1 << 6,
-    /**
-        Style which disabled the fade-in effect for the docking hint when using
-        Venetian blinds hint.
-
-        This style is obsolete and doesn't do anything any longer, fade-in
-        effect is only enabled when wxAUI_MGR_HINT_FADE is used.
-     */
-    wxAUI_MGR_NO_VENETIAN_BLINDS_FADE  = 0,
+    /// Used in complement of wxAUI_MGR_VENETIAN_BLINDS_HINT to show the hint immediately.
+    wxAUI_MGR_NO_VENETIAN_BLINDS_FADE  = 1 << 7,
     /// When a docked pane is resized, its content is refreshed in live (instead of moving
     /// the border alone and refreshing the content at the end).
-    /// Since wxWidgets 3.3.0 this flag is included in the default flags.
     wxAUI_MGR_LIVE_RESIZE              = 1 << 8,
     /// Default behaviour.
     wxAUI_MGR_DEFAULT = wxAUI_MGR_ALLOW_FLOATING |
                         wxAUI_MGR_TRANSPARENT_HINT |
-                        wxAUI_MGR_LIVE_RESIZE
+                        wxAUI_MGR_HINT_FADE |
+                        wxAUI_MGR_NO_VENETIAN_BLINDS_FADE
 };
 
 /**
@@ -71,7 +58,7 @@ enum wxAuiManagerOption
 
     wxAuiManager is the central class of the wxAUI class framework.
 
-    wxAuiManager manages the panes associated with it for a particular window,
+    wxAuiManager manages the panes associated with it for a particular wxFrame,
     using a pane's wxAuiPaneInfo information to determine each pane's docking
     and floating behaviour.
 
@@ -87,18 +74,18 @@ enum wxAuiManagerOption
     flicker, by modifying more than one pane at a time, and then "committing"
     all of the changes at once by calling Update().
 
-    Panes can be added using AddPane():
+    Panes can be added quite easily:
 
     @code
-    wxTextCtrl* text1 = new wxTextCtrl(this, wxID_ANY);
-    wxTextCtrl* text2 = new wxTextCtrl(this, wxID_ANY);
+    wxTextCtrl* text1 = new wxTextCtrl(this, -1);
+    wxTextCtrl* text2 = new wxTextCtrl(this, -1);
     m_mgr.AddPane(text1, wxLEFT, "Pane Caption");
     m_mgr.AddPane(text2, wxBOTTOM, "Pane Caption");
     m_mgr.Update();
     @endcode
 
-    Later on, the positions and other attributes can be modified, e.g. the
-    following will float an existing pane in a tool window:
+    Later on, the positions can be modified easily. The following will float
+    an existing pane in a tool window:
 
     @code
     m_mgr.GetPane(text1).Float();
@@ -147,26 +134,18 @@ enum wxAuiManagerOption
            appearing partially transparent hint.
     @style{wxAUI_MGR_RECTANGLE_HINT}
            The possible location for docking is indicated by a rectangular
-           outline. Note that this flag doesn't work, i.e. doesn't show any
-           hint in wxGTK and wxOSX, please use one of the hint flags above
-           instead.
+           outline.
     @style{wxAUI_MGR_HINT_FADE}
            The translucent area where the pane could be docked appears gradually.
-           Note that this flag is not included in wxAUI_MGR_DEFAULT since
-           wxWidgets 3.3.0 any longer.
     @style{wxAUI_MGR_NO_VENETIAN_BLINDS_FADE}
-           This style is obsolete and doesn't do anything, it is only defined
-           as 0 for compatibility.
+           Used in complement of wxAUI_MGR_VENETIAN_BLINDS_HINT to show the
+           docking hint immediately.
     @style{wxAUI_MGR_LIVE_RESIZE}
            When a docked pane is resized, its content is refreshed in live (instead of moving
-           the border alone and refreshing the content at the end). Note that
-           this flag is included in wxAUI_MGR_DEFAULT and so needs to be
-           explicitly turned off if you don't need. Also note that it is
-           always enabled in wxGTK3 and wxOSX ports as non-live resizing is not
-           implemented in them.
+           the border alone and refreshing the content at the end).
     @style{wxAUI_MGR_DEFAULT}
-           Default behaviour, combines ::wxAUI_MGR_ALLOW_FLOATING,
-           ::wxAUI_MGR_TRANSPARENT_HINT and ::wxAUI_MGR_LIVE_RESIZE.
+           Default behaviour, combines: wxAUI_MGR_ALLOW_FLOATING | wxAUI_MGR_TRANSPARENT_HINT |
+           wxAUI_MGR_HINT_FADE | wxAUI_MGR_NO_VENETIAN_BLINDS_FADE.
     @endStyleTable
 
     @beginEventEmissionTable{wxAuiManagerEvent}
@@ -197,14 +176,13 @@ public:
     /**
         Constructor.
 
-        @param managedWindow
-            Specifies the window which will contain AUI panes. If it is not
-            specified here, it must be set later using SetManagedWindow().
+        @param managed_wnd
+            Specifies the wxFrame which should be managed.
         @param flags
             Specifies the frame management behaviour and visual effects
             with the ::wxAuiManagerOption's style flags.
     */
-    wxAuiManager(wxWindow* managedWindow = nullptr,
+    wxAuiManager(wxWindow* managed_wnd = NULL,
                  unsigned int flags = wxAUI_MGR_DEFAULT);
 
     /**
@@ -235,18 +213,12 @@ public:
         If this function returns true, ::wxAUI_MGR_LIVE_RESIZE flag is ignored
         and live resize is always used, whether it's specified or not.
 
-        Currently this is the case for wxOSX and wxGTK3 when using Wayland, as
-        live resizing is the only implemented method there. See
-        wxClientDC::CanBeUsedForDrawing() for more details.
-
-        @param window The associated window, may be null (this parameter was
-            added in wxWidgets 3.3.0)
-
-        @note As of wxWidgets 3.3.0 this function always returns false.
+        Currently this is the case for wxOSX and wxGTK3 ports, as live resizing
+        is the only implemented method there.
 
         @since 3.1.4
      */
-    static bool AlwaysUsesLiveResize(const wxWindow* window);
+    static bool AlwaysUsesLiveResize();
 
     /**
         This function is used by controls to calculate the drop hint rectangle.
@@ -257,15 +229,12 @@ public:
         @param paneWindow The window pointer of the pane being dragged.
         @param pt The mouse position, in client coordinates.
         @param offset Describes the offset that the mouse is from the upper-left
-            corner of the item being dragged, 0 by default (since wxWidgets
-            3.3.0, this parameter had to be specified in the earlier versions).
+            corner of the item being dragged.
         @return The rectangle hint will be returned in screen coordinates if the pane
             would indeed become docked at the specified drop point.
             Otherwise, an empty rectangle is returned.
     */
-    wxRect CalculateHintRect(wxWindow* paneWindow,
-                             const wxPoint& pt,
-                             const wxPoint& offset = wxPoint{0, 0});
+    wxRect CalculateHintRect(wxWindow* paneWindow, const wxPoint& pt, const wxPoint& offset);
 
     /**
         Check if a key modifier is pressed (actually ::WXK_CONTROL or
@@ -298,27 +267,13 @@ public:
 
         It is rarely called, and is mostly used by controls implementing custom
         pane drag/drop behaviour.
-
-        Calling it is equivalent to calling CalculateHintRect() and
-        UpdateHint() with the resulting rectangle.
-
-        @param paneWindow Window passed to CalculateHintRect().
-        @param pt Mouse position passed to CalculateHintRect().
-        @param offset Offset passed to CalculateHintRect(), 0 by default (since
-            wxWidgets 3.3.0, this parameter had to be specified in the earlier
-            versions).
     */
-    void DrawHintRect(wxWindow* paneWindow,
-                      const wxPoint& pt,
-                      const wxPoint& offset = wxPoint{0, 0});
+    void DrawHintRect(wxWindow* paneWindow, const wxPoint& pt, const wxPoint& offset);
 
     /**
         Returns an array of all panes managed by the frame manager.
     */
     wxAuiPaneInfoArray& GetAllPanes();
-
-    /// @overload
-    const wxAuiPaneInfoArray& GetAllPanes() const;
 
     /**
         Returns the current art provider being used.
@@ -384,8 +339,6 @@ public:
 
     /**
         HideHint() hides any docking hint that may be visible.
-
-        @see UpdateHint()
     */
     virtual void HideHint();
 
@@ -405,19 +358,6 @@ public:
                     int insert_level = wxAUI_INSERT_PANE);
 
     /**
-        Load the layout information saved by SaveLayout().
-
-        The implementation of wxAuiDeserializer object passed to this function
-        should be consistent with that of the serializer used to save the
-        layout. See @ref page_samples_aui for an example of using serializer
-        saving the layout in XML format and matching deserializer restoring the
-        layout from it.
-
-        @since 3.3.0
-     */
-    void LoadLayout(wxAuiDeserializer& deserializer);
-
-    /**
         LoadPaneInfo() is similar to LoadPerspective, with the exception that it
         only loads information about a single pane.
 
@@ -426,18 +366,14 @@ public:
 
         @note This operation also changes the name in the pane information!
 
-        @see LoadPerspective
-        @see SavePaneInfo()
-        @see SavePerspective
+        @sa LoadPerspective
+        @sa SavePaneInfo().
+        @sa SavePerspective
     */
     void LoadPaneInfo(wxString pane_part, wxAuiPaneInfo& pane);
 
     /**
         Loads a saved perspective.
-
-        This function is used to load layouts previously saved with
-        SavePerspective(), use LoadLayout() to load a layout saved with
-        SaveLayout().
 
         A perspective is the layout state of an AUI managed window.
 
@@ -450,9 +386,9 @@ public:
         @param update      If update is @true, wxAuiManager::Update() is automatically invoked,
                            thus realizing the specified perspective on screen.
 
-        @see LoadPaneInfo
-        @see LoadPerspective
-        @see SavePerspective
+        @sa LoadPaneInfo
+        @sa LoadPerspective
+        @sa SavePerspective
     */
     bool LoadPerspective(const wxString& perspective,
                          bool update = true);
@@ -473,19 +409,6 @@ public:
     void RestoreMaximizedPane();
 
     /**
-        Save the layout information using the provided object.
-
-        This function allows to use a custom @a serializer to save the layout
-        information in any format, e.g. @ref page_samples_aui shows how to save
-        it in XML format.
-
-        See wxAuiSerializer documentation for more details.
-
-        @since 3.3.0
-     */
-    void SaveLayout(wxAuiSerializer& serializer) const;
-
-    /**
         SavePaneInfo() is similar to SavePerspective, with the exception that it only
         saves information about a single pane.
 
@@ -494,9 +417,9 @@ public:
                     the string. Information about the pointers to UI elements stored
                     in the pane are not serialized.
 
-        @see LoadPaneInfo
-        @see LoadPerspective
-        @see SavePerspective
+        @sa LoadPaneInfo
+        @sa LoadPerspective
+        @sa SavePerspective
     */
     wxString SavePaneInfo(const wxAuiPaneInfo& pane);
 
@@ -504,12 +427,9 @@ public:
         Saves the entire user interface layout into an encoded wxString, which
         can then be stored by the application (probably using wxConfig).
 
-        @note You may prefer to use SaveLayout() instead of this function for
-            more flexibility.
-
-        @see LoadPerspective
-        @see LoadPaneInfo
-        @see SavePaneInfo
+        @sa LoadPerspective
+        @sa LoadPaneInfo
+        @sa SavePaneInfo
     */
     wxString SavePerspective();
 
@@ -544,29 +464,17 @@ public:
     void SetFlags(unsigned int flags);
 
     /**
-        Set the window which is to be managed by wxAuiManager.
-
-        This window will often be a wxFrame but an arbitrary child window can
-        also be used.
-
-        Note that wxAuiManager handles many events for the managed window,
-        including ::wxEVT_SIZE, so any application-defined handlers for this
-        window should take care to call wxEvent::Skip() to let wxAuiManager
-        perform its own processing.
+        Called to specify the frame or window which is to be managed by wxAuiManager.
+        Frame management is not restricted to just frames.  Child windows or custom
+        controls are also allowed.
     */
-    void SetManagedWindow(wxWindow* managedWindow);
+    void SetManagedWindow(wxWindow* managed_wnd);
 
     /**
-        This function is used to show a hint window at the specified rectangle.
-
-        It can be overridden to customize the hint appearance. When overriding
-        it, HideHint() should normally be also overridden as well.
-
-        Do not call this function directly to show the hint, use UpdateHint()
-        instead.
-
-        @param rect The area where the hint window should be shown, in screen
-            coordinates, or an empty rectangle to hide the window.
+        This function is used by controls to explicitly show a hint window at the
+        specified rectangle. It is rarely called, and is mostly used by controls
+        implementing custom pane drag/drop behaviour.
+        The specified rectangle should be in screen coordinates.
     */
     virtual void ShowHint(const wxRect& rect);
 
@@ -595,18 +503,6 @@ public:
         pane flicker to be avoided by updating the whole layout at one time.
     */
     void Update();
-
-    /**
-        Show or hide the hint window.
-
-        This function is mostly used internally.
-
-        @param rect The area where the hint window should be shown, in screen
-            coordinates, or an empty rectangle to hide the window.
-
-        @since 3.3.0
-     */
-    void UpdateHint(const wxRect& rect);
 
 protected:
 
@@ -772,27 +668,9 @@ public:
     //@{
     /**
         FloatingSize() sets the size of the floating pane.
-
-        FloatingClientSize() has precedence over this, i.e. this size is ignored
-        if the floating client size is specified.
     */
     wxAuiPaneInfo& FloatingSize(const wxSize& size);
     wxAuiPaneInfo& FloatingSize(int x, int y);
-    //@}
-
-    //@{
-    /**
-        FloatingClientSize() sets the client size of the floating pane.
-
-        This has precedence over FloatingSize(), i.e. FloatingSize() is ignored
-        if this is specified.
-
-        @see wxWindow::SetClientSize
-
-        @since 3.3.1
-    */
-    wxAuiPaneInfo& FloatingClientSize(const wxSize& size);
-    wxAuiPaneInfo& FloatingClientSize(int x, int y);
     //@}
 
     /**

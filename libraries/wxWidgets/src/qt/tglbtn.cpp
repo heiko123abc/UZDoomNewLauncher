@@ -8,7 +8,6 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_TOGGLEBTN
 
 #ifndef WX_PRECOMP
     #include "wx/bitmap.h"
@@ -24,6 +23,10 @@
 wxDEFINE_EVENT( wxEVT_TOGGLEBUTTON, wxCommandEvent );
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxBitmapToggleButton, wxToggleButton);
+
+wxBitmapToggleButton::wxBitmapToggleButton()
+{
+}
 
 wxBitmapToggleButton::wxBitmapToggleButton(wxWindow *parent,
                wxWindowID id,
@@ -67,6 +70,10 @@ bool wxBitmapToggleButton::Create(wxWindow *parent,
 
 wxIMPLEMENT_DYNAMIC_CLASS(wxToggleButton, wxControl);
 
+wxToggleButton::wxToggleButton()
+{
+}
+
 wxToggleButton::wxToggleButton(wxWindow *parent,
                wxWindowID id,
                const wxString& label,
@@ -89,22 +96,20 @@ bool wxToggleButton::Create(wxWindow *parent,
 {
     // create a checkable push button
     QtCreate(parent);
-    GetQPushButton()->setCheckable(true);
+    m_qtPushButton->setCheckable(true);
 
     // this button is toggleable and has a text label
     SetLabel( wxIsStockID( id ) ? wxGetStockLabel( id ) : label );
 
-    return wxToggleButtonBase::Create( parent, id, pos, size, style, validator, name );
+    return QtCreateControl( parent, id, pos, size, style, validator, name );
 }
 
 void wxToggleButton::SetValue(bool state)
 {
-    GetQPushButton()->setChecked( state );
+    m_qtPushButton->setChecked( state );
 }
 
 bool wxToggleButton::GetValue() const
 {
-    return GetQPushButton()->isChecked();
+    return m_qtPushButton->isChecked();
 }
-
-#endif // wxUSE_TOGGLEBTN

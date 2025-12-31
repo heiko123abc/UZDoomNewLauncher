@@ -14,15 +14,15 @@ class QMenuBar;
 class WXDLLIMPEXP_CORE wxMenu : public wxMenuBase
 {
 public:
-    explicit wxMenu(long style = 0);
-    explicit wxMenu(const wxString& title, long style = 0);
+    wxMenu(long style = 0);
+    wxMenu(const wxString& title, long style = 0);
 
     virtual QMenu *GetHandle() const;
 
 protected:
-    virtual wxMenuItem *DoAppend(wxMenuItem *item) override;
-    virtual wxMenuItem *DoInsert(size_t pos, wxMenuItem *item) override;
-    virtual wxMenuItem *DoRemove(wxMenuItem *item) override;
+    virtual wxMenuItem *DoAppend(wxMenuItem *item) wxOVERRIDE;
+    virtual wxMenuItem *DoInsert(size_t pos, wxMenuItem *item) wxOVERRIDE;
+    virtual wxMenuItem *DoRemove(wxMenuItem *item) wxOVERRIDE;
 
 private:
     QMenu *m_qtMenu;
@@ -36,25 +36,28 @@ class WXDLLIMPEXP_CORE wxMenuBar : public wxMenuBarBase
 {
 public:
     wxMenuBar();
-    explicit wxMenuBar(long style);
+    wxMenuBar(long style);
     wxMenuBar(size_t n, wxMenu *menus[], const wxString titles[], long style = 0);
 
-    virtual bool Append(wxMenu *menu, const wxString& title) override;
-    virtual bool Insert(size_t pos, wxMenu *menu, const wxString& title) override;
-    virtual wxMenu *Remove(size_t pos) override;
+    virtual bool Append(wxMenu *menu, const wxString& title) wxOVERRIDE;
+    virtual bool Insert(size_t pos, wxMenu *menu, const wxString& title) wxOVERRIDE;
+    virtual wxMenu *Remove(size_t pos) wxOVERRIDE;
 
-    virtual void EnableTop(size_t pos, bool enable) override;
-    virtual bool IsEnabledTop(size_t pos) const override;
+    virtual void EnableTop(size_t pos, bool enable) wxOVERRIDE;
+    virtual bool IsEnabledTop(size_t pos) const wxOVERRIDE;
 
-    virtual void SetMenuLabel(size_t pos, const wxString& label) override;
-    virtual wxString GetMenuLabel(size_t pos) const override;
+    virtual void SetMenuLabel(size_t pos, const wxString& label) wxOVERRIDE;
+    virtual wxString GetMenuLabel(size_t pos) const wxOVERRIDE;
 
-    QMenuBar* GetQMenuBar() const;
+    QMenuBar *GetQMenuBar() const { return m_qtMenuBar; }
+    virtual QWidget *GetHandle() const wxOVERRIDE;
 
-    virtual void Attach(wxFrame *frame) override;
-    virtual void Detach() override;
+    virtual void Attach(wxFrame *frame) wxOVERRIDE;
+    virtual void Detach() wxOVERRIDE;
 
 private:
+    QMenuBar *m_qtMenuBar;
+
     wxDECLARE_DYNAMIC_CLASS(wxMenuBar);
 };
 

@@ -56,7 +56,7 @@ public:
     /**
         Constructor. @a data is the data to be associated with the drop target.
     */
-    wxDropTarget(wxDataObject* data = nullptr);
+    wxDropTarget(wxDataObject* data = NULL);
 
     /**
         Destructor. Deletes the associated data object, if any.
@@ -194,10 +194,10 @@ public:
         @param iconNone
             The icon or cursor used for feedback when operation can't be done.
     */
-    wxDropSource(wxWindow* win = nullptr,
-                 const wxCursorBundle& iconCopy = {},
-                 const wxCursorBundle& iconMove = {},
-                 const wxCursorBundle& iconNone = {});
+    wxDropSource(wxWindow* win = NULL,
+                 const wxCursor& iconCopy = wxNullCursor,
+                 const wxCursor& iconMove = wxNullCursor,
+                 const wxCursor& iconNone = wxNullCursor);
 
     /**
         The constructor taking a wxDataObject.
@@ -220,10 +220,10 @@ public:
         @param iconNone
             The icon or cursor used for feedback when operation can't be done.
     */
-    wxDropSource(wxDataObject& data, wxWindow* win = nullptr,
-                 const wxCursorBundle& iconCopy = {},
-                 const wxCursorBundle& iconMove = {},
-                 const wxCursorBundle& iconNone = {});
+    wxDropSource(wxDataObject& data, wxWindow* win = NULL,
+                 const wxCursor& iconCopy = wxNullCursor,
+                 const wxCursor& iconMove = wxNullCursor,
+                 const wxCursor& iconNone = wxNullCursor);
 
     /**
         This constructor requires that you must call SetData() later.
@@ -242,7 +242,7 @@ public:
         @param iconNone
             The icon or cursor used for feedback when operation can't be done.
     */
-    wxDropSource(wxWindow* win = nullptr,
+    wxDropSource(wxWindow* win = NULL,
                  const wxIcon& iconCopy = wxNullIcon,
                  const wxIcon& iconMove = wxNullIcon,
                  const wxIcon& iconNone = wxNullIcon);
@@ -266,7 +266,7 @@ public:
         @param iconNone
             The icon or cursor used for feedback when operation can't be done.
     */
-    wxDropSource(wxDataObject& data, wxWindow* win = nullptr,
+    wxDropSource(wxDataObject& data, wxWindow* win = NULL,
                  const wxIcon& iconCopy = wxNullIcon,
                  const wxIcon& iconMove = wxNullIcon,
                  const wxIcon& iconNone = wxNullIcon);
@@ -318,7 +318,7 @@ public:
 
         @onlyfor{wxmsw,wxosx}
     */
-    void SetCursor(wxDragResult res, const wxCursorBundle& cursor);
+    void SetCursor(wxDragResult res, const wxCursor& cursor);
 
     /**
         Set the icon to use for a certain drag result.

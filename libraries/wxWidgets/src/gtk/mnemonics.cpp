@@ -58,9 +58,9 @@ static wxString GTKProcessMnemonics(const wxString& label, MnemonicsFlag flag)
     labelGTK.reserve(label.length());
     for ( wxString::const_iterator i = label.begin(); i != label.end(); ++i )
     {
-        wxUniChar ch = *i;
+        wxChar ch = *i;
 
-        switch ( ch.GetValue() )
+        switch ( ch )
         {
             case wxT('&'):
                 if ( i + 1 == label.end() )
@@ -98,7 +98,7 @@ static wxString GTKProcessMnemonics(const wxString& label, MnemonicsFlag flag)
                 }
 
                 ch = *(++i); // skip '&' itself
-                switch ( ch.GetValue() )
+                switch ( ch )
                 {
                     case wxT('&'):
                         // special case: "&&" is not a mnemonic at all but just

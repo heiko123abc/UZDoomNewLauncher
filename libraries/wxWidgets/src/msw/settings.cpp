@@ -2,6 +2,7 @@
 // Name:        src/msw/settings.cpp
 // Purpose:     wxSystemSettingsNative implementation for MSW
 // Author:      Julian Smart
+// Modified by:
 // Created:     04/01/98
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
@@ -30,7 +31,6 @@
 
 #include "wx/msw/private.h"
 #include "wx/msw/missing.h" // for SM_CXCURSOR, SM_CYCURSOR, SM_TABLETPC
-#include "wx/msw/private/darkmode.h"
 #include "wx/msw/private/metrics.h"
 #include "wx/msw/registry.h"
 
@@ -46,8 +46,8 @@
 class wxSystemSettingsModule : public wxModule
 {
 public:
-    virtual bool OnInit() override;
-    virtual void OnExit() override;
+    virtual bool OnInit() wxOVERRIDE;
+    virtual void OnExit() wxOVERRIDE;
 
 private:
     wxDECLARE_DYNAMIC_CLASS(wxSystemSettingsModule);
@@ -59,7 +59,7 @@ private:
 
 // the font returned by GetFont(wxSYS_DEFAULT_GUI_FONT): it is created when
 // GetFont() is called for the first time and deleted by wxSystemSettingsModule
-static wxFont *gs_fontDefault = nullptr;
+static wxFont *gs_fontDefault = NULL;
 
 // ============================================================================
 // implementation
@@ -98,14 +98,6 @@ void wxSystemSettingsModule::OnExit()
 
 wxColour wxSystemSettingsNative::GetColour(wxSystemColour index)
 {
-    // As GetSysColor() doesn't support dark mode, check for it before using it.
-    if ( wxMSWDarkMode::IsActive() )
-    {
-        const wxColour colDark = wxMSWDarkMode::GetColour(index);
-        if ( colDark.IsOk() )
-            return colDark;
-    }
-
     if ( index == wxSYS_COLOUR_LISTBOXTEXT)
     {
         // there is no standard colour with this index, map to another one
@@ -156,7 +148,7 @@ wxFont wxCreateFontFromStockObject(int index)
         LOGFONT lf;
         if ( ::GetObject(hFont, sizeof(LOGFONT), &lf) != 0 )
         {
-            wxNativeFontInfo info(lf, nullptr);
+            wxNativeFontInfo info(lf, NULL);
             font.Create(info);
         }
         else
@@ -290,36 +282,13 @@ int wxSystemSettingsNative::GetMetric(wxSystemMetric index, const wxWindow* win)
         {
             return -1;
         }
-
+        
         if ( blinkTime == INFINITE ) // caret does not blink
         {
             return 0;
         }
 
         return blinkTime;
-    }
-
-    // Avoid using SM_C[XY]CURSOR: these are legacy values preserved only for
-    // compatibility and don't actually describe the current cursor size.
-    if ( index == wxSYS_CURSOR_X || index == wxSYS_CURSOR_Y )
-    {
-        wxRegKey rk(wxRegKey::HKCU, "Control Panel\\Cursors");
-        constexpr char CURSOR_SIZE[] = "CursorBaseSize";
-        if ( rk.Exists() && rk.HasValue(CURSOR_SIZE) )
-        {
-            // We expect the base cursor size to be a multiple of 16 between 32
-            // and 256, so check at least the first part (maybe even bigger
-            // cursors will be allowed in the future...) before using it.
-            long value = -1;
-            if ( rk.QueryValue(CURSOR_SIZE, &value) && !(value % 16) )
-            {
-                // The value in the registry doesn't depend on the current DPI,
-                // so scale it accordingly.
-                return wxWindow::FromDIP(value, win);
-            }
-        }
-        //else: If we failed to get the value from the registry, fall back to
-        //      the old method.
     }
 
     int indexMSW = gs_metricsMap[index];
@@ -393,50 +362,22 @@ extern wxFont wxGetCCDefaultFont()
 #endif // wxUSE_LISTCTRL || wxUSE_TREECTRL
 
 // There is no official API for determining whether dark mode is being used,
-// but HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize
-// contains AppsUseLightTheme and SystemUsesLightTheme values determining
-// whether the applications/system use light or dark mode, so use them.
+// but // HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize has
+// a value AppsUseLightTheme = 0 for dark mode and 1 for normal mode, so use it
+// and fall back to the generic algorithm in IsUsingDarkBackground() if it's
+// absent.
 //
 // Adapted from https://stackoverflow.com/a/51336913/15275 ("How to detect
 // Windows 10 light/dark mode in Win32 application?").
-namespace
-{
-
-// Return false unless we are sure we're using the dark mode.
-bool IsUsingDarkTheme(const wxString& forWhat)
+bool wxSystemAppearance::IsDark() const
 {
     wxRegKey rk(wxRegKey::HKCU, "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize");
-    if ( rk.Exists() && rk.HasValue(forWhat) )
+    if ( rk.Exists() && rk.HasValue("AppsUseLightTheme") )
     {
         long value = -1;
-        if ( rk.QueryValue(forWhat, &value) )
+        if ( rk.QueryValue("AppsUseLightTheme", &value) )
             return value <= 0;
     }
 
-    return false;
-}
-
-} // anonymous namespace
-
-bool wxSystemAppearance::IsDark() const
-{
-    // If the application opted in using dark mode, use the undocumented API
-    // which we use for dark mode support directly.
-    if ( wxMSWDarkMode::IsActive() )
-        return true;
-
-    // Note that we should _not_ check if the system is configured to use the
-    // dark mode for the other applications here, what matters is whether this
-    // application itself uses dark colour schema or not.
     return IsUsingDarkBackground();
-}
-
-bool wxSystemAppearance::AreAppsDark() const
-{
-    return IsUsingDarkTheme("AppsUseLightTheme");
-}
-
-bool wxSystemAppearance::IsSystemDark() const
-{
-    return IsUsingDarkTheme("SystemUsesLightTheme");
 }

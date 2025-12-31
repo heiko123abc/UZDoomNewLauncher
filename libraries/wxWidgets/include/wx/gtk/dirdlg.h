@@ -6,10 +6,8 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef _WX_GTKDIRDLG_H_
-#define _WX_GTKDIRDLG_H_
-
-typedef struct _GtkFileChooser GtkFileChooser;
+#ifndef __GTKDIRDLGH__
+#define __GTKDIRDLGH__
 
 //-------------------------------------------------------------------------
 // wxDirDialog
@@ -17,9 +15,8 @@ typedef struct _GtkFileChooser GtkFileChooser;
 
 class WXDLLIMPEXP_CORE wxDirDialog : public wxDirDialogBase
 {
-    typedef wxDirDialogBase BaseType;
 public:
-    wxDirDialog() = default;
+    wxDirDialog() { }
 
     wxDirDialog(wxWindow *parent,
                 const wxString& message = wxASCII_STR(wxDirSelectorPromptStr),
@@ -35,11 +32,13 @@ public:
                 const wxPoint& pos = wxDefaultPosition,
                 const wxSize& size = wxDefaultSize,
                 const wxString& name = wxASCII_STR(wxDirDialogNameStr));
-    ~wxDirDialog();
+    virtual ~wxDirDialog() { }
 
-    virtual int ShowModal() override;
-    virtual void EndModal(int retCode) override;
-    void SetPath(const wxString& path) override;
+
+public:     // overrides from wxGenericDirDialog
+
+    void SetPath(const wxString& path) wxOVERRIDE;
+
 
     // Implementation only.
 
@@ -51,14 +50,11 @@ protected:
     // form doesn't have any m_wxwindow
     virtual void DoSetSize(int x, int y,
                            int width, int height,
-                           int sizeFlags = wxSIZE_AUTO) override;
+                           int sizeFlags = wxSIZE_AUTO) wxOVERRIDE;
 
 
 private:
-    void GTKAccept();
-    GtkFileChooser* m_fileChooser = nullptr;
-
     wxDECLARE_DYNAMIC_CLASS(wxDirDialog);
 };
 
-#endif // _WX_GTKDIRDLG_H_
+#endif // __GTKDIRDLGH__

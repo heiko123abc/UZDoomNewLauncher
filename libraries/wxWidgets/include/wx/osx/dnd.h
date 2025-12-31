@@ -50,17 +50,17 @@ class WXDLLIMPEXP_CORE wxDropTarget: public wxDropTargetBase
 {
   public:
 
-    wxDropTarget(wxDataObject *dataObject = nullptr );
+    wxDropTarget(wxDataObject *dataObject = NULL );
 
-    virtual wxDragResult OnDragOver(wxCoord x, wxCoord y, wxDragResult def) override;
-    virtual bool OnDrop(wxCoord x, wxCoord y) override;
-    virtual wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def) override;
-    virtual bool GetData() override;
+    virtual wxDragResult OnDragOver(wxCoord x, wxCoord y, wxDragResult def) wxOVERRIDE;
+    virtual bool OnDrop(wxCoord x, wxCoord y) wxOVERRIDE;
+    virtual wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def) wxOVERRIDE;
+    virtual bool GetData() wxOVERRIDE;
     // NOTE: This is needed by the generic wxDataViewCtrl, not sure how to implement.
     virtual wxDataFormat GetMatchingPair();
 
     bool CurrentDragHasSupportedFormat() ;
-
+    
     void SetCurrentDragSource( wxOSXDataSource* dragpasteboard ) { m_currentDragPasteboard = dragpasteboard ; }
   protected :
     wxOSXDataSource* m_currentDragPasteboard ;
@@ -77,23 +77,23 @@ public:
     //
     // NB: the "wxWindow *win" parameter is unused and is here only for wxGTK
     //     compatibility, as well as both icon parameters
-    wxDropSource( wxWindow *win = nullptr,
-                 const wxCursorBundle& cursorCopy = {},
-                 const wxCursorBundle& cursorMove = {},
-                 const wxCursorBundle& cursorStop = {});
+    wxDropSource( wxWindow *win = NULL,
+                 const wxCursor &cursorCopy = wxNullCursor,
+                 const wxCursor &cursorMove = wxNullCursor,
+                 const wxCursor &cursorStop = wxNullCursor);
 
     /* constructor for setting one data object */
     wxDropSource( wxDataObject& data,
                   wxWindow *win,
-                 const wxCursorBundle& cursorCopy = {},
-                 const wxCursorBundle& cursorMove = {},
-                 const wxCursorBundle& cursorStop = {});
+                 const wxCursor &cursorCopy = wxNullCursor,
+                 const wxCursor &cursorMove = wxNullCursor,
+                 const wxCursor &cursorStop = wxNullCursor);
 
     virtual ~wxDropSource();
 
     // do it (call this in response to a mouse button press, for example)
     // params: if bAllowMove is false, data can be only copied
-    virtual wxDragResult DoDragDrop(int flags = wxDrag_CopyOnly) override;
+    virtual wxDragResult DoDragDrop(int flags = wxDrag_CopyOnly) wxOVERRIDE;
 
     wxWindow*     GetWindow() { return m_window ; }
     void SetCurrentDragPasteboard( void* dragpasteboard ) { m_currentDragPasteboard = dragpasteboard ; }

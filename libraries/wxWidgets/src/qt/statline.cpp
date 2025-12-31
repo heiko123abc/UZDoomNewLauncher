@@ -8,11 +8,14 @@
 // For compilers that support precompilation, includes "wx.h".
 #include "wx/wxprec.h"
 
-#if wxUSE_STATLINE
-
 #include "wx/statline.h"
 
 #include <QtWidgets/QFrame>
+
+wxStaticLine::wxStaticLine() :
+    m_qtFrame(NULL)
+{
+}
 
 wxStaticLine::wxStaticLine( wxWindow *parent,
               wxWindowID id,
@@ -31,19 +34,16 @@ bool wxStaticLine::Create( wxWindow *parent,
              long style,
              const wxString &name)
 {
-    m_qtWindow = new QFrame( parent->GetHandle() );
-
+    m_qtFrame = new QFrame( parent->GetHandle() );
     if ( style & wxLI_HORIZONTAL )
-        GetQFrame()->setFrameStyle( QFrame::HLine );
+        m_qtFrame->setFrameStyle( QFrame::HLine );
     else if ( style & wxLI_VERTICAL )
-        GetQFrame()->setFrameStyle( QFrame::VLine );
+        m_qtFrame->setFrameStyle( QFrame::VLine );
 
-    return wxStaticLineBase::Create( parent, id, pos, size, style, wxDefaultValidator, name );
+    return QtCreateControl( parent, id, pos, size, style, wxDefaultValidator, name );
 }
 
-QFrame* wxStaticLine::GetQFrame() const
+QWidget *wxStaticLine::GetHandle() const
 {
-    return static_cast<QFrame*>(m_qtWindow);
+    return m_qtFrame;
 }
-
-#endif // wxUSE_STATLINE

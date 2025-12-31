@@ -88,8 +88,6 @@ wxString wxNumberFormatter::PostProcessIntString(wxString s, int style)
     wxASSERT_MSG( !(style & Style_NoTrailingZeroes),
                   "Style_NoTrailingZeroes can't be used with integer values" );
 
-    AddSignPrefix(s, style);
-
     return s;
 }
 
@@ -126,8 +124,6 @@ wxString wxNumberFormatter::ToString(double val, int precision, int style)
     if ( style & Style_NoTrailingZeroes )
         RemoveTrailingZeroes(s);
 
-    AddSignPrefix(s, style);
-
     return s;
 }
 
@@ -135,10 +131,10 @@ wxString wxNumberFormatter::Format(const wxString& format, double val)
 {
     wxString s = wxString::Format(format, val);
 
-    const wxUniChar sep = GetDecimalSeparator();
+    const wxChar sep = GetDecimalSeparator();
     if ( s.find(sep) == wxString::npos )
     {
-        const wxUniChar other = sep == '.' ? ',' : '.';
+        const wxChar other = sep == '.' ? ',' : '.';
         const size_t posSep = s.find(other);
         if ( posSep != wxString::npos )
             s[posSep] = sep;
@@ -206,30 +202,6 @@ void wxNumberFormatter::RemoveTrailingZeroes(wxString& s)
     // Remove sign from orphaned zero.
     if ( s.compare("-0") == 0 )
         s = "0";
-}
-
-// Add the sign prefix to a string representing a number without
-// the prefix. This is used by ToString().
-void wxNumberFormatter::AddSignPrefix(wxString& s, int style)
-{
-    wxASSERT_MSG( !(style & Style_SignPlus) ||
-                  !(style & Style_SignSpace),
-                  "Style_SignPlus can't be used with Style_SignSpace" );
-
-    if ( style & Style_SignPlus )
-    {
-        if ( s[0] != '-' )
-        {
-            s = '+' + s;
-        }
-    }
-    else if ( style & Style_SignSpace )
-    {
-        if ( s[0] != '-' )
-        {
-            s = ' ' + s;
-        }
-    }
 }
 
 // ----------------------------------------------------------------------------

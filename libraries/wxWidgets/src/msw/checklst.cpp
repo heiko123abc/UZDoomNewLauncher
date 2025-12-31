@@ -2,6 +2,7 @@
 // Name:        src/msw/checklst.cpp
 // Purpose:     implementation of wxCheckListBox class
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:     16.11.97
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -36,13 +37,14 @@
     #include "wx/log.h"
 #endif
 
-#include "wx/msw/private/listboxitem.h"
+#include "wx/ownerdrw.h"
 
 #include <windowsx.h>
 
 #include "wx/renderer.h"
 #include "wx/msw/private.h"
 #include "wx/msw/dc.h"
+#include "wx/msw/private/dcdynwrap.h"
 
 // ----------------------------------------------------------------------------
 // private functions
@@ -69,13 +71,25 @@ namespace
 // declaration and implementation of wxCheckListBoxItem class
 // ----------------------------------------------------------------------------
 
-class wxCheckListBoxItem : public wxListBoxItemBase<wxCheckListBox>
+class wxCheckListBoxItem : public wxOwnerDrawn
 {
 public:
+    // ctor
     wxCheckListBoxItem(wxCheckListBox *parent);
 
     // drawing functions
-    virtual bool OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxODStatus stat) override;
+    virtual bool OnDrawItem(wxDC& dc, const wxRect& rc, wxODAction act, wxODStatus stat) wxOVERRIDE;
+
+    // simple accessors and operations
+    wxCheckListBox *GetParent() const
+        { return m_parent; }
+
+    int GetIndex() const
+        { return m_parent->GetItemIndex(const_cast<wxCheckListBoxItem*>(this)); }
+
+    wxString GetName() const wxOVERRIDE
+        { return m_parent->GetString(GetIndex()); }
+
 
     bool IsChecked() const
         { return m_checked; }
@@ -87,7 +101,7 @@ public:
         { Check(!IsChecked()); }
 
 protected:
-    virtual int MSWGetTextType() const override
+    virtual int MSWGetTextType() const wxOVERRIDE
     {
         // Don't handle mnemonics in the label specially, they don't make sense
         // for the listbox items that can't be activated from keyboard using
@@ -96,20 +110,22 @@ protected:
     }
 
 private:
+    wxCheckListBox *m_parent;
     bool m_checked;
 
     wxDECLARE_NO_COPY_CLASS(wxCheckListBoxItem);
 };
 
 wxCheckListBoxItem::wxCheckListBoxItem(wxCheckListBox *parent)
-    : wxListBoxItemBase<wxCheckListBox>(parent)
 {
+    m_parent = parent;
     m_checked = false;
 
     wxSize size = wxRendererNative::Get().GetCheckBoxSize(parent);
     size.x += 2 * CHECKMARK_EXTRA_SPACE + CHECKMARK_LABEL_SPACE;
 
     SetMarginWidth(size.GetWidth());
+    SetBackgroundColour(parent->GetBackgroundColour());
 }
 
 bool wxCheckListBoxItem::OnDrawItem(wxDC& dc, const wxRect& rc,
@@ -150,7 +166,7 @@ bool wxCheckListBoxItem::OnDrawItem(wxDC& dc, const wxRect& rc,
     UINT uState = stat & wxOwnerDrawn::wxODSelected ? wxDSB_SELECTED : wxDSB_NORMAL;
 
     // checkmarks should not be mirrored in RTL layout
-    DWORD oldLayout = ::GetLayout(hdc);
+    DWORD oldLayout = wxDynLoadWrappers::GetLayout(hdc);
     if ( oldLayout & LAYOUT_RTL )
         ::SetLayout(hdc, oldLayout | LAYOUT_BITMAPORIENTATIONPRESERVED);
     wxDrawStateBitmap(hdc, hBmpCheck, x, y, uState);
@@ -402,7 +418,7 @@ void wxCheckListBox::OnLeftClick(wxMouseEvent& event)
                 // scroll one item down if the item is the last one
                 // and isn't visible at all
                 int h;
-                GetClientSize(nullptr, &h);
+                GetClientSize(NULL, &h);
                 if ( rect.GetBottom() > h )
                     ScrollLines(1);
             }

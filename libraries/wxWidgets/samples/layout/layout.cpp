@@ -74,7 +74,7 @@ wxEND_EVENT_TABLE()
 
 // Define my frame constructor
 MyFrame::MyFrame()
-       : wxFrame(nullptr, wxID_ANY, "wxWidgets Layout Demo")
+       : wxFrame(NULL, wxID_ANY, "wxWidgets Layout Demo")
 {
     SetIcon(wxICON(sample));
 
@@ -119,28 +119,28 @@ MyFrame::MyFrame()
     // 1) top: create wxStaticText with minimum size equal to its default size
     topsizer->Add(
         new wxStaticText( p, wxID_ANY, "An explanation (wxALIGN_RIGHT)." ),
-        wxSizerFlags().Align(wxALIGN_RIGHT).Border(wxALL & ~wxBOTTOM));
+        wxSizerFlags().Align(wxALIGN_RIGHT).Border(wxALL & ~wxBOTTOM, 5));
     topsizer->Add(
         new wxStaticText( p, wxID_ANY, "An explanation (wxALIGN_LEFT)." ),
-        wxSizerFlags().Align(wxALIGN_LEFT).Border(wxALL & ~wxBOTTOM));
+        wxSizerFlags().Align(wxALIGN_LEFT).Border(wxALL & ~wxBOTTOM, 5));
     topsizer->Add(
         new wxStaticText( p, wxID_ANY, "An explanation (wxALIGN_CENTRE_HORIZONTAL)." ),
-        wxSizerFlags().Align(wxALIGN_CENTRE_HORIZONTAL).Border(wxALL & ~wxBOTTOM));
+        wxSizerFlags().Align(wxALIGN_CENTRE_HORIZONTAL).Border(wxALL & ~wxBOTTOM, 5));
 
     // 2) top: create wxTextCtrl with minimum size (100x60)
     topsizer->Add(
-        new wxTextCtrl( p, wxID_ANY, "My text (wxEXPAND).", wxDefaultPosition, FromDIP(wxSize(100,60)), wxTE_MULTILINE),
-        wxSizerFlags(1).Expand().Border(wxALL));
+        new wxTextCtrl( p, wxID_ANY, "My text (wxEXPAND).", wxDefaultPosition, wxSize(100,60), wxTE_MULTILINE),
+        wxSizerFlags(1).Expand().Border(wxALL, 5));
 
     // 2.5) Gratuitous test of wxStaticBoxSizers
     wxBoxSizer *statsizer = new wxStaticBoxSizer(
         new wxStaticBox(p, wxID_ANY, "A wxStaticBoxSizer"), wxVERTICAL );
     statsizer->Add(
         new wxStaticText(p, wxID_ANY, "And some TEXT inside it"),
-        wxSizerFlags().Border(wxALL, FromDIP(30)));
+        wxSizerFlags().Border(wxALL, 30));
     topsizer->Add(
         statsizer,
-        wxSizerFlags(1).Expand().DoubleBorder(wxALL));
+        wxSizerFlags(1).Expand().Border(wxALL, 10));
 
     // 2.7) And a test of wxGridSizer
     wxGridSizer *gridsizer = new wxGridSizer(2, 5, 5);
@@ -158,7 +158,7 @@ MyFrame::MyFrame()
                 wxSizerFlags().Align(wxGROW | wxALIGN_CENTER_VERTICAL));
     topsizer->Add(
         gridsizer,
-        wxSizerFlags().Proportion(1).Expand().DoubleBorder(wxALL));
+        wxSizerFlags().Proportion(1).Expand().Border(wxALL, 10));
 
 
 #if wxUSE_STATLINE
@@ -173,10 +173,10 @@ MyFrame::MyFrame()
     wxBoxSizer *button_box = new wxBoxSizer( wxHORIZONTAL );
     button_box->Add(
         new wxButton( p, wxID_ANY, "Two buttons in a box" ),
-        wxSizerFlags().Border(wxALL, FromDIP(7)));
+        wxSizerFlags().Border(wxALL, 7));
     button_box->Add(
         new wxButton( p, wxID_ANY, "(wxCENTER)" ),
-        wxSizerFlags().Border(wxALL, FromDIP(7)));
+        wxSizerFlags().Border(wxALL, 7));
 
     topsizer->Add(button_box, wxSizerFlags().Center());
 

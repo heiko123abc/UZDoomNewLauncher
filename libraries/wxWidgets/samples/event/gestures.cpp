@@ -5,7 +5,7 @@
 #include "../image/horse.xpm"
 
 MyGestureFrame::MyGestureFrame()
-    : wxFrame(nullptr, wxID_ANY, "Multi-touch Gestures", wxDefaultPosition, wxSize(800, 600))
+    : wxFrame(NULL, wxID_ANY, "Multi-touch Gestures", wxDefaultPosition, wxSize(800, 600))
 {
     // Create controls
     MyGesturePanel *myPanel = new MyGesturePanel(this);
@@ -83,7 +83,7 @@ void MyGesturePanel::OnPaint(wxPaintEvent& WXUNUSED(event))
 
     wxGCDC dc(paintDC);
     dc.SetTransformMatrix(m_affineMatrix);
-    dc.DrawBitmap(m_bitmap, 0, 0);
+    dc.DrawBitmap(m_bitmap, wxRound(m_translateDistance.m_x), wxRound(m_translateDistance.m_y));
 }
 
 void MyGesturePanel::OnPan(wxPanGestureEvent& event)
@@ -102,11 +102,13 @@ void MyGesturePanel::OnPan(wxPanGestureEvent& event)
     // Transform the distance using the transpose of the matrix,
     // in order to translate the image to match the screen coordinates
     wxMatrix2D m;
-    wxPoint2DDouble tr;
+    m_affineMatrix.Get(&m, NULL);
 
-    m_affineMatrix.Get(&m, &tr);
-    tr += event.GetDelta();
-    m_affineMatrix.Set(m, tr);
+    wxPoint2DDouble deltaD(m.m_11 * delta.x + m.m_12 * delta.y,
+                           m.m_21 * delta.x + m.m_22 * delta.y);
+
+    // Add it to the total translation
+    m_translateDistance += deltaD;
 
     if ( event.IsGestureEnd() )
     {
@@ -123,31 +125,19 @@ void MyGesturePanel::OnZoom(wxZoomGestureEvent& event)
         wxLogMessage("Zoom gesture started");
 
         m_lastZoomFactor = 1.0;
-        m_lastGesturePos = event.GetPosition();
     }
 
     wxLogMessage("Zoom gesture performed with zoom center at (%d, %d) and zoom Factor = %f",
         event.GetPosition().x, event.GetPosition().y, event.GetZoomFactor());
 
-    const wxPoint &evtPos = event.GetPosition();
-    double factor = event.GetZoomFactor() / m_lastZoomFactor;
+    const wxPoint& zoomCenter = event.GetPosition();
 
-    wxMatrix2D m;
-    wxPoint2DDouble tr;
-    m_affineMatrix.Get(&m, &tr);
-
-    tr -= m_lastGesturePos;
-
-    wxAffineMatrix2D inv = m_affineMatrix;
-    inv.Invert();
-    tr = inv.TransformDistance(tr);
-    m_affineMatrix.Scale(factor, factor);
-    tr = m_affineMatrix.TransformDistance(tr);
-
-    tr += evtPos;
-
-    m_affineMatrix.Get(&m, nullptr);
-    m_affineMatrix.Set(m, tr);
+    // Translate to zoom center
+    m_affineMatrix.Translate(zoomCenter.x, zoomCenter.y);
+    // Scale
+    m_affineMatrix.Scale(event.GetZoomFactor() / m_lastZoomFactor, event.GetZoomFactor() / m_lastZoomFactor);
+    // Translate back
+    m_affineMatrix.Translate(-zoomCenter.x, -zoomCenter.y);
 
     if ( event.IsGestureEnd() )
     {
@@ -155,7 +145,6 @@ void MyGesturePanel::OnZoom(wxZoomGestureEvent& event)
     }
 
     m_lastZoomFactor = event.GetZoomFactor();
-    m_lastGesturePos = evtPos;
 
     Refresh();
 }
@@ -172,25 +161,14 @@ void MyGesturePanel::OnRotate(wxRotateGestureEvent& event)
     wxLogMessage("Rotate gesture performed with rotation center at (%d, %d) and cumulative rotation angle = %f",
         event.GetPosition().x, event.GetPosition().y, event.GetRotationAngle());
 
-    const wxPoint& evtPos = event.GetPosition();
+    const wxPoint& rotationCenter = event.GetPosition();
 
-    wxMatrix2D m;
-    wxPoint2DDouble tr;
-
-    m_affineMatrix.Get(&m, &tr);
-
-    tr -= evtPos;
-
-    wxAffineMatrix2D inv = m_affineMatrix;
-    inv.Invert();
-    tr = inv.TransformDistance(tr);
+    // Translate to rotation center
+    m_affineMatrix.Translate(rotationCenter.x, rotationCenter.y);
+    // Rotate
     m_affineMatrix.Rotate(event.GetRotationAngle() - m_lastRotationAngle);
-    tr = m_affineMatrix.TransformDistance(tr);
-
-    tr += evtPos;
-
-    m_affineMatrix.Get(&m, nullptr);
-    m_affineMatrix.Set(m, tr);
+    // Translate back
+    m_affineMatrix.Translate(-rotationCenter.x, -rotationCenter.y);
 
     if ( event.IsGestureEnd() )
     {

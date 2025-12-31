@@ -2,6 +2,7 @@
 // Name:        wx/x11/colour.h
 // Purpose:     wxColour class
 // Author:      Julian Smart, Robert Roebling
+// Modified by:
 // Created:     17/09/98
 // Copyright:   (c) Julian Smart, Robert Roebling
 // Licence:     wxWindows licence
@@ -38,6 +39,8 @@ public:
     // ------------
     DEFINE_STD_WXCOLOUR_CONSTRUCTORS
 
+    virtual ~wxColour();
+
     bool operator==(const wxColour& col) const;
     bool operator!=(const wxColour& col) const { return !(*this == col); }
 
@@ -53,7 +56,7 @@ public:
 
 protected:
     virtual wxGDIRefData *CreateGDIRefData() const;
-    wxNODISCARD virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
+    virtual wxGDIRefData *CloneGDIRefData(const wxGDIRefData *data) const;
 
     virtual void
     InitRGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a);

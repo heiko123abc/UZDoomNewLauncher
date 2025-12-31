@@ -2,6 +2,7 @@
 // Name:        src/msw/ole/droptgt.cpp
 // Purpose:     wxDropTarget implementation
 // Author:      Vadim Zeitlin
+// Modified by:
 // Created:
 // Copyright:   (c) 1998 Vadim Zeitlin <zeitlin@dptmaths.ens-cachan.fr>
 // Licence:     wxWindows licence
@@ -32,8 +33,7 @@
 #include "wx/msw/wrapshl.h"            // for DROPFILES structure
 
 #include "wx/dnd.h"
-
-#include "wx/private/safecall.h"
+#include "wx/except.h"
 
 #include "wx/msw/ole/oleutils.h"
 
@@ -80,15 +80,15 @@ public:
     void SetHwnd(HWND hwnd) { m_hwnd = hwnd; }
 
     // IDropTarget methods
-    STDMETHODIMP DragEnter(LPDATAOBJECT, DWORD, POINTL, LPDWORD) override;
-    STDMETHODIMP DragOver(DWORD, POINTL, LPDWORD) override;
-    STDMETHODIMP DragLeave() override;
-    STDMETHODIMP Drop(LPDATAOBJECT, DWORD, POINTL, LPDWORD) override;
+    STDMETHODIMP DragEnter(LPDATAOBJECT, DWORD, POINTL, LPDWORD) wxOVERRIDE;
+    STDMETHODIMP DragOver(DWORD, POINTL, LPDWORD) wxOVERRIDE;
+    STDMETHODIMP DragLeave() wxOVERRIDE;
+    STDMETHODIMP Drop(LPDATAOBJECT, DWORD, POINTL, LPDWORD) wxOVERRIDE;
 
     DECLARE_IUNKNOWN_METHODS;
 
 protected:
-    // This pointer is not null between the calls to DragEnter and DragLeave/Drop
+    // This pointer is !NULL between the calls to DragEnter and DragLeave/Drop
     wxCOMPtr<IDataObject> m_pIDataObject;
 
     wxDropTarget *m_pTarget;      // the real target (we're just a proxy)
@@ -111,20 +111,7 @@ protected:
 
         return E_UNEXPECTED;
     }
-
-    // More convenient version of wxSafeCall() used in this class.
-    template <typename T>
-    HRESULT SafeCall(const T& func)
-    {
-        return wxSafeCall<HRESULT>(func, [&]() { return HandleException(); });
-    }
-#else // !wxUSE_EXCEPTIONS
-    template <typename T>
-    HRESULT SafeCall(const T& func)
-    {
-        return func();
-    }
-#endif // wxUSE_EXCEPTIONS/!wxUSE_EXCEPTIONS
+#endif // wxUSE_EXCEPTIONS
 
     wxDECLARE_NO_COPY_CLASS(wxIDropTarget);
 };
@@ -209,7 +196,7 @@ STDMETHODIMP wxIDropTarget::DragEnter(IDataObject *pIDataSource,
                                       POINTL       pt,
                                       DWORD       *pdwEffect)
 {
-    return SafeCall([&, this]()
+    wxTRY
     {
         wxLogTrace(wxTRACE_OleCalls, wxT("IDropTarget::DragEnter"));
 
@@ -223,7 +210,7 @@ STDMETHODIMP wxIDropTarget::DragEnter(IDataObject *pIDataSource,
         if ( SUCCEEDED(pIDataSource->EnumFormatEtc(DATADIR_GET, &penumFmt)) )
         {
             FORMATETC fmt;
-            while ( penumFmt->Next(1, &fmt, nullptr) == S_OK )
+            while ( penumFmt->Next(1, &fmt, NULL) == S_OK )
             {
                 wxLogDebug(wxT("Drop source supports format %s"),
                            wxDataObject::GetFormatName(fmt.cfFormat));
@@ -272,7 +259,8 @@ STDMETHODIMP wxIDropTarget::DragEnter(IDataObject *pIDataSource,
         m_pTarget->MSWUpdateDragImageOnDragOver(pt.x, pt.y, res);
 
         return S_OK;
-    });
+    }
+    wxCATCH_ALL( return HandleException(); )
 }
 
 
@@ -290,7 +278,7 @@ STDMETHODIMP wxIDropTarget::DragOver(DWORD   grfKeyState,
                                      POINTL  pt,
                                      LPDWORD pdwEffect)
 {
-    return SafeCall([&, this]()
+    wxTRY
     {
         // there are too many of them... wxLogDebug("IDropTarget::DragOver");
 
@@ -324,7 +312,8 @@ STDMETHODIMP wxIDropTarget::DragOver(DWORD   grfKeyState,
                                                 ConvertDragEffectToResult(*pdwEffect));
 
         return S_OK;
-    });
+    }
+    wxCATCH_ALL( return HandleException(); )
 }
 
 // Name    : wxIDropTarget::DragLeave
@@ -333,7 +322,7 @@ STDMETHODIMP wxIDropTarget::DragOver(DWORD   grfKeyState,
 // Notes   : good place to do any clean-up
 STDMETHODIMP wxIDropTarget::DragLeave()
 {
-    return SafeCall([&, this]()
+    wxTRY
     {
         wxLogTrace(wxTRACE_OleCalls, wxT("IDropTarget::DragLeave"));
 
@@ -347,7 +336,8 @@ STDMETHODIMP wxIDropTarget::DragLeave()
         m_pTarget->MSWUpdateDragImageOnLeave();
 
         return S_OK;
-    });
+    }
+    wxCATCH_ALL( return HandleException(); )
 }
 
 // Name    : wxIDropTarget::Drop
@@ -364,7 +354,7 @@ STDMETHODIMP wxIDropTarget::Drop(IDataObject *pIDataSource,
                                  POINTL       pt,
                                  DWORD       *pdwEffect)
 {
-    return SafeCall([&, this]()
+    wxTRY
     {
         wxLogTrace(wxTRACE_OleCalls, wxT("IDropTarget::Drop"));
 
@@ -442,7 +432,8 @@ STDMETHODIMP wxIDropTarget::Drop(IDataObject *pIDataSource,
         }
 
         return S_OK;
-    });
+    }
+    wxCATCH_ALL( return HandleException(); )
 }
 
 // ============================================================================
@@ -455,7 +446,7 @@ STDMETHODIMP wxIDropTarget::Drop(IDataObject *pIDataSource,
 
 wxDropTarget::wxDropTarget(wxDataObject *dataObj)
             : wxDropTargetBase(dataObj),
-              m_dropTargetHelper(nullptr)
+              m_dropTargetHelper(NULL)
 {
     // create an IDropTarget implementation which will notify us about d&d
     // operations.
@@ -535,7 +526,7 @@ bool wxDropTarget::GetData()
     STGMEDIUM stm;
     FORMATETC fmtMemory;
     fmtMemory.cfFormat  = format;
-    fmtMemory.ptd       = nullptr;
+    fmtMemory.ptd       = NULL;
     fmtMemory.dwAspect  = DVASPECT_CONTENT;
     fmtMemory.lindex    = -1;
     fmtMemory.tymed     = TYMED_HGLOBAL;  // TODO to add other media
@@ -588,11 +579,11 @@ wxDataFormat wxDropTarget::GetMatchingPair()
 
 wxDataFormat wxDropTarget::MSWGetSupportedFormat(IDataObject *pIDataSource) const
 {
-    // this structure describes a data of any type (first field will be
+    // this strucutre describes a data of any type (first field will be
     // changing) being passed through global memory block.
     static FORMATETC s_fmtMemory = {
         0,
-        nullptr,
+        NULL,
         DVASPECT_CONTENT,
         -1,
         TYMED_HGLOBAL       // TODO is it worth supporting other tymeds here?
@@ -636,10 +627,10 @@ void
 wxDropTarget::MSWEndDragImageSupport()
 {
     // release drop target helper
-    if ( m_dropTargetHelper != nullptr )
+    if ( m_dropTargetHelper != NULL )
     {
         m_dropTargetHelper->Release();
-        m_dropTargetHelper = nullptr;
+        m_dropTargetHelper = NULL;
     }
 }
 
@@ -647,7 +638,7 @@ void
 wxDropTarget::MSWInitDragImageSupport()
 {
     // Use the default drop target helper to show shell drag images
-    CoCreateInstance(wxCLSID_DragDropHelper, nullptr, CLSCTX_INPROC_SERVER,
+    CoCreateInstance(wxCLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER,
                      wxIID_IDropTargetHelper, (LPVOID*)&m_dropTargetHelper);
 }
 
@@ -657,7 +648,7 @@ wxDropTarget::MSWUpdateDragImageOnData(wxCoord x,
                                        wxDragResult dragResult)
 {
     // call corresponding event on drop target helper
-    if ( m_dropTargetHelper != nullptr )
+    if ( m_dropTargetHelper != NULL )
     {
         POINT pt = {x, y};
         DWORD dwEffect = ConvertDragResultToEffect(dragResult);
@@ -671,7 +662,7 @@ wxDropTarget::MSWUpdateDragImageOnDragOver(wxCoord x,
                                            wxDragResult dragResult)
 {
     // call corresponding event on drop target helper
-    if ( m_dropTargetHelper != nullptr )
+    if ( m_dropTargetHelper != NULL )
     {
         POINT pt = {x, y};
         DWORD dwEffect = ConvertDragResultToEffect(dragResult);
@@ -685,7 +676,7 @@ wxDropTarget::MSWUpdateDragImageOnEnter(wxCoord x,
                                         wxDragResult dragResult)
 {
     // call corresponding event on drop target helper
-    if ( m_dropTargetHelper != nullptr )
+    if ( m_dropTargetHelper != NULL )
     {
         POINT pt = {x, y};
         DWORD dwEffect = ConvertDragResultToEffect(dragResult);
@@ -697,7 +688,7 @@ void
 wxDropTarget::MSWUpdateDragImageOnLeave()
 {
     // call corresponding event on drop target helper
-    if ( m_dropTargetHelper != nullptr )
+    if ( m_dropTargetHelper != NULL )
     {
         m_dropTargetHelper->DragLeave();
     }

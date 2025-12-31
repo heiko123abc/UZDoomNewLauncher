@@ -56,10 +56,7 @@ void wxGenericStaticText::DoDrawLabel(wxDC& dc, const wxRect& rect)
 {
 #if wxUSE_MARKUP
     if ( m_markupText )
-    {
-        m_markupText->Render(dc, rect, wxMarkupText::Render_ShowAccels,
-                             GetAlignment());
-    }
+        m_markupText->Render(dc, rect, wxMarkupText::Render_ShowAccels);
     else
 #endif // wxUSE_MARKUP
         dc.DrawLabel(m_label, rect, GetAlignment(), m_mnemonic);
@@ -87,7 +84,7 @@ void wxGenericStaticText::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 wxSize wxGenericStaticText::DoGetBestClientSize() const
 {
-    wxInfoDC dc(wxConstCast(this, wxGenericStaticText));
+    wxClientDC dc(wxConstCast(this, wxGenericStaticText));
 
 #if wxUSE_MARKUP
     if ( m_markupText )
@@ -108,7 +105,7 @@ void wxGenericStaticText::SetLabel(const wxString& label)
     if ( m_markupText )
     {
         delete m_markupText;
-        m_markupText = nullptr;
+        m_markupText = NULL;
     }
 #endif // wxUSE_MARKUP
 
@@ -127,11 +124,10 @@ bool wxGenericStaticText::DoSetLabelMarkup(const wxString& markup)
     if ( !wxStaticTextBase::DoSetLabelMarkup(markup) )
         return false;
 
-    if ( m_markupText && !m_markupText->SetMarkup(markup) )
-        return true;
-
     if ( !m_markupText )
         m_markupText = new wxMarkupText(markup);
+    else
+        m_markupText->SetMarkup(markup);
 
     AutoResizeIfNecessary();
 

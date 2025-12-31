@@ -15,13 +15,13 @@
 class WXDLLIMPEXP_CORE wxNonOwnedWindow : public wxNonOwnedWindowBase
 {
 public:
-    wxNonOwnedWindow() = default;
+    wxNonOwnedWindow();
 
 protected:
-    virtual bool DoClearShape() override;
-    virtual bool DoSetRegionShape(const wxRegion& region) override;
+    virtual bool DoClearShape() wxOVERRIDE;
+    virtual bool DoSetRegionShape(const wxRegion& region) wxOVERRIDE;
 #if wxUSE_GRAPHICS_CONTEXT
-    virtual bool DoSetPathShape(const wxGraphicsPath& path) override;
+    virtual bool DoSetPathShape(const wxGraphicsPath& path) wxOVERRIDE;
 #endif // wxUSE_GRAPHICS_CONTEXT
 
     wxDECLARE_NO_COPY_CLASS(wxNonOwnedWindow);

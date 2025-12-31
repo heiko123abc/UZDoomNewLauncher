@@ -30,7 +30,7 @@ std::string getReleasesParsed(std::string xmlBuffer)
 	//just in case it is invalid
 	try
 	{
-		doc.parse<0>(&xmlBuffer[0]);
+		doc.parse<0>(xmlBuffer.data());
 	}
 	catch (...)
 	{

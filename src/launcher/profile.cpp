@@ -313,7 +313,7 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	if (this->enableFullscreen)
 		cmd << "+set fullscreen 1 ";
 	if (this->enableSupportWAD)
-		cmd << "-file ./uzdoom.pk3 ";
+		cmd << "-file ./game_support.pk3 ";
 	if (this->disableAutoload)
 		cmd << "-noautoload ";
 

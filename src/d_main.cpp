@@ -118,6 +118,7 @@
 #include "wi_stuff.h"
 #include "wipe.h"
 #include "zwidget/window/window.h"
+#include "starter.h"
 
 #ifdef __unix__
 #include "i_system.h"  // for SHARE_DIR
@@ -4167,17 +4168,7 @@ void SignalHandler(int signal)
 
 int GameMain()
 {
-	// On Windows, prefer the native win32 backend.
-	// On other platforms, use SDL until the other backends are more mature.
-	auto zwidget = DisplayBackend::TryCreateWin32();
-	if (!zwidget)
-		zwidget = DisplayBackend::TryCreateSDL2();
-	if (!zwidget)
-    {
-		fprintf(stderr, "Unable to create init zwidget\n");
-		return -1;
-    }
-	DisplayBackend::Set(std::move(zwidget));
+	wxKickStarter(); //call the wxWidgets starter here to begin
 
 	int ret = 0;
 	GameTicRate = TICRATE;
@@ -4204,7 +4195,8 @@ int GameMain()
 	}
 	catch (const std::exception &error)
 	{
-		I_ShowFatalError(error.what());
+		//wxWidgets provides its own crash handler
+		//I_ShowFatalError(error.what());
 		ret = -1;
 	}
 	// Unless something really bad happened, the game should only exit through this single point in the code.

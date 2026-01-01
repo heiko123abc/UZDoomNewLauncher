@@ -22,3 +22,5 @@ class Starter : public wxApp
 	bool OnInit();
 	void OnFatalException();
 };
+
+int wxKickStarter();

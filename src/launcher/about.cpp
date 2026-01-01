@@ -22,9 +22,14 @@
 
 std::string loadFileToString(const std::string &filename)
 {
+	if (!std::filesystem::exists(filename))
+	{
+		return "Error: File not found at " + filename + "\n";
+	}
+
 	std::ifstream file(filename, std::ios::in | std::ios::binary);
 	if (!file)
-		return "";
+		return "Error Loading the file.";
 
 	uintmax_t   fileSize = std::filesystem::file_size(filename);
 	std::string result(fileSize, '\0');

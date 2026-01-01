@@ -23,7 +23,19 @@
 
 using json = nlohmann::json;
 
-wxIMPLEMENT_APP(Starter);
+
+// This is called from outside to kickstart the launcher ui and logics
+int wxKickStarter()
+{
+	int   argc = 1;
+	char *argv[2];
+	argv[0] = (char *)"UZDoom";
+	argv[1] = nullptr;
+
+	wxApp::SetInstance(new Starter()); //set this as the instance
+	return wxEntry(argc, argv);
+}
+
 
 // This function is called on application startup and creates the main window
 bool Starter::OnInit()

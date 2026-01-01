@@ -1,3 +1,18 @@
+/*
+** about.cpp
+**
+** Create the UI to display the Credits and Patch Notes
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #include "about.h"
 
 #include <filesystem>
@@ -58,7 +73,7 @@ std::string getReleasesParsed(std::string xmlBuffer)
 		if (date)
 			ss << " (" << date->value() << ")";
 
-		ss << "\n"; //sperated the notes
+		ss << "------------------------------------------------------\n"; //sperated the notes
 	}
 
 	return ss.str();

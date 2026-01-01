@@ -1,3 +1,18 @@
+/*
+** profile.cpp
+**
+** Methods for interaction (e.g save/load) of Profile files using JSON
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #include "profile.h"
 
 #include <nlohmann/json.hpp> //for JSON file support

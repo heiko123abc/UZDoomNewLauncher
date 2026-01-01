@@ -1,3 +1,18 @@
+/*
+** loader.cpp
+**
+** Create profile and correctly assign if imported file is IWAD or PWAD
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #include "loader.h"
 #include "profile.h"
 

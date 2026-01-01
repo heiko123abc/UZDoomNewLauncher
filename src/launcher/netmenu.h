@@ -1,3 +1,18 @@
+/*
+** netmenu.h
+**
+** Header for netmenu.cpp
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #pragma once
 #include <wx/wx.h>
 

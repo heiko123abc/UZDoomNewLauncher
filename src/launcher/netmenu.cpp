@@ -1,3 +1,18 @@
+/*
+** netmenu.cpp
+**
+** Contains both menus for hosting and joining a multiplayer game
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #include "netmenu.h"
 #include <wx/listctrl.h>
 

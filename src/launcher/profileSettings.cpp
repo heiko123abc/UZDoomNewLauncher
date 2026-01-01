@@ -1,3 +1,18 @@
+/*
+** profileSettings.cpp
+**
+** Contains UI code and logic for the profiles own Settings tab 
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
 #include "profileSettings.h"
 #include <filesystem>
 #include <fstream>

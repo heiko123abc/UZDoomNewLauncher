@@ -1,3 +1,19 @@
+/*
+** launcherMainWindow.cpp
+**
+** Creates the main window for the launcher with the profile list and buttons
+**
+**---------------------------------------------------------------------------
+**
+** Copyright 2025-2026 UZDoom Maintainers and Contributors
+**
+** SPDX-License-Identifier: GPL-3.0-or-later
+**
+**---------------------------------------------------------------------------
+**
+*/
+
+
 #include "launcherMainWindow.h"
 
 #include <chrono>
@@ -56,7 +72,7 @@ enum
 	ID_MOVE_DOWN
 };
 
-// Event Binder Table
+// wxEvent Binder Table
 wxBEGIN_EVENT_TABLE(LauncherMainWindow, wxFrame) EVT_MENU(ID_ADD_WAD, LauncherMainWindow::OnButtonClicked)
 	EVT_MENU(ID_ADD_ARCHIVE, LauncherMainWindow::OnButtonClicked)
 		EVT_MENU(wxID_EXIT, LauncherMainWindow::OnButtonClicked)

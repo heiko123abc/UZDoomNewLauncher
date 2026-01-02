@@ -31,6 +31,7 @@
 #include <wx/process.h>
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
+#include <wx/app.h>
 
 #include "about.h"
 #include "loader.h"
@@ -321,7 +322,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			// check if already launched
 			if (isAlreadyLaunched)
 			{
-				wxMessageBox("A UZdoom instance is already running. Please close it before starting another.", "UZdoom Error",
+				wxMessageBox("A UZdoom instance is already running. Please close it before starting another.", "UZdoom Warning",
 							 wxOK | wxICON_WARNING);
 				return;
 			}
@@ -341,8 +342,6 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			if (event.GetId() == ID_HOST_GAME)
 				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host").c_str();
 
-			// DEBUG: Show command before launch
-			// wxMessageBox(dispatchedCmd, "Command to be used");
 
 			// below bind a listener that monitors if uzdoom closes/ends
 			this->Iconize(true); // Minimize immediately

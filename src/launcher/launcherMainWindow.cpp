@@ -13,7 +13,6 @@
 **
 */
 
-
 #include "launcherMainWindow.h"
 
 #include <chrono>
@@ -25,13 +24,13 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <wx/app.h>
 #include <wx/artprov.h>
 #include <wx/dataview.h>
 #include <wx/filedlg.h>
 #include <wx/process.h>
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
-#include <wx/app.h>
 
 #include "about.h"
 #include "loader.h"
@@ -70,7 +69,31 @@ enum
 	ID_PROFILE_SETTINGS,
 	ID_REFRESH_LIST,
 	ID_MOVE_UP,
-	ID_MOVE_DOWN
+	ID_MOVE_DOWN,
+
+	ID_LANG_ENU,
+	ID_LANG_ENG,
+	ID_LANG_CS,
+	ID_LANG_DA,
+	ID_LANG_DE,
+	ID_LANG_ES,
+	ID_LANG_ESM,
+	ID_LANG_EO,
+	ID_LANG_FI,
+	ID_LANG_FR,
+	ID_LANG_HU,
+	ID_LANG_IT,
+	ID_LANG_JP,
+	ID_LANG_KO,
+	ID_LANG_NL,
+	ID_LANG_NB,
+	ID_LANG_PL,
+	ID_LANG_PTG,
+	ID_LANG_PT,
+	ID_LANG_RO,
+	ID_LANG_RU,
+	ID_LANG_SR,
+	ID_LANG_TR
 };
 
 // wxEvent Binder Table
@@ -167,9 +190,31 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	// create menu item to change preferences e.g language, theme, etc
 	wxMenu *PrefMenu = new wxMenu;
 
-	// create theme toggler
+	// create toggler
 	wxMenu *LangToggler = new wxMenu();
-	// TODO add lang support here
+	LangToggler->Append(ID_LANG_ENU, wxString::FromUTF8("enu - English (US)"));
+	LangToggler->Append(ID_LANG_ENG, wxString::FromUTF8("eng - English (UK)"));
+	LangToggler->Append(ID_LANG_CS, wxString::FromUTF8("cs - Česky (Czech)"));
+	LangToggler->Append(ID_LANG_DA, wxString::FromUTF8("da - Dansk (Danish)"));
+	LangToggler->Append(ID_LANG_DE, wxString::FromUTF8("de - Deutsch (German)"));
+	LangToggler->Append(ID_LANG_ES, wxString::FromUTF8("es - Español (España) (Castilian Spanish)"));
+	LangToggler->Append(ID_LANG_ESM, wxString::FromUTF8("esm - Español (Latino) (Latin American Spanish)"));
+	LangToggler->Append(ID_LANG_EO, wxString::FromUTF8("eo - Esperanto"));
+	LangToggler->Append(ID_LANG_FI, wxString::FromUTF8("fi - Suomi (Finnish)"));
+	LangToggler->Append(ID_LANG_FR, wxString::FromUTF8("fr - Français (French)"));
+	LangToggler->Append(ID_LANG_HU, wxString::FromUTF8("hu - Magyar (Hungarian)"));
+	LangToggler->Append(ID_LANG_IT, wxString::FromUTF8("it - Italiano (Italian)"));
+	LangToggler->Append(ID_LANG_JP, wxString::FromUTF8("jp - 日本語 (Japanese)"));
+	LangToggler->Append(ID_LANG_KO, wxString::FromUTF8("ko - 한국어 (Korean)"));
+	LangToggler->Append(ID_LANG_NL, wxString::FromUTF8("nl - Nederlands (Dutch)"));
+	LangToggler->Append(ID_LANG_NB, wxString::FromUTF8("nb - Norsk Bokmål (Norwegian)"));
+	LangToggler->Append(ID_LANG_PL, wxString::FromUTF8("pl - Polski (Polish)"));
+	LangToggler->Append(ID_LANG_PTG, wxString::FromUTF8("ptg - Português (European Portuguese)"));
+	LangToggler->Append(ID_LANG_PT, wxString::FromUTF8("pt - Português do Brasil (Brazilian Portuguese)"));
+	LangToggler->Append(ID_LANG_RO, wxString::FromUTF8("ro - Română (Romanian)"));
+	LangToggler->Append(ID_LANG_RU, wxString::FromUTF8("ru - Русский (Russian)"));
+	LangToggler->Append(ID_LANG_SR, wxString::FromUTF8("sr - Српски (Serbian)"));
+	LangToggler->Append(ID_LANG_TR, wxString::FromUTF8("tr - Türkçe (Turkish)"));
 	PrefMenu->AppendSubMenu(LangToggler, "&Language", "Change application language.");
 
 	// create menu item to view credits and release notes
@@ -312,7 +357,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 	}
 
 	//"profileList->GetSelectedRow() != wxNOT_FOUND" blocks the user from exception when clicking profile settings after
-	//losing focus due to list refresh
+	// losing focus due to list refresh
 	if (profileList->GetSelectedRow() != wxNOT_FOUND)
 	{
 
@@ -322,8 +367,8 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			// check if already launched
 			if (isAlreadyLaunched)
 			{
-				wxMessageBox("A UZdoom instance is already running. Please close it before starting another.", "UZdoom Warning",
-							 wxOK | wxICON_WARNING);
+				wxMessageBox("A UZdoom instance is already running. Please close it before starting another.",
+				             "UZdoom Warning", wxOK | wxICON_WARNING);
 				return;
 			}
 
@@ -341,7 +386,6 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "join").c_str();
 			if (event.GetId() == ID_HOST_GAME)
 				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host").c_str();
-
 
 			// below bind a listener that monitors if uzdoom closes/ends
 			this->Iconize(true); // Minimize immediately
@@ -435,3 +479,9 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 		}
 	}
 }
+
+void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
+{
+	//TODO
+}
+

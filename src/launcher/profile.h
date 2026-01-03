@@ -48,6 +48,7 @@ class Profile
 	wxString playerName = "Player";   //Player name
 	wxString playerClass = "Fighter";  //Player class
 	wxString playerGender = "Male"; // Player gender
+	wxString wadLanguage = "enu";     // selected language for this wad
 	
 	wxString hostPort        = "5029";
 	int      hostMaxPlayers  = 8;

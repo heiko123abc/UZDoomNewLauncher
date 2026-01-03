@@ -940,9 +940,9 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	advGameplayButton->Bind(wxEVT_BUTTON, [currEdit, panel](wxCommandEvent &) { advGameplay(currEdit, panel); });
 	leftCol->Add(gameplayGroup, 0, wxEXPAND | wxALL, 5);
 
-        // miscellaneous
+    // miscellaneous
 	wxStaticBoxSizer *miscGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Miscellaneous");
-	wxFlexGridSizer  *miscGrid  = new wxFlexGridSizer(3, 2, 5, 5);
+	wxFlexGridSizer  *miscGrid  = new wxFlexGridSizer(0, 2, 5, 5);
 	miscGrid->AddGrowableCol(1);
 
 	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Name:"), 0, wxALIGN_CENTER_VERTICAL);
@@ -962,6 +962,38 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	genderCombo->Append("Object");
 	genderCombo->SetEditable(false);
 	miscGrid->Add(genderCombo, 0, wxEXPAND);
+
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Language:"), 0, wxALIGN_CENTER_VERTICAL | wxTOP,
+	              panel->FromDIP(15));
+	wxComboBox *langCombo = new wxComboBox(panel, wxID_ANY, "enu", wxDefaultPosition, wxDefaultSize, 0, NULL, 0,
+	                                         wxGenericValidator(&currEdit->wadLanguage));
+
+	langCombo->Append(wxString::FromUTF8("enu - English (US)"));
+	langCombo->Append(wxString::FromUTF8("eng - English (UK)"));
+	langCombo->Append(wxString::FromUTF8("cs - Česky (Czech)"));
+	langCombo->Append(wxString::FromUTF8("da - Dansk (Danish)"));
+	langCombo->Append(wxString::FromUTF8("de - Deutsch (German)"));
+	langCombo->Append(wxString::FromUTF8("es - Español (España) (Castilian Spanish)"));
+	langCombo->Append(wxString::FromUTF8("esm - Español (Latino) (Latin American Spanish)"));
+	langCombo->Append(wxString::FromUTF8("eo - Esperanto"));
+	langCombo->Append(wxString::FromUTF8("fi - Suomi (Finnish)"));
+	langCombo->Append(wxString::FromUTF8("fr - Français (French)"));
+	langCombo->Append(wxString::FromUTF8("hu - Magyar (Hungarian)"));
+	langCombo->Append(wxString::FromUTF8("it - Italiano (Italian)"));
+	langCombo->Append(wxString::FromUTF8("jp - 日本語 (Japanese)"));
+	langCombo->Append(wxString::FromUTF8("ko - 한국어 (Korean)"));
+	langCombo->Append(wxString::FromUTF8("nl - Nederlands (Dutch)"));
+	langCombo->Append(wxString::FromUTF8("nb - Norsk Bokmål (Norwegian)"));
+	langCombo->Append(wxString::FromUTF8("pl - Polski (Polish)"));
+	langCombo->Append(wxString::FromUTF8("ptg - Português (European Portuguese)"));
+	langCombo->Append(wxString::FromUTF8("pt - Português do Brasil (Brazilian Portuguese)"));
+	langCombo->Append(wxString::FromUTF8("ro - Română (Romanian)"));
+	langCombo->Append(wxString::FromUTF8("ru - Русский (Russian)"));
+	langCombo->Append(wxString::FromUTF8("sr - Српски (Serbian)"));
+	langCombo->Append(wxString::FromUTF8("tr - Türkçe (Turkish)"));
+
+	langCombo->SetEditable(false);
+	miscGrid->Add(langCombo, 0, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxTOP, panel->FromDIP(15));
 
 	miscGroup->Add(miscGrid, 1, wxEXPAND | wxALL, 5);
 	leftCol->Add(miscGroup, 0, wxEXPAND | wxALL, 5);

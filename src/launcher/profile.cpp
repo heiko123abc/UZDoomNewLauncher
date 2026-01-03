@@ -72,6 +72,7 @@ void Profile::saveToFile(const std::string &filepath)
 	j["launch"]["playerName"]                = this->playerName;
 	j["launch"]["playerClass"]                = this->playerClass;
 	j["launch"]["playerGender"]                = this->playerGender;
+	j["launch"]["wadLanguage"]               = this->wadLanguage;
 	j["launch"]["hostPort"]                   = this->hostPort;
 	j["launch"]["hostMaxPlayers"]             = this->hostMaxPlayers;
 	j["launch"]["hostTickRate"]               = this->hostTickRate;
@@ -151,6 +152,7 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->playerName                 = j["launch"].value("playerName", "Player");
 		this->playerClass                = j["launch"].value("playerClass", "Fighter");
 		this->playerGender               = j["launch"].value("playerGender", "male");
+		this->wadLanguage                = j["launch"].value("wadLanguage", "default");
 		this->hostPort                   = j["launch"].value("hostPort", "");
 		this->hostMaxPlayers             = j["launch"].value("hostMaxPlayers", 8);
 		this->hostTickRate               = j["launch"].value("hostTickRate", "");
@@ -302,10 +304,11 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	if (alwaysapplydmflags)
 		cmd << "+set alwaysapplydmflags 1 ";
 
-        //apply names,class and gender
+        //apply names,class and gender (and language)
         cmd << "+set name " << this->playerName << " ";
         cmd << "+set playerclass " << this->playerClass << " ";
         cmd << "+set gender " << this->playerGender << " ";
+		cmd << "+set language " << this->wadLanguage << " ";
 
 
 	// pass directories

@@ -40,7 +40,7 @@
 
 using json = nlohmann::json;
 
-bool isAlreadyLaunched = false;
+bool     isAlreadyLaunched = false;
 wxString langVar           = "";
 
 // reuturns a string that calculates XXhXXm
@@ -59,7 +59,7 @@ std::string getTimeString(std::time_t totalSeconds)
 // IDs for various events
 enum
 {
-	ID_ADD_WAD,
+	ID_ADD_WAD = wxID_HIGHEST + 1,
 	ID_ADD_ARCHIVE,
 	ID_LANG,
 	ID_THEME,
@@ -73,6 +73,7 @@ enum
 	ID_MOVE_UP,
 	ID_MOVE_DOWN,
 
+	// Language IDs (Must remain sequential for range binding far below)
 	ID_LANG_ENU,
 	ID_LANG_ENG,
 	ID_LANG_CS,
@@ -98,31 +99,8 @@ enum
 	ID_LANG_TR
 };
 
-// wxEvent Binder Table
-wxBEGIN_EVENT_TABLE(LauncherMainWindow, wxFrame) EVT_MENU(ID_ADD_WAD, LauncherMainWindow::OnButtonClicked) EVT_MENU(
-	ID_ADD_ARCHIVE, LauncherMainWindow::OnButtonClicked) EVT_MENU(wxID_EXIT, LauncherMainWindow::OnButtonClicked)
-	EVT_MENU(ID_REL_NOTES, LauncherMainWindow::OnButtonClicked) EVT_MENU(ID_CREDITS,
-                                                                         LauncherMainWindow::OnButtonClicked)
-		EVT_BUTTON(ID_START_GAME, LauncherMainWindow::OnButtonClicked) EVT_BUTTON(ID_JOIN_GAME,
-                                                                                  LauncherMainWindow::OnButtonClicked)
-			EVT_BUTTON(ID_HOST_GAME, LauncherMainWindow::OnButtonClicked)
-				EVT_BUTTON(ID_PROFILE_SETTINGS, LauncherMainWindow::OnButtonClicked)
-					EVT_BUTTON(ID_REFRESH_LIST, LauncherMainWindow::OnButtonClicked)
-						EVT_BUTTON(ID_MOVE_UP, LauncherMainWindow::OnButtonClicked)
-							EVT_BUTTON(ID_MOVE_DOWN, LauncherMainWindow::OnButtonClicked)
-
-								EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-									EVT_MENU(ID_LANG_ENG, LauncherMainWindow::OnLanguageChanged)
-										EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-											EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-												EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-													EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-														EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-															EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
-																wxEND_EVENT_TABLE()
-
-	// write back the vector to file
-	void saveConfig(LauncherMainWindow *lmw)
+// write back the vector to file
+void saveConfig(LauncherMainWindow *lmw)
 {
 	json j;
 	j["lang"]     = langVar;
@@ -270,6 +248,25 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	// the description box
 	wxTextCtrl *descriptionBox = new wxTextCtrl(panel, wxID_ANY, wxT("Nothing Selected."), wxDefaultPosition,
 	                                            wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+
+	// Menu Bindings
+	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, ID_ADD_WAD);
+	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, ID_ADD_ARCHIVE);
+	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, wxID_EXIT);
+	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, ID_REL_NOTES);
+	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, ID_CREDITS);
+
+	// This catches any menu event between ID_LANG_ENU and ID_LANG_TR (must be in one piece)
+	Bind(wxEVT_MENU, &LauncherMainWindow::OnLanguageChanged, this, ID_LANG_ENU, ID_LANG_TR);
+
+	// Button Bindings
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_START_GAME);
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_JOIN_GAME);
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_HOST_GAME);
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_PROFILE_SETTINGS);
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_REFRESH_LIST);
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_MOVE_UP);
+	Bind(wxEVT_BUTTON, &LauncherMainWindow::OnButtonClicked, this, ID_MOVE_DOWN);
 
 	// do exactly that above when event is captured and when user clicks away they will be disabled again
 	profileList->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, [=, this](wxDataViewEvent &event) {
@@ -494,80 +491,80 @@ void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
 {
 
 	// assign correct value for language
-		switch (event.GetId())
-		{
-		case ID_LANG_ENU:
-			langVar = "enu";
-			break;
-		case ID_LANG_ENG:
-			langVar = "eng";
-			break;
-		case ID_LANG_CS:
-			langVar = "cs";
-			break;
-		case ID_LANG_DA:
-			langVar = "da";
-			break;
-		case ID_LANG_DE:
-			langVar = "de";
-			break;
-		case ID_LANG_ES:
-			langVar = "es";
-			break;
-		case ID_LANG_ESM:
-			langVar = "esm";
-			break;
-		case ID_LANG_EO:
-			langVar = "eo";
-			break;
-		case ID_LANG_FI:
-			langVar = "fi";
-			break;
-		case ID_LANG_FR:
-			langVar = "fr";
-			break;
-		case ID_LANG_HU:
-			langVar = "hu";
-			break;
-		case ID_LANG_IT:
-			langVar = "it";
-			break;
-		case ID_LANG_JP:
-			langVar = "jp";
-			break;
-		case ID_LANG_KO:
-			langVar = "ko";
-			break;
-		case ID_LANG_NL:
-			langVar = "nl";
-			break;
-		case ID_LANG_NB:
-			langVar = "nb";
-			break;
-		case ID_LANG_PL:
-			langVar = "pl";
-			break;
-		case ID_LANG_PTG:
-			langVar = "ptg";
-			break;
-		case ID_LANG_PT:
-			langVar = "pt";
-			break;
-		case ID_LANG_RO:
-			langVar = "ro";
-			break;
-		case ID_LANG_RU:
-			langVar = "ru";
-			break;
-		case ID_LANG_SR:
-			langVar = "sr";
-			break;
-		case ID_LANG_TR:
-			langVar = "tr";
-			break;
-		}
+	switch (event.GetId())
+	{
+	case ID_LANG_ENU:
+		langVar = "enu";
+		break;
+	case ID_LANG_ENG:
+		langVar = "eng";
+		break;
+	case ID_LANG_CS:
+		langVar = "cs";
+		break;
+	case ID_LANG_DA:
+		langVar = "da";
+		break;
+	case ID_LANG_DE:
+		langVar = "de";
+		break;
+	case ID_LANG_ES:
+		langVar = "es";
+		break;
+	case ID_LANG_ESM:
+		langVar = "esm";
+		break;
+	case ID_LANG_EO:
+		langVar = "eo";
+		break;
+	case ID_LANG_FI:
+		langVar = "fi";
+		break;
+	case ID_LANG_FR:
+		langVar = "fr";
+		break;
+	case ID_LANG_HU:
+		langVar = "hu";
+		break;
+	case ID_LANG_IT:
+		langVar = "it";
+		break;
+	case ID_LANG_JP:
+		langVar = "jp";
+		break;
+	case ID_LANG_KO:
+		langVar = "ko";
+		break;
+	case ID_LANG_NL:
+		langVar = "nl";
+		break;
+	case ID_LANG_NB:
+		langVar = "nb";
+		break;
+	case ID_LANG_PL:
+		langVar = "pl";
+		break;
+	case ID_LANG_PTG:
+		langVar = "ptg";
+		break;
+	case ID_LANG_PT:
+		langVar = "pt";
+		break;
+	case ID_LANG_RO:
+		langVar = "ro";
+		break;
+	case ID_LANG_RU:
+		langVar = "ru";
+		break;
+	case ID_LANG_SR:
+		langVar = "sr";
+		break;
+	case ID_LANG_TR:
+		langVar = "tr";
+		break;
+	}
 
-	 saveConfig(this);
+	saveConfig(this);
 
 	// now, trigger language update of the entire launacher ui
 }

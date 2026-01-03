@@ -31,5 +31,4 @@ class LauncherMainWindow : public wxFrame
   private:
 	void OnButtonClicked(wxCommandEvent &event);
 	void OnLanguageChanged(wxCommandEvent &event);
-	wxDECLARE_EVENT_TABLE();
 };

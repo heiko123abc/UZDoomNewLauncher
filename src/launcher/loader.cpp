@@ -245,16 +245,8 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	                              std::format("{:%Y%m%d-%H%M%S}", std::chrono::system_clock::now());
 
 	// we have a name for the profile, now
-	if (newProfile.isIWAD == 1)
-	{
-		std::filesystem::create_directories(std::string(IWAD_PROFILE_DIR.ToUTF8()) + profileFilename);
-		path = std::string(IWAD_PROFILE_DIR.ToUTF8()) + profileFilename + "/";
-	}
-	else
-	{
-		std::filesystem::create_directories(std::string(PWAD_PROFILE_DIR.ToUTF8()) + profileFilename);
-		path = std::string(PWAD_PROFILE_DIR.ToUTF8()) + profileFilename + "/";
-	}
+	std::filesystem::create_directories(std::string(PROFILE_DIR.ToUTF8()) + profileFilename);
+	path = std::string(PROFILE_DIR.ToUTF8()) + profileFilename + "/";
 
 	// copy the file(s) to the respective folder
 	if (!wasArchive)
@@ -303,9 +295,23 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		// WAIT, the user might drop a arbitary archive here, we simply stop if there isnt even a .wad file
 		if (wasArchive)
 		{
+			// was the archive nested
+			auto nestCheck = std::filesystem::directory_iterator(path);
+			const auto &firstEntry = *nestCheck;
+			if (nestCheck != std::filesystem::directory_iterator())
+			{
+				auto nextEntry = nestCheck;
+				if (firstEntry.is_directory() && ++nextEntry == std::filesystem::directory_iterator())
+				{
+					path = firstEntry.path().string(); //only on item and its a folder -> nested!
+				}
+			}
+
+
 			bool wadFound = false;
 			for (const auto &entry : std::filesystem::directory_iterator(path))
 			{
+
 				if (entry.is_regular_file())
 				{
 					std::string extension = entry.path().extension().string();
@@ -313,7 +319,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 					// Convert to lowercase for case-insensitive comparison (WAD vs wad)
 					std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 
-					if (extension == ".wad" || extension == ".iwad")
+					if (extension == ".wad")
 					{
 						foundWadPath = entry.path().string();
 						wadFound     = true;
@@ -327,7 +333,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 			{
 				// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
 				path.pop_back(); // drop the / at the end
-				wxMessageBox("Error: No .wad file found in the archive!", "Error", wxICON_ERROR);
+				wxMessageBox("Error: No .wad file found in the archive! (Or archive is too nested.)", "Error", wxICON_ERROR);
 				std::filesystem::remove_all(path); // delete dir since we aborted
 				return;
 			}
@@ -349,7 +355,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	newProfile.title[0] = std::toupper(newProfile.title[0]);            // capitlize the first letter for beautify
 
 	// buffer entire WAD
-	std::ifstream     file(filepath, std::ios_base::in | std::ios_base::binary);
+	std::ifstream     file(foundWadPath, std::ios_base::in | std::ios_base::binary);
 	std::stringstream buffer;
 	buffer << file.rdbuf();
 	std::string fileContent = buffer.str();

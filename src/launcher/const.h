@@ -25,8 +25,7 @@ inline wxString exePath;
 
 // defined directories
 inline wxString ROOT_DIR;
-inline wxString IWAD_PROFILE_DIR;
-inline wxString PWAD_PROFILE_DIR;
+inline wxString PROFILE_DIR;
 
 // config file path
 inline wxString CONFIG_FILE;

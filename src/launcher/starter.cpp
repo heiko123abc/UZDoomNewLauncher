@@ -46,14 +46,12 @@ bool Starter::OnInit()
 	exePath = "./"; // we just need the folder where the executeable is located
 
 	ROOT_DIR         = exePath + "launcher/";
-	IWAD_PROFILE_DIR = ROOT_DIR + "IWAD/";
-	PWAD_PROFILE_DIR = ROOT_DIR + "PWAD/";
+	PROFILE_DIR		 = ROOT_DIR + "profiles/";
 	CONFIG_FILE      = ROOT_DIR + "config.json";
 
-	// hang on, lets see if folder for launchers IWAD and PWAD dirs exists
+	// hang on, lets see if folder for launchers profiles exists
 	// if not, create them
-	std::filesystem::create_directories(std::string(IWAD_PROFILE_DIR.ToUTF8()));
-	std::filesystem::create_directories(std::string(PWAD_PROFILE_DIR.ToUTF8()));
+	std::filesystem::create_directories(std::string(PROFILE_DIR.ToUTF8()));
 
 	// and now the config file for launcher
 	std::string filePath = std::string(CONFIG_FILE.ToUTF8());

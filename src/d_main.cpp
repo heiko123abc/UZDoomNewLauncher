@@ -4168,7 +4168,13 @@ void SignalHandler(int signal)
 
 int GameMain()
 {
-	wxKickStarter(); //call the wxWidgets starter here to begin
+	//if -file is there, skip the ui directly into game.
+	const char *value = Args->CheckValue(FArg_file);
+
+	if (!value)
+	{
+		wxKickStarter(); // call the wxWidgets starter here to begin
+	}
 
 	int ret = 0;
 	GameTicRate = TICRATE;

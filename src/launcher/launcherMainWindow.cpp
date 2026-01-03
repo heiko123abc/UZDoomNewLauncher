@@ -350,7 +350,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			wxProcess *process = new wxProcess(this);
 
 			// Capture process end
-			this->Bind(wxEVT_END_PROCESS, [this, selectedRowPath, startingPoint](wxProcessEvent &event) {
+			this->Bind(wxEVT_END_PROCESS, [this, selectedRowPath, startingPoint, process](wxProcessEvent &event) {
 				TimePoint doneTime = std::chrono::system_clock::now();
 				long long secondsPlayed =
 					std::chrono::duration_cast<std::chrono::seconds>(doneTime - startingPoint).count();
@@ -374,6 +374,8 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 				refreshList(profileList, this);
 
 				isAlreadyLaunched = false; // reset flag
+
+				delete process;
 			});
 
 			wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);

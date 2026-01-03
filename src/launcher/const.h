@@ -30,5 +30,5 @@ inline wxString PROFILE_DIR;
 // config file path
 inline wxString CONFIG_FILE;
 
-// default language is english (en)
-inline std::string_view DEFAULT_LANG = "en";
+// default language is u.s english (enu)
+inline std::string_view DEFAULT_LANG = "enu";

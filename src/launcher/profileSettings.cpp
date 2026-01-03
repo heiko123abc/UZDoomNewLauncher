@@ -1,7 +1,7 @@
 /*
 ** profileSettings.cpp
 **
-** Contains UI code and logic for the profiles own Settings tab 
+** Contains UI code and logic for the profiles own Settings tab
 **
 **---------------------------------------------------------------------------
 **
@@ -526,7 +526,8 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		rowSizer->Add(label, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
 
 		// UP Button
-		wxButton *btnUp = new wxButton(row, wxID_ANY, wxString::FromUTF8("▲"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
+		wxButton *btnUp =
+			new wxButton(row, wxID_ANY, wxString::FromUTF8("▲"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
 		btnUp->Enable(i > 0);
 		btnUp->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			if (i > 0)
@@ -538,7 +539,8 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		rowSizer->Add(btnUp, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
 		// DOWN Button
-		wxButton *btnDown = new wxButton(row, wxID_ANY, wxString::FromUTF8("▼"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
+		wxButton *btnDown =
+			new wxButton(row, wxID_ANY, wxString::FromUTF8("▼"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
 		btnDown->Enable(i < currEdit->modFiles.size() - 1);
 		btnDown->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			if (i < currEdit->modFiles.size() - 1)
@@ -550,7 +552,8 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 		rowSizer->Add(btnDown, 0, wxRIGHT | wxALIGN_CENTER_VERTICAL, 2);
 
 		// DELETE Button
-		wxButton *btnDel = new wxButton(row, wxID_ANY, wxString::FromUTF8("X"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
+		wxButton *btnDel =
+			new wxButton(row, wxID_ANY, wxString::FromUTF8("X"), wxDefaultPosition, parent->FromDIP(wxSize(35, 30)));
 		btnDel->SetForegroundColour(*wxRED);
 		btnDel->Bind(wxEVT_BUTTON, [=](wxCommandEvent &) {
 			std::filesystem::remove(currEdit->modFiles[i]);           // Wipe the mod file itsself first
@@ -673,8 +676,9 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                                       wxTextValidator(wxFILTER_NONE, &currEdit->configFilePath));
 	configTxt->SetInsertionPointEnd();
 
-	wxButton *configButton = new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
-	                 panel->FromDIP(wxSize(configTxt->GetBestSize().y*1.2, configTxt->GetBestSize().y)));
+	wxButton *configButton =
+		new wxButton(panel, wxID_ANY, "...", wxDefaultPosition,
+	                 panel->FromDIP(wxSize(configTxt->GetBestSize().y * 1.2, configTxt->GetBestSize().y)));
 	// bind it
 	configButton->Bind(wxEVT_BUTTON, [panel, configTxt](wxCommandEvent &) {
 		OpenPathPicker(panel, configTxt, "Select Config File", false, "INI files (*.ini)|*.ini");
@@ -940,22 +944,22 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	advGameplayButton->Bind(wxEVT_BUTTON, [currEdit, panel](wxCommandEvent &) { advGameplay(currEdit, panel); });
 	leftCol->Add(gameplayGroup, 0, wxEXPAND | wxALL, 5);
 
-    // miscellaneous
+	// miscellaneous
 	wxStaticBoxSizer *miscGroup = new wxStaticBoxSizer(wxVERTICAL, panel, "Miscellaneous");
 	wxFlexGridSizer  *miscGrid  = new wxFlexGridSizer(0, 2, 5, 5);
 	miscGrid->AddGrowableCol(1);
 
 	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Name:"), 0, wxALIGN_CENTER_VERTICAL);
 	miscGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
-	                               wxTextValidator(wxFILTER_NONE, &currEdit->playerName)),
-	                0, wxEXPAND);
+	                             wxTextValidator(wxFILTER_NONE, &currEdit->playerName)),
+	              0, wxEXPAND);
 	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Class:"), 0, wxALIGN_CENTER_VERTICAL);
 	miscGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
-	                               wxTextValidator(wxFILTER_NONE, &currEdit->playerClass)),
-	                0, wxEXPAND);
+	                             wxTextValidator(wxFILTER_NONE, &currEdit->playerClass)),
+	              0, wxEXPAND);
 	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Player Gender:"), 0, wxALIGN_CENTER_VERTICAL);
 	wxComboBox *genderCombo = new wxComboBox(panel, wxID_ANY, "Male", wxDefaultPosition, wxDefaultSize, 0, NULL, 0,
-	                                           wxGenericValidator(&currEdit->playerGender));
+	                                         wxGenericValidator(&currEdit->playerGender));
 	genderCombo->Append("Male");
 	genderCombo->Append("Female");
 	genderCombo->Append("Neutral");
@@ -965,32 +969,57 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	miscGrid->Add(new wxStaticText(panel, wxID_ANY, "Language:"), 0, wxALIGN_CENTER_VERTICAL | wxTOP,
 	              panel->FromDIP(15));
-	wxComboBox *langCombo = new wxComboBox(panel, wxID_ANY, "enu", wxDefaultPosition, wxDefaultSize, 0, NULL, 0,
-	                                         wxGenericValidator(&currEdit->wadLanguage));
+	wxComboBox *langCombo = new wxComboBox(panel, wxID_ANY, "enu", wxDefaultPosition, wxDefaultSize, 0, NULL, 0);
 
-	langCombo->Append(wxString::FromUTF8("enu - English (US)"));
-	langCombo->Append(wxString::FromUTF8("eng - English (UK)"));
-	langCombo->Append(wxString::FromUTF8("cs - Česky (Czech)"));
-	langCombo->Append(wxString::FromUTF8("da - Dansk (Danish)"));
-	langCombo->Append(wxString::FromUTF8("de - Deutsch (German)"));
-	langCombo->Append(wxString::FromUTF8("es - Español (España) (Castilian Spanish)"));
-	langCombo->Append(wxString::FromUTF8("esm - Español (Latino) (Latin American Spanish)"));
-	langCombo->Append(wxString::FromUTF8("eo - Esperanto"));
-	langCombo->Append(wxString::FromUTF8("fi - Suomi (Finnish)"));
-	langCombo->Append(wxString::FromUTF8("fr - Français (French)"));
-	langCombo->Append(wxString::FromUTF8("hu - Magyar (Hungarian)"));
-	langCombo->Append(wxString::FromUTF8("it - Italiano (Italian)"));
-	langCombo->Append(wxString::FromUTF8("jp - 日本語 (Japanese)"));
-	langCombo->Append(wxString::FromUTF8("ko - 한국어 (Korean)"));
-	langCombo->Append(wxString::FromUTF8("nl - Nederlands (Dutch)"));
-	langCombo->Append(wxString::FromUTF8("nb - Norsk Bokmål (Norwegian)"));
-	langCombo->Append(wxString::FromUTF8("pl - Polski (Polish)"));
-	langCombo->Append(wxString::FromUTF8("ptg - Português (European Portuguese)"));
-	langCombo->Append(wxString::FromUTF8("pt - Português do Brasil (Brazilian Portuguese)"));
-	langCombo->Append(wxString::FromUTF8("ro - Română (Romanian)"));
-	langCombo->Append(wxString::FromUTF8("ru - Русский (Russian)"));
-	langCombo->Append(wxString::FromUTF8("sr - Српски (Serbian)"));
-	langCombo->Append(wxString::FromUTF8("tr - Türkçe (Turkish)"));
+	langCombo->Append(wxString::FromUTF8("enu - English (US)"), new wxStringClientData("enu"));
+	langCombo->Append(wxString::FromUTF8("eng - English (UK)"), new wxStringClientData("eng"));
+	langCombo->Append(wxString::FromUTF8("cs - Česky (Czech)"), new wxStringClientData("cs"));
+	langCombo->Append(wxString::FromUTF8("da - Dansk (Danish)"), new wxStringClientData("da"));
+	langCombo->Append(wxString::FromUTF8("de - Deutsch (German)"), new wxStringClientData("de"));
+	langCombo->Append(wxString::FromUTF8("es - Español (España) (Castilian Spanish)"), new wxStringClientData("es"));
+	langCombo->Append(wxString::FromUTF8("esm - Español (Latino) (Latin American Spanish)"),
+	                  new wxStringClientData("esm"));
+	langCombo->Append(wxString::FromUTF8("eo - Esperanto"), new wxStringClientData("eo"));
+	langCombo->Append(wxString::FromUTF8("fi - Suomi (Finnish)"), new wxStringClientData("fi"));
+	langCombo->Append(wxString::FromUTF8("fr - Français (French)"), new wxStringClientData("fr"));
+	langCombo->Append(wxString::FromUTF8("hu - Magyar (Hungarian)"), new wxStringClientData("hu"));
+	langCombo->Append(wxString::FromUTF8("it - Italiano (Italian)"), new wxStringClientData("it"));
+	langCombo->Append(wxString::FromUTF8("jp - 日本語 (Japanese)"), new wxStringClientData("jp"));
+	langCombo->Append(wxString::FromUTF8("ko - 한국어 (Korean)"), new wxStringClientData("ko"));
+	langCombo->Append(wxString::FromUTF8("nl - Nederlands (Dutch)"), new wxStringClientData("nl"));
+	langCombo->Append(wxString::FromUTF8("nb - Norsk Bokmål (Norwegian)"), new wxStringClientData("nb"));
+	langCombo->Append(wxString::FromUTF8("pl - Polski (Polish)"), new wxStringClientData("pl"));
+	langCombo->Append(wxString::FromUTF8("ptg - Português (European Portuguese)"), new wxStringClientData("ptg"));
+	langCombo->Append(wxString::FromUTF8("pt - Português do Brasil (Brazilian Portuguese)"),
+	                  new wxStringClientData("pt"));
+	langCombo->Append(wxString::FromUTF8("ro - Română (Romanian)"), new wxStringClientData("ro"));
+	langCombo->Append(wxString::FromUTF8("ru - Русский (Russian)"), new wxStringClientData("ru"));
+	langCombo->Append(wxString::FromUTF8("sr - Српски (Serbian)"), new wxStringClientData("sr"));
+	langCombo->Append(wxString::FromUTF8("tr - Türkçe (Turkish)"), new wxStringClientData("tr"));
+
+	// pre select based on what is in wadLanguage
+	for (unsigned int i = 0; i < langCombo->GetCount(); ++i)
+	{
+		wxStringClientData *data = static_cast<wxStringClientData *>(langCombo->GetClientObject(i));
+		if (data && data->GetData() == currEdit->wadLanguage)
+		{
+			langCombo->SetSelection(i);
+			break;
+		}
+	}
+
+	// get selection and save it
+	langCombo->Bind(wxEVT_COMBOBOX, [langCombo, currEdit](wxCommandEvent &) {
+		int sel = langCombo->GetSelection();
+		if (sel != wxNOT_FOUND)
+		{
+			wxStringClientData *data = static_cast<wxStringClientData *>(langCombo->GetClientObject(sel));
+			if (data)
+			{
+				currEdit->wadLanguage = data->GetData();
+			}
+		}
+	});
 
 	langCombo->SetEditable(false);
 	miscGrid->Add(langCombo, 0, wxEXPAND | wxALIGN_CENTER_VERTICAL | wxTOP, panel->FromDIP(15));

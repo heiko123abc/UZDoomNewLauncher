@@ -33,6 +33,7 @@
 #include <wx/utils.h>
 
 #include "about.h"
+#include "const.h"
 #include "loader.h"
 #include "profile.h"
 #include "profileSettings.h"
@@ -40,6 +41,7 @@
 using json = nlohmann::json;
 
 bool isAlreadyLaunched = false;
+wxString langVar           = "";
 
 // reuturns a string that calculates XXhXXm
 using TimePoint = std::chrono::system_clock::time_point;
@@ -97,25 +99,33 @@ enum
 };
 
 // wxEvent Binder Table
-wxBEGIN_EVENT_TABLE(LauncherMainWindow, wxFrame) EVT_MENU(ID_ADD_WAD, LauncherMainWindow::OnButtonClicked)
-	EVT_MENU(ID_ADD_ARCHIVE, LauncherMainWindow::OnButtonClicked)
-		EVT_MENU(wxID_EXIT, LauncherMainWindow::OnButtonClicked)
-			EVT_MENU(ID_REL_NOTES, LauncherMainWindow::OnButtonClicked)
-				EVT_MENU(ID_CREDITS, LauncherMainWindow::OnButtonClicked)
-					EVT_BUTTON(ID_START_GAME, LauncherMainWindow::OnButtonClicked)
-						EVT_BUTTON(ID_JOIN_GAME, LauncherMainWindow::OnButtonClicked)
-							EVT_BUTTON(ID_HOST_GAME, LauncherMainWindow::OnButtonClicked)
-								EVT_BUTTON(ID_PROFILE_SETTINGS, LauncherMainWindow::OnButtonClicked)
-									EVT_BUTTON(ID_REFRESH_LIST, LauncherMainWindow::OnButtonClicked)
-										EVT_BUTTON(ID_MOVE_UP, LauncherMainWindow::OnButtonClicked)
-											EVT_BUTTON(ID_MOVE_DOWN, LauncherMainWindow::OnButtonClicked)
-												wxEND_EVENT_TABLE()
+wxBEGIN_EVENT_TABLE(LauncherMainWindow, wxFrame) EVT_MENU(ID_ADD_WAD, LauncherMainWindow::OnButtonClicked) EVT_MENU(
+	ID_ADD_ARCHIVE, LauncherMainWindow::OnButtonClicked) EVT_MENU(wxID_EXIT, LauncherMainWindow::OnButtonClicked)
+	EVT_MENU(ID_REL_NOTES, LauncherMainWindow::OnButtonClicked) EVT_MENU(ID_CREDITS,
+                                                                         LauncherMainWindow::OnButtonClicked)
+		EVT_BUTTON(ID_START_GAME, LauncherMainWindow::OnButtonClicked) EVT_BUTTON(ID_JOIN_GAME,
+                                                                                  LauncherMainWindow::OnButtonClicked)
+			EVT_BUTTON(ID_HOST_GAME, LauncherMainWindow::OnButtonClicked)
+				EVT_BUTTON(ID_PROFILE_SETTINGS, LauncherMainWindow::OnButtonClicked)
+					EVT_BUTTON(ID_REFRESH_LIST, LauncherMainWindow::OnButtonClicked)
+						EVT_BUTTON(ID_MOVE_UP, LauncherMainWindow::OnButtonClicked)
+							EVT_BUTTON(ID_MOVE_DOWN, LauncherMainWindow::OnButtonClicked)
+
+								EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+									EVT_MENU(ID_LANG_ENG, LauncherMainWindow::OnLanguageChanged)
+										EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+											EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+												EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+													EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+														EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+															EVT_MENU(ID_LANG_ENU, LauncherMainWindow::OnLanguageChanged)
+																wxEND_EVENT_TABLE()
 
 	// write back the vector to file
 	void saveConfig(LauncherMainWindow *lmw)
 {
 	json j;
-	j["lang"]     = DEFAULT_LANG.data(); // This needs to become a variable down the line
+	j["lang"]     = langVar;
 	j["profiles"] = lmw->profilePaths;
 
 	std::ofstream file(CONFIG_FILE.ToUTF8());
@@ -482,6 +492,82 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
 {
-	//TODO
-}
 
+	// assign correct value for language
+		switch (event.GetId())
+		{
+		case ID_LANG_ENU:
+			langVar = "enu";
+			break;
+		case ID_LANG_ENG:
+			langVar = "eng";
+			break;
+		case ID_LANG_CS:
+			langVar = "cs";
+			break;
+		case ID_LANG_DA:
+			langVar = "da";
+			break;
+		case ID_LANG_DE:
+			langVar = "de";
+			break;
+		case ID_LANG_ES:
+			langVar = "es";
+			break;
+		case ID_LANG_ESM:
+			langVar = "esm";
+			break;
+		case ID_LANG_EO:
+			langVar = "eo";
+			break;
+		case ID_LANG_FI:
+			langVar = "fi";
+			break;
+		case ID_LANG_FR:
+			langVar = "fr";
+			break;
+		case ID_LANG_HU:
+			langVar = "hu";
+			break;
+		case ID_LANG_IT:
+			langVar = "it";
+			break;
+		case ID_LANG_JP:
+			langVar = "jp";
+			break;
+		case ID_LANG_KO:
+			langVar = "ko";
+			break;
+		case ID_LANG_NL:
+			langVar = "nl";
+			break;
+		case ID_LANG_NB:
+			langVar = "nb";
+			break;
+		case ID_LANG_PL:
+			langVar = "pl";
+			break;
+		case ID_LANG_PTG:
+			langVar = "ptg";
+			break;
+		case ID_LANG_PT:
+			langVar = "pt";
+			break;
+		case ID_LANG_RO:
+			langVar = "ro";
+			break;
+		case ID_LANG_RU:
+			langVar = "ru";
+			break;
+		case ID_LANG_SR:
+			langVar = "sr";
+			break;
+		case ID_LANG_TR:
+			langVar = "tr";
+			break;
+		}
+
+	 saveConfig(this);
+
+	// now, trigger language update of the entire launacher ui
+}

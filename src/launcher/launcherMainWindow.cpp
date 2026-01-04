@@ -178,9 +178,6 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	file.close();
 	GStrings.UpdateLanguage(langVar);
 
-	// use langvar to update language
-	updateLanguage();
-
 	// This Panel is the base for all other UI components
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
 
@@ -196,29 +193,29 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create toggler
 	wxMenu *LangToggler = new wxMenu();
-	LangToggler->Append(ID_LANG_ENU, wxString::FromUTF8("enu - English (US)"));
-	LangToggler->Append(ID_LANG_ENG, wxString::FromUTF8("eng - English (UK)"));
-	LangToggler->Append(ID_LANG_CS, wxString::FromUTF8("cs - Česky (Czech)"));
-	LangToggler->Append(ID_LANG_DA, wxString::FromUTF8("da - Dansk (Danish)"));
-	LangToggler->Append(ID_LANG_DE, wxString::FromUTF8("de - Deutsch (German)"));
-	LangToggler->Append(ID_LANG_ES, wxString::FromUTF8("es - Español (España) (Castilian Spanish)"));
-	LangToggler->Append(ID_LANG_ESM, wxString::FromUTF8("esm - Español (Latino) (Latin American Spanish)"));
-	LangToggler->Append(ID_LANG_EO, wxString::FromUTF8("eo - Esperanto"));
-	LangToggler->Append(ID_LANG_FI, wxString::FromUTF8("fi - Suomi (Finnish)"));
-	LangToggler->Append(ID_LANG_FR, wxString::FromUTF8("fr - Français (French)"));
-	LangToggler->Append(ID_LANG_HU, wxString::FromUTF8("hu - Magyar (Hungarian)"));
-	LangToggler->Append(ID_LANG_IT, wxString::FromUTF8("it - Italiano (Italian)"));
-	LangToggler->Append(ID_LANG_JP, wxString::FromUTF8("jp - 日本語 (Japanese)"));
-	LangToggler->Append(ID_LANG_KO, wxString::FromUTF8("ko - 한국어 (Korean)"));
-	LangToggler->Append(ID_LANG_NL, wxString::FromUTF8("nl - Nederlands (Dutch)"));
-	LangToggler->Append(ID_LANG_NB, wxString::FromUTF8("nb - Norsk Bokmål (Norwegian)"));
-	LangToggler->Append(ID_LANG_PL, wxString::FromUTF8("pl - Polski (Polish)"));
-	LangToggler->Append(ID_LANG_PTG, wxString::FromUTF8("ptg - Português (European Portuguese)"));
-	LangToggler->Append(ID_LANG_PT, wxString::FromUTF8("pt - Português do Brasil (Brazilian Portuguese)"));
-	LangToggler->Append(ID_LANG_RO, wxString::FromUTF8("ro - Română (Romanian)"));
-	LangToggler->Append(ID_LANG_RU, wxString::FromUTF8("ru - Русский (Russian)"));
-	LangToggler->Append(ID_LANG_SR, wxString::FromUTF8("sr - Српски (Serbian)"));
-	LangToggler->Append(ID_LANG_TR, wxString::FromUTF8("tr - Türkçe (Turkish)"));
+	LangToggler->Append(ID_LANG_ENU, wxString::FromUTF8("English (US)"));
+	LangToggler->Append(ID_LANG_ENG, wxString::FromUTF8("English (UK)"));
+	LangToggler->Append(ID_LANG_CS, wxString::FromUTF8("Česky (Czech)"));
+	LangToggler->Append(ID_LANG_DA, wxString::FromUTF8("Dansk (Danish)"));
+	LangToggler->Append(ID_LANG_DE, wxString::FromUTF8("Deutsch (German)"));
+	LangToggler->Append(ID_LANG_ES, wxString::FromUTF8("Español (España) (Castilian Spanish)"));
+	LangToggler->Append(ID_LANG_ESM, wxString::FromUTF8("Español (Latino) (Latin American Spanish)"));
+	LangToggler->Append(ID_LANG_EO, wxString::FromUTF8("Esperanto"));
+	LangToggler->Append(ID_LANG_FI, wxString::FromUTF8("Suomi (Finnish)"));
+	LangToggler->Append(ID_LANG_FR, wxString::FromUTF8("Français (French)"));
+	LangToggler->Append(ID_LANG_HU, wxString::FromUTF8("Magyar (Hungarian)"));
+	LangToggler->Append(ID_LANG_IT, wxString::FromUTF8("Italiano (Italian)"));
+	LangToggler->Append(ID_LANG_JP, wxString::FromUTF8("日本語 (Japanese)"));
+	LangToggler->Append(ID_LANG_KO, wxString::FromUTF8("한국어 (Korean)"));
+	LangToggler->Append(ID_LANG_NL, wxString::FromUTF8("Nederlands (Dutch)"));
+	LangToggler->Append(ID_LANG_NB, wxString::FromUTF8("Norsk Bokmål (Norwegian)"));
+	LangToggler->Append(ID_LANG_PL, wxString::FromUTF8("Polski (Polish)"));
+	LangToggler->Append(ID_LANG_PTG, wxString::FromUTF8("Português (European Portuguese)"));
+	LangToggler->Append(ID_LANG_PT, wxString::FromUTF8("Português do Brasil (Brazilian Portuguese)"));
+	LangToggler->Append(ID_LANG_RO, wxString::FromUTF8("Română (Romanian)"));
+	LangToggler->Append(ID_LANG_RU, wxString::FromUTF8("Русский (Russian)"));
+	LangToggler->Append(ID_LANG_SR, wxString::FromUTF8("Српски (Serbian)"));
+	LangToggler->Append(ID_LANG_TR, wxString::FromUTF8("Türkçe (Turkish)"));
 	PrefMenu->AppendSubMenu(LangToggler, "&Language");
 
 	// create menu item to view credits and release notes
@@ -243,7 +240,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	profileList->AppendTextColumn("Playtime", wxDATAVIEW_CELL_INERT, 80, wxALIGN_CENTER, 0);
 
 	// Add 4 buttons to the right of the profile list
-	startGameButton  = new wxButton(panel, ID_START_GAME, "Start Game");
+	startGameButton  = new wxButton(panel, ID_START_GAME, GStrings.GetString("LAUNCHER_PROFBUTTON_START"));
 	joinServerButton = new wxButton(panel, ID_JOIN_GAME, "Join Server");
 	hostServerButton = new wxButton(panel, ID_HOST_GAME, "Host Server");
 	settingsButton   = new wxButton(panel, ID_PROFILE_SETTINGS, "Profile Settings ...");
@@ -338,6 +335,9 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	panel->SetSizer(mainSizer);
 	panel->Layout(); // Force an immediate update
+
+	// use langvar to update language
+	updateLanguage();
 }
 
 void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
@@ -505,12 +505,15 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 void LauncherMainWindow::updateLanguage()
 {
+	// Make sure GStrings uses the correct language
+	GStrings.UpdateLanguage(langVar);
+
 	// Update all UI strings
 	this->SetTitle(GStrings.GetString("LAUNCHER_TITLE"));
-
-
+	startGameButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_START"));
 	// in case layout needs to be updated too
 	this->Layout();
+	this->Refresh();
 }
 
 void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
@@ -522,7 +525,7 @@ void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
 		switch (event.GetId())
 		{
 		case ID_LANG_ENU:
-			langVar = "enu";
+			langVar = "default";
 			break;
 		case ID_LANG_ENG:
 			langVar = "eng";
@@ -567,7 +570,7 @@ void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
 			langVar = "nl";
 			break;
 		case ID_LANG_NB:
-			langVar = "nb";
+			langVar = "no";
 			break;
 		case ID_LANG_PL:
 			langVar = "pl";

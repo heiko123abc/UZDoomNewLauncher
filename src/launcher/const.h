@@ -31,8 +31,8 @@ inline wxString PROFILE_DIR;
 // config file path
 inline wxString CONFIG_FILE;
 
-// default language is u.s english (enu)
-inline std::string_view DEFAULT_LANG = "enu";
+// default language is u.s english
+inline std::string_view DEFAULT_LANG = "default";
 
 // Simple struct to hold all data for a single flag
 struct FlagInfo

@@ -390,6 +390,7 @@ endif()
 
 add_subdirectory( libraries/webp )
 
+set( wxUSE_LIBSDL OFF CACHE BOOL "" FORCE )
 set( wxBUILD_INSTALL OFF CACHE BOOL "" FORCE )
 set( wxBUILD_SHARED OFF CACHE BOOL "" FORCE )
 set( wxBUILD_MONOLITHIC ON CACHE BOOL "" FORCE )

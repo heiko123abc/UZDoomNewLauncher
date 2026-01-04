@@ -29,6 +29,15 @@ class LauncherMainWindow : public wxFrame
 	LauncherMainWindow(const wxString &title);
 
   private:
+	wxButton *startGameButton;
+	wxButton *joinServerButton;
+	wxButton *hostServerButton;
+	wxButton *settingsButton;
+
+	wxButton *refreshButton;
+	wxButton *moveEntryUpButton;
+	wxButton *moveEntryDownButton;
+
 	void updateLanguage();
 	void OnButtonClicked(wxCommandEvent &event);
 	void OnLanguageChanged(wxCommandEvent &event);

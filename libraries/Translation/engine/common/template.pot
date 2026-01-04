@@ -1928,218 +1928,417 @@ msgstr ""
 msgid "DSPLYMNU_ADVANCED"
 msgstr ""
 
-msgid "PICKER_SELECT"
+msgid "LAUNCHER_TITLE"
 msgstr ""
 
-msgid "PICKER_PLAY"
+msgid "LAUNCHER_TOPBAR_FILE"
 msgstr ""
 
-msgid "PICKER_EXIT"
+msgid "LAUNCHER_TOPBAR_FILEADDWAD"
 msgstr ""
 
-msgid "PICKER_GENERAL"
+msgid "LAUNCHER_TOPBAR_FILEADDARCHIVE"
 msgstr ""
 
-msgid "PICKER_EXTRA"
+# Button in the drop down menu to exit UZDoom
+msgid "LAUNCHER_TOPBAR_FILEEXIT"
 msgstr ""
 
-msgid "PICKER_FULLSCREEN"
+msgid "LAUNCHER_TOPBAR_PREF"
 msgstr ""
 
-msgid "PICKER_NOAUTOLOAD"
+msgid "LAUNCHER_TOPBAR_PREFLANG"
 msgstr ""
 
-msgid "PICKER_DONTASK"
+msgid "LAUNCHER_TOPBAR_ABOUT"
 msgstr ""
 
-msgid "PICKER_LIGHTS"
+msgid "LAUNCHER_TOPBAR_ABOUTNOTES"
 msgstr ""
 
-msgid "PICKER_BRIGHTMAPS"
+msgid "LAUNCHER_TOPBAR_ABOUTCREDITS"
 msgstr ""
 
-msgid "PICKER_WIDESCREEN"
+msgid "LAUNCHER_PROFLIST_TYPE"
 msgstr ""
 
-msgid "PICKER_ADDPARM"
+msgid "LAUNCHER_PROFLIST_TITLE"
 msgstr ""
 
-msgid "PICKER_WELCOME"
+# indicates one OR more authors for a WAD
+msgid "LAUNCHER_PROFLIST_AUTHORS"
 msgstr ""
 
-msgid "PICKER_VERSION"
+msgid "LAUNCHER_PROFLIST_RELEASEDATE"
 msgstr ""
 
-msgid "PICKER_PREFERBACKEND"
+msgid "LAUNCHER_PROFLIST_LASTPLAYED"
 msgstr ""
 
-msgid "PICKER_TAB_PLAY"
+msgid "LAUNCHER_PROFLIST_PLAYTIME"
 msgstr ""
 
-# Option to enable or disable individual controllers/joysticks when
-# configuring it in the Controller Options menu
-msgid "JOYMNU_JOYENABLE"
+# start the selected profile button
+msgid "LAUNCHER_PROFBUTTON_START"
 msgstr ""
 
-msgid "CNTRLMNU_OPEN_MAIN"
+msgid "LAUNCHER_PROFBUTTON_JOIN"
 msgstr ""
 
-msgid "MODMNU_REPLAYER"
+msgid "LAUNCHER_PROFBUTTON_HOST"
 msgstr ""
 
-# This is enabled per-controller, it means to enable "this" controller in the
-# background when GZDoom is not in focus.
-msgid "JOYMNU_JOYENABLEINBACKGROUND"
+msgid  "LAUNCHER_PROFBUTTON_SETTING"
 msgstr ""
 
-# Order to sort the list of saved games in the save and load game menu. This
-# used to only be alphabetical.
-msgid "MISCMNU_SAVEORDER"
+msgid  "LAUNCHER_PROFBUTTON_REFRESH"
 msgstr ""
 
-msgid "OPTVAL_ALPHABETICAL"
+msgid "LAUNCHER_PROFBUTTON_MVUP"
 msgstr ""
 
-msgid "OPTVAL_LASTSAVEDTIME"
+msgid "LAUNCHER_PROFBUTTON_MVDOWN"
 msgstr ""
 
-msgid "PICKER_PLAYHOST"
+msgid "LAUNCHER_NO_DSC_SELECT"
 msgstr ""
 
-msgid "PICKER_PLAYJOIN"
+# a user clicks on a profile but no description is available
+msgid "LAUNCHER_NO_DSC_AVAIL"
 msgstr ""
 
-msgid "PICKER_REMPARM"
+# shows a the bottom e.g X Profiles(s) available.
+msgid "LAUNCHER_AVAIL_STATUS"
 msgstr ""
 
-# For stuff like id24.
-msgid "PICKER_SUPPORTWADS"
+msgid "LAUNCHER_WADPICK_DIALOG_TITLE"
 msgstr ""
 
-msgid "PICKER_TAB_MULTI"
+msgid "LAUNCHER_ARCHPICK_DIALOG_TITLE"
 msgstr ""
 
-msgid "PICKER_LOADSAVE"
+# the button if update should show patch notes
+msgid "LAUNCHER_SHOW_ONUPDATED"
 msgstr ""
 
-msgid "PICKER_REMSAVE"
+
+msgid "PROFSET_TITLE"
+msgstr ""
+
+msgid "PROFSET_TAB_GENERAL"
+msgstr ""
+
+msgid "PROFSET_TAB_LAUNCH"
+msgstr ""
+
+msgid "PROFSET_TAB_FILES"
+msgstr ""
+
+msgid "PROFSET_TAB_OUTPUT"
+msgstr ""
+
+msgid "PROFSET_TAB_ADVANCED"
+msgstr ""
+
+# The Save and return button
+msgid "PROFSET_SV_RT"
+msgstr ""
+
+# The delete profile button
+msgid "PROFSET_DELPROF"
+msgstr ""
+
+msgid "PROFSET_GENERAL_TYPE"
+msgstr ""
+
+msgid "PROFSET_GENERAL_DSC"
+msgstr ""
+
+# shown when IWAD dialog opens
+msgid "PROFSET_GENERAL_IWADDIAG"
+msgstr ""
+
+# shown when PWAD dialog opens
+msgid "PROFSET_GENERAL_PWADDIAG"
+msgstr ""
+
+
+msgid "PROFSET_LAUNCH_MODE"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_MAP"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SAVE"
+msgstr ""
+
+# play demo when profile launched
+msgid "PROFSET_LAUNCH_PLAYDEM"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_RECORD"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SAVEDIAG"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_DEMODIAG"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_GAMEPLAY"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SKILL"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SKILL1"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SKILL2"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SKILL3"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SKILL4"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_SKILL5"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_FMONSTER"
+msgstr ""
+
+# respawn monster option
+msgid "PROFSET_LAUNCH_RMONSTER"
+msgstr ""
+
+# no monster option
+msgid "PROFSET_LAUNCH_NMONSTER"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_GAMEPLAYMORE"
+msgstr ""
+
+# More gameplay option dialog title
+msgid "PROFSET_GAMEPLAY_TITLE"
+msgstr ""
+
+msgid "PROFSET_GAMEPLAY_FORCE"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_MISC"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_NAME"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_CLASS"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_GENDER"
+msgstr ""
+
+# male
+msgid "PROFSET_LAUNCH_GENDER0"
+msgstr ""
+
+# female
+msgid "PROFSET_LAUNCH_GENDER1"
+msgstr ""
+
+# neutral
+msgid "PROFSET_LAUNCH_GENDER2"
+msgstr ""
+
+# object
+msgid "PROFSET_LAUNCH_GENDER3"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_LANG"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_REMOTE"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_REMADDR"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_REMPORT"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_TEAMNO"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_HOSTMP"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_HOPORT"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_HOMAXP"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_HOTICK"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_TICK25"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_TICK175"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_TICK116"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_HOGAME"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_COOP"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_TDM"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_ATDM"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_DM"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_ADM"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_HOMODE"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_PACKETS"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_PEER"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_COMP"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_COMP0"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_COMP1"
 msgstr ""
 
-# As in, to host a game.
-msgid "PICKER_HOST"
+msgid "PROFSET_LAUNCH_COMP2"
 msgstr ""
 
-msgid "PICKER_JOIN"
+msgid "PROFSET_LAUNCH_COMP3"
 msgstr ""
 
-msgid "PICKER_NETMODE"
+msgid "PROFSET_LAUNCH_COMP4"
 msgstr ""
 
-msgid "PICKER_NETAUTO"
+msgid "PROFSET_LAUNCH_COMP5"
 msgstr ""
 
-# Connections are routed through the host instead of all players connecting to
-# each other individually.
-msgid "PICKER_NETSERVER"
+msgid "PROFSET_LAUNCH_COMP6"
 msgstr ""
 
-# Players connect to each other individually.
-msgid "PICKER_NETPEER"
+msgid "PROFSET_LAUNCH_COMP7"
 msgstr ""
 
-msgid "PICKER_NETRATE"
+msgid "PROFSET_LAUNCH_COMP8"
 msgstr ""
 
-# Sends out duplicate copies of packets to help with spotty connections e.g.
-# wifi.
-msgid "PICKER_NETBACKUP"
+msgid "PROFSET_LAUNCH_COMP9"
 msgstr ""
 
-msgid "PICKER_GAMEMODE"
+msgid "PROFSET_LAUNCH_COMPPRE"
 msgstr ""
 
-msgid "PICKER_COOP"
+# Custom Compatibility button
+msgid "PROFSET_LAUNCH_COMPCUST"
 msgstr ""
 
-msgid "PICKER_DM"
+msgid "PROFSET_COMP_TITLE"
 msgstr ""
 
-msgid "PICKER_TDM"
+# warns that custom disable comp preset
+msgid "PROFSET_COMP_INFO"
 msgstr ""
 
-# Which team the player wants to be assigned to.
-msgid "PICKER_TEAM"
+msgid "PROFSET_FILES_CONFIG"
 msgstr ""
 
-msgid "PICKER_ALTDM"
+msgid "PROFSET_FILES_SAVE"
 msgstr ""
 
-msgid "PICKER_PLAYERS"
+msgid "PROFSET_FILES_SCREEN"
 msgstr ""
 
-msgid "PICKER_PORT"
+msgid "PROFSET_FILES_DEMO"
 msgstr ""
 
-# Max number of players.
-msgid "PICKER_PLAYERHINT"
+# shown when config file dialog opens
+msgid "PROFSET_FILES_CONFIGDIAG"
 msgstr ""
 
-# GZDoom's default port.
-msgid "PICKER_PORTHINT"
+# shown when save dir dialog opens
+msgid "PROFSET_FILES_SAVEDIAG"
 msgstr ""
 
-# Team 255 randomizes which team the player gets put on.
-msgid "PICKER_TEAMHINT"
+# shown when screenshot dir dialog opens
+msgid "PROFSET_FILES_SCREENDIAG"
 msgstr ""
 
-msgid "PICKER_IP"
+# shown when demo file dialog opens
+msgid "PROFSET_FILES_DEMODIAG"
 msgstr ""
 
-msgid "PICKER_TDMLABEL"
+# User can add either .pk3 or .wad as additional mod files
+msgid "PROFSET_FILES_MODS"
 msgstr ""
 
-# Same context as TXT_SAY.
-msgid "TXT_SAYTEAM"
+# the button to add mod file
+msgid "PROFSET_FILES_ADDMOD"
 msgstr ""
 
-msgid "MISCMNU_DISCORDRPC"
+msgid "PROFSET_OUTPUT_GENERAL"
 msgstr ""
 
-msgid "JOYMNU_TURNSPEED"
+msgid "PROFSET_OUTPUT_FULLSCREEN"
 msgstr ""
 
-msgid "JOYMNU_LOOKSPEED"
+msgid "PROFSET_OUTPUT_SUPPORTWAD"
 msgstr ""
 
-msgid "JOYMNU_ANALOGSTRAFERUN"
+msgid "PROFSET_OUTPUT_DISAUTO"
 msgstr ""
 
-msgid "NOTES_FAIL"
+msgid "PROFSET_OUTPUT_RENDER"
 msgstr ""
 
-msgid "NOTES_VERSION"
+msgid "PROFSET_OUTPUT_VULKAN"
 msgstr ""
 
-msgid "NOTES_UNKNOWN"
+msgid "PROFSET_OUTPUT_OPENGL"
 msgstr ""
 
-msgid "NOTES_RELEASED"
+msgid "PROFSET_OUTPUT_GLES"
 msgstr ""
 
-msgid "NOTES_EMPTY"
+msgid "PROFSET_OUTPUT_EXTRA"
 msgstr ""
 
-msgid "NOTES_DETAILS"
+msgid "PROFSET_OUTPUT_LIGHTS"
 msgstr ""
 
-msgid "PICKER_SHOWTHIS"
+msgid "PROFSET_OUTPUT_BRIGHT"
 msgstr ""
 
-msgid "PICKER_SHOWNOTES"
+msgid "PROFSET_OUTPUT_WIDE"
 msgstr ""
 
-msgid "PICKER_TAB_ABOUT"
+msgid "PROFSET_ADVANCED_PREPEND"
 msgstr ""
 
-msgid "PICKER_TAB_RELEASE"
+msgid "PROFSET_ADVANCED_APPEND"
 msgstr ""

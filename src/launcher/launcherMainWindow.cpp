@@ -182,8 +182,8 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create menu item to add Archive or WAD for new profile
 	wxMenu *AddMenu = new wxMenu;
-	AddMenu->Append(ID_ADD_WAD, test1, "Load a Doom WAD file.");
-	AddMenu->Append(ID_ADD_ARCHIVE, "&Add Archive ...", "Load a ZIP archive.");
+	AddMenu->Append(ID_ADD_WAD, test1);
+	AddMenu->Append(ID_ADD_ARCHIVE, "&Add Archive ...");
 	AddMenu->AppendSeparator();
 	AddMenu->Append(wxID_EXIT, "&Exit");
 
@@ -215,12 +215,12 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	LangToggler->Append(ID_LANG_RU, wxString::FromUTF8("ru - Русский (Russian)"));
 	LangToggler->Append(ID_LANG_SR, wxString::FromUTF8("sr - Српски (Serbian)"));
 	LangToggler->Append(ID_LANG_TR, wxString::FromUTF8("tr - Türkçe (Turkish)"));
-	PrefMenu->AppendSubMenu(LangToggler, "&Language", "Change application language.");
+	PrefMenu->AppendSubMenu(LangToggler, "&Language");
 
 	// create menu item to view credits and release notes
 	wxMenu *Credinfo = new wxMenu;
-	Credinfo->Append(ID_REL_NOTES, "&Release Notes", "View version history of UZDoom.");
-	Credinfo->Append(ID_CREDITS, "&Credits", "View Credits of UZDoom.");
+	Credinfo->Append(ID_REL_NOTES, "&Release Notes");
+	Credinfo->Append(ID_CREDITS, "&Credits");
 
 	// create menu bar
 	wxMenuBar *menuBar = new wxMenuBar;
@@ -239,15 +239,15 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	profileList->AppendTextColumn("Playtime", wxDATAVIEW_CELL_INERT, 80, wxALIGN_CENTER, 0);
 
 	// Add 4 buttons to the right of the profile list
-	wxButton *startGameButton  = new wxButton(panel, ID_START_GAME, "Start Game");
-	wxButton *joinServerButton = new wxButton(panel, ID_JOIN_GAME, "Join Server");
-	wxButton *hostServerButton = new wxButton(panel, ID_HOST_GAME, "Host Server");
-	wxButton *settingsButton   = new wxButton(panel, ID_PROFILE_SETTINGS, "Profile Settings ...");
+	startGameButton  = new wxButton(panel, ID_START_GAME, "Start Game");
+	joinServerButton = new wxButton(panel, ID_JOIN_GAME, "Join Server");
+	hostServerButton = new wxButton(panel, ID_HOST_GAME, "Host Server");
+	settingsButton   = new wxButton(panel, ID_PROFILE_SETTINGS, "Profile Settings ...");
 
 	// move entry buttons + refresh
-	wxButton *refreshButton       = new wxButton(panel, ID_REFRESH_LIST, "Refresh");
-	wxButton *moveEntryUpButton   = new wxButton(panel, ID_MOVE_UP, "Move Up");
-	wxButton *moveEntryDownButton = new wxButton(panel, ID_MOVE_DOWN, "Move Down");
+	refreshButton       = new wxButton(panel, ID_REFRESH_LIST, "Refresh");
+	moveEntryUpButton   = new wxButton(panel, ID_MOVE_UP, "Move Up");
+	moveEntryDownButton = new wxButton(panel, ID_MOVE_DOWN, "Move Down");
 
 	// disable until user has clicked on item in profile list
 	startGameButton->Disable();
@@ -510,7 +510,12 @@ void LauncherMainWindow::updateLanguage()
 	GStrings.UpdateLanguage(langVar);
 
 	// now, trigger language update of the entire launacher ui
-	test1 = GStrings.GetString("PICKER_VERSION");
+
+
+
+
+	// go to other launcher components and update them too
+
 	
 }
 

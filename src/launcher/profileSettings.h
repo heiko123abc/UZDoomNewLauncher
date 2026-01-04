@@ -22,6 +22,8 @@ class ProfileSettings : public wxDialog
 {
 
 	// contains settings for user profiles
+  private:
+
 
   public:
 	void ProfileSettingsMenu(wxWindow *parent, const wxString &title, const std::string &profilePath);

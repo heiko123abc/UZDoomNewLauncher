@@ -189,9 +189,9 @@ void Profile::loadFromFile(const std::string &filepath)
 	}
 	else
 	{
-
 		return;
 	}
+	file.close();
 }
 
 // WE ASSUME THE LAUNCHER WHERE UZDOOM executeable USUALLY RESIDES IN

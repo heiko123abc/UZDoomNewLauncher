@@ -29,6 +29,7 @@ class LauncherMainWindow : public wxFrame
 	LauncherMainWindow(const wxString &title);
 
   private:
+	void updateLanguage();
 	void OnButtonClicked(wxCommandEvent &event);
 	void OnLanguageChanged(wxCommandEvent &event);
 };

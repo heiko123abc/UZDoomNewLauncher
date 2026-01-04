@@ -37,6 +37,7 @@
 #include "loader.h"
 #include "profile.h"
 #include "profileSettings.h"
+#include "gstrings.h"
 
 using json = nlohmann::json;
 
@@ -112,6 +113,8 @@ void saveConfig(LauncherMainWindow *lmw)
 		file << j.dump(4);
 		file.close();
 	}
+
+	file.close();
 }
 
 void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
@@ -143,6 +146,8 @@ void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
 		}
 	}
 
+	file.close();
+
 	// all paths collected, now parse them into the list
 	for (const auto &filepaths : lmw->profilePaths)
 	{
@@ -165,12 +170,15 @@ void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
 // default size for the window is 1280x720
 LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition)
 {
+	// Initilize correct language
+	updateLanguage();
+
 	// This Panel is the base for all other UI components
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
 
 	// create menu item to add Archive or WAD for new profile
 	wxMenu *AddMenu = new wxMenu;
-	AddMenu->Append(ID_ADD_WAD, "&Add WAD ...", "Load a Doom WAD file.");
+	AddMenu->Append(ID_ADD_WAD, GStrings.GetString(" PICKER_VERSION "), "Load a Doom WAD file.");
 	AddMenu->Append(ID_ADD_ARCHIVE, "&Add Archive ...", "Load a ZIP archive.");
 	AddMenu->AppendSeparator();
 	AddMenu->Append(wxID_EXIT, "&Exit");
@@ -487,84 +495,100 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 	}
 }
 
+void LauncherMainWindow::updateLanguage()
+{
+	// set what language it is supposed to be and init langvar
+	std::ifstream file(CONFIG_FILE.ToUTF8());
+	json          j;
+	file >> j;
+	langVar = j["lang"].get<std::string>();
+	file.close();
+	GStrings.UpdateLanguage(langVar);
+
+	// now, trigger language update of the entire launacher ui
+}
+
 void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
 {
 
-	// assign correct value for language
-	switch (event.GetId())
+	if (&event)
 	{
-	case ID_LANG_ENU:
-		langVar = "enu";
-		break;
-	case ID_LANG_ENG:
-		langVar = "eng";
-		break;
-	case ID_LANG_CS:
-		langVar = "cs";
-		break;
-	case ID_LANG_DA:
-		langVar = "da";
-		break;
-	case ID_LANG_DE:
-		langVar = "de";
-		break;
-	case ID_LANG_ES:
-		langVar = "es";
-		break;
-	case ID_LANG_ESM:
-		langVar = "esm";
-		break;
-	case ID_LANG_EO:
-		langVar = "eo";
-		break;
-	case ID_LANG_FI:
-		langVar = "fi";
-		break;
-	case ID_LANG_FR:
-		langVar = "fr";
-		break;
-	case ID_LANG_HU:
-		langVar = "hu";
-		break;
-	case ID_LANG_IT:
-		langVar = "it";
-		break;
-	case ID_LANG_JP:
-		langVar = "jp";
-		break;
-	case ID_LANG_KO:
-		langVar = "ko";
-		break;
-	case ID_LANG_NL:
-		langVar = "nl";
-		break;
-	case ID_LANG_NB:
-		langVar = "nb";
-		break;
-	case ID_LANG_PL:
-		langVar = "pl";
-		break;
-	case ID_LANG_PTG:
-		langVar = "ptg";
-		break;
-	case ID_LANG_PT:
-		langVar = "pt";
-		break;
-	case ID_LANG_RO:
-		langVar = "ro";
-		break;
-	case ID_LANG_RU:
-		langVar = "ru";
-		break;
-	case ID_LANG_SR:
-		langVar = "sr";
-		break;
-	case ID_LANG_TR:
-		langVar = "tr";
-		break;
+		// assign correct value for language
+		switch (event.GetId())
+		{
+		case ID_LANG_ENU:
+			langVar = "enu";
+			break;
+		case ID_LANG_ENG:
+			langVar = "eng";
+			break;
+		case ID_LANG_CS:
+			langVar = "cs";
+			break;
+		case ID_LANG_DA:
+			langVar = "da";
+			break;
+		case ID_LANG_DE:
+			langVar = "de";
+			break;
+		case ID_LANG_ES:
+			langVar = "es";
+			break;
+		case ID_LANG_ESM:
+			langVar = "esm";
+			break;
+		case ID_LANG_EO:
+			langVar = "eo";
+			break;
+		case ID_LANG_FI:
+			langVar = "fi";
+			break;
+		case ID_LANG_FR:
+			langVar = "fr";
+			break;
+		case ID_LANG_HU:
+			langVar = "hu";
+			break;
+		case ID_LANG_IT:
+			langVar = "it";
+			break;
+		case ID_LANG_JP:
+			langVar = "jp";
+			break;
+		case ID_LANG_KO:
+			langVar = "ko";
+			break;
+		case ID_LANG_NL:
+			langVar = "nl";
+			break;
+		case ID_LANG_NB:
+			langVar = "nb";
+			break;
+		case ID_LANG_PL:
+			langVar = "pl";
+			break;
+		case ID_LANG_PTG:
+			langVar = "ptg";
+			break;
+		case ID_LANG_PT:
+			langVar = "pt";
+			break;
+		case ID_LANG_RO:
+			langVar = "ro";
+			break;
+		case ID_LANG_RU:
+			langVar = "ru";
+			break;
+		case ID_LANG_SR:
+			langVar = "sr";
+			break;
+		case ID_LANG_TR:
+			langVar = "tr";
+			break;
+		}
+
+		saveConfig(this);
 	}
-
-	saveConfig(this);
-
-	// now, trigger language update of the entire launacher ui
+	
+	updateLanguage();
 }

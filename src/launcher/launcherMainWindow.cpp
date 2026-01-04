@@ -100,6 +100,10 @@ enum
 	ID_LANG_TR
 };
 
+//Variable strings for i18n
+
+std::string test1 = GStrings.GetString("PICKER_VERSION");
+
 // write back the vector to file
 void saveConfig(LauncherMainWindow *lmw)
 {
@@ -178,7 +182,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create menu item to add Archive or WAD for new profile
 	wxMenu *AddMenu = new wxMenu;
-	AddMenu->Append(ID_ADD_WAD, GStrings.GetString(" PICKER_VERSION "), "Load a Doom WAD file.");
+	AddMenu->Append(ID_ADD_WAD, test1, "Load a Doom WAD file.");
 	AddMenu->Append(ID_ADD_ARCHIVE, "&Add Archive ...", "Load a ZIP archive.");
 	AddMenu->AppendSeparator();
 	AddMenu->Append(wxID_EXIT, "&Exit");
@@ -506,6 +510,8 @@ void LauncherMainWindow::updateLanguage()
 	GStrings.UpdateLanguage(langVar);
 
 	// now, trigger language update of the entire launacher ui
+	test1 = GStrings.GetString("PICKER_VERSION");
+	
 }
 
 void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)

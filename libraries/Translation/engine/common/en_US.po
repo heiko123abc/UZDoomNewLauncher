@@ -1920,218 +1920,463 @@ msgstr "Appearance"
 msgid "DSPLYMNU_ADVANCED"
 msgstr "Advanced Display Options"
 
-msgid "PICKER_SELECT"
-msgstr "Select which game file to run."
+msgid "LAUNCHER_TITLE"
+msgstr "UZDoom - Launcher 5.0.0"
 
-msgid "PICKER_PLAY"
-msgstr "Play Game"
+msgid "LAUNCHER_TOPBAR_FILE"
+msgstr "File"
 
-msgid "PICKER_EXIT"
+msgid "LAUNCHER_TOPBAR_FILEADDWAD"
+msgstr "Add File ..."
+
+msgid "LAUNCHER_TOPBAR_FILEADDARCHIVE"
+msgstr "Add Archive ..."
+
+# Button in the drop down menu to exit UZDoom
+msgid "LAUNCHER_TOPBAR_FILEEXIT"
 msgstr "Exit"
 
-msgid "PICKER_GENERAL"
-msgstr "General"
+msgid "LAUNCHER_TOPBAR_PREF"
+msgstr "Preferences"
 
-msgid "PICKER_EXTRA"
-msgstr "Extra Graphics"
+msgid "LAUNCHER_TOPBAR_PREFLANG"
+msgstr "Langauge"
 
-msgid "PICKER_FULLSCREEN"
-msgstr "Fullscreen"
-
-msgid "PICKER_NOAUTOLOAD"
-msgstr "Disable autoload"
-
-msgid "PICKER_DONTASK"
-msgstr "Don't ask me again"
-
-msgid "PICKER_LIGHTS"
-msgstr "Lights"
-
-msgid "PICKER_BRIGHTMAPS"
-msgstr "Brightmaps"
-
-msgid "PICKER_WIDESCREEN"
-msgstr "Widescreen"
-
-msgid "PICKER_ADDPARM"
-msgstr "Additional Parameters:"
-
-msgid "PICKER_WELCOME"
-msgstr "Welcome to %s!"
-
-msgid "PICKER_VERSION"
-msgstr "Version %s"
-
-msgid "PICKER_PREFERBACKEND"
-msgstr "Rendering API"
-
-msgid "PICKER_TAB_PLAY"
-msgstr "Game"
-
-# Option to enable or disable individual controllers/joysticks when
-# configuring it in the Controller Options menu
-msgid "JOYMNU_JOYENABLE"
-msgstr "Enable this controller"
-
-msgid "CNTRLMNU_OPEN_MAIN"
-msgstr "Open Main Menu"
-
-msgid "MODMNU_REPLAYER"
-msgstr "Module replayer"
-
-# This is enabled per-controller, it means to enable "this" controller in the
-# background when GZDoom is not in focus.
-msgid "JOYMNU_JOYENABLEINBACKGROUND"
-msgstr "Allow Background Controller Input"
-
-# Order to sort the list of saved games in the save and load game menu. This
-# used to only be alphabetical.
-msgid "MISCMNU_SAVEORDER"
-msgstr "Save Game Sorting Order"
-
-msgid "OPTVAL_ALPHABETICAL"
-msgstr "Alphabetical"
-
-msgid "OPTVAL_LASTSAVEDTIME"
-msgstr "Last Saved Time"
-
-msgid "PICKER_PLAYHOST"
-msgstr "Host Game"
-
-msgid "PICKER_PLAYJOIN"
-msgstr "Join Game"
-
-msgid "PICKER_REMPARM"
-msgstr "Remember Parameters"
-
-# For stuff like id24.
-msgid "PICKER_SUPPORTWADS"
-msgstr "Load Support WADs"
-
-msgid "PICKER_TAB_MULTI"
-msgstr "Multiplayer"
-
-msgid "PICKER_LOADSAVE"
-msgstr "Load Save File:"
-
-msgid "PICKER_REMSAVE"
-msgstr "Remember Save File"
-
-# As in, to host a game.
-msgid "PICKER_HOST"
-msgstr "Host"
-
-msgid "PICKER_JOIN"
-msgstr "Join"
-
-msgid "PICKER_NETMODE"
-msgstr "Networking Mode:"
-
-msgid "PICKER_NETAUTO"
-msgstr "Auto (recommended)"
-
-# Connections are routed through the host instead of all players connecting to
-# each other individually.
-msgid "PICKER_NETSERVER"
-msgstr "Packet-Server"
-
-# Players connect to each other individually.
-msgid "PICKER_NETPEER"
-msgstr "Peer-to-Peer"
-
-msgid "PICKER_NETRATE"
-msgstr "Packet Ticrate:"
-
-# Sends out duplicate copies of packets to help with spotty connections e.g.
-# wifi.
-msgid "PICKER_NETBACKUP"
-msgstr "Send Backup Packets"
-
-msgid "PICKER_GAMEMODE"
-msgstr "Game Mode:"
-
-msgid "PICKER_COOP"
-msgstr "Co-op"
-
-msgid "PICKER_DM"
-msgstr "Deathmatch"
-
-msgid "PICKER_TDM"
-msgstr "Team Deathmatch"
-
-# Which team the player wants to be assigned to.
-msgid "PICKER_TEAM"
-msgstr "Team #:"
-
-msgid "PICKER_ALTDM"
-msgstr "Use Alternate Deathmatch Rules"
-
-msgid "PICKER_PLAYERS"
-msgstr "Max Players:"
-
-msgid "PICKER_PORT"
-msgstr "Host Port:"
-
-# Max number of players.
-msgid "PICKER_PLAYERHINT"
-msgstr "Max 64"
-
-# GZDoom's default port.
-msgid "PICKER_PORTHINT"
-msgstr "Default 5029"
-
-# Team 255 randomizes which team the player gets put on.
-msgid "PICKER_TEAMHINT"
-msgstr "255 = Random"
-
-msgid "PICKER_IP"
-msgstr "Host IP:"
-
-msgid "PICKER_TDMLABEL"
-msgstr "Team Deathmatch:"
-
-# Same context as TXT_SAY.
-msgid "TXT_SAYTEAM"
-msgstr "Say (Team):"
-
-msgid "MISCMNU_DISCORDRPC"
-msgstr "Discord Rich Presence"
-
-msgid "JOYMNU_TURNSPEED"
-msgstr "Turning speed"
-
-msgid "JOYMNU_LOOKSPEED"
-msgstr "Looking speed"
-
-msgid "JOYMNU_ANALOGSTRAFERUN"
-msgstr "Analog strafe run"
-
-msgid "NOTES_FAIL"
-msgstr "Unable to parse release notes"
-
-msgid "NOTES_VERSION"
-msgstr "version"
-
-msgid "NOTES_UNKNOWN"
-msgstr "Unknown"
-
-msgid "NOTES_RELEASED"
-msgstr "released"
-
-msgid "NOTES_EMPTY"
-msgstr "No description provided."
-
-msgid "NOTES_DETAILS"
-msgstr "For more details see:"
-
-msgid "PICKER_SHOWTHIS"
-msgstr "Show this page after updates"
-
-msgid "PICKER_SHOWNOTES"
-msgstr "Show release notes"
-
-msgid "PICKER_TAB_ABOUT"
+msgid "LAUNCHER_TOPBAR_ABOUT"
 msgstr "About"
 
-msgid "PICKER_TAB_RELEASE"
+msgid "LAUNCHER_TOPBAR_ABOUTNOTES"
 msgstr "Release Notes"
+
+msgid "LAUNCHER_TOPBAR_ABOUTCREDITS"
+msgstr "Credits"
+
+msgid "LAUNCHER_PROFLIST_TYPE"
+msgstr "Type"
+
+msgid "LAUNCHER_PROFLIST_TITLE"
+msgstr "Title"
+
+# indicates one OR more authors for a WAD
+msgid "LAUNCHER_PROFLIST_AUTHORS"
+msgstr "Author(s)"
+
+msgid "LAUNCHER_PROFLIST_RELEASEDATE"
+msgstr "Release Date"
+
+msgid "LAUNCHER_PROFLIST_LASTPLAYED"
+msgstr "Last Played"
+
+msgid "LAUNCHER_PROFLIST_PLAYTIME"
+msgstr "Playtime"
+
+# start the selected profile button
+msgid "LAUNCHER_PROFBUTTON_START"
+msgstr "Start Game"
+
+msgid "LAUNCHER_PROFBUTTON_JOIN"
+msgstr "Join Game"
+
+msgid "LAUNCHER_PROFBUTTON_HOST"
+msgstr "Host Game"
+
+msgid  "LAUNCHER_PROFBUTTON_SETTING"
+msgstr "Profile Settings ..."
+
+msgid  "LAUNCHER_PROFBUTTON_REFRESH"
+msgstr "Refresh"
+
+msgid "LAUNCHER_PROFBUTTON_MVUP"
+msgstr "Move Up"
+
+msgid "LAUNCHER_PROFBUTTON_MVDOWN"
+msgstr "Move Down"
+
+msgid "LAUNCHER_NO_DSC_SELECT"
+msgstr "Nothing Selected."
+
+# a user clicks on a profile but no description is available
+msgid "LAUNCHER_NO_DSC_AVAIL"
+msgstr "No description available."
+
+# shows a the bottom e.g X Profiles(s) available.
+msgid "LAUNCHER_AVAIL_STATUS"
+msgstr "Profile(s) available."
+
+msgid "LAUNCHER_WADPICK_DIALOG_TITLE"
+msgstr "Select a Doom PWAD or IWAD file."
+
+msgid "LAUNCHER_ARCHPICK_DIALOG_TITLE"
+msgstr "Select an archive file."
+
+# the button if update should show patch notes
+msgid "LAUNCHER_SHOW_ONUPDATED"
+msgstr "Show these notes upon new update."
+
+# An engine instance is already running
+msgid "LAUNCHER_ERROR_ALRRUNNING"
+msgstr "A UZdoom instance is already running. Please close it before starting another."
+
+# An archive extraction error occured
+msgid "LAUNCHER_ERROR_EXTRACTION"
+msgstr "Extraction was stopped."
+
+# No .wad file in archive
+msgid "LAUNCHER_ERROR_NOWADARCH"
+msgstr "Error: No .wad file found in the archive! (Or archive is too nested.)"
+
+# Launcher Configuration was corrupted
+msgid "LAUNCHER_ERROR_CORRUPT"
+msgstr "The launcher configuration file is corrupted and could not be read.\nPlease fix or delete the file: "
+
+msgid "LAUNCHER_DETECT_IWAD"
+msgstr "File was added as an IWAD.\n\nNot properly detected? It can be changed in the profile settings."
+
+msgid "LAUNCHER_DETECT_PWAD"
+msgstr "File was added as an PWAD.\n\nRemember to select the correct IWAD for it before launching.\nNot properly detected? It can be changed in the profile settings."
+
+# Somthing wasnt an archive
+msgid "LAUNCHER_DETECT_NOTARCHIVE"
+msgstr "That is not a valid archive file."
+
+# Somthing wasnt a wad
+msgid "LAUNCHER_DETECT_NOWAD"
+msgstr "That is not a valid IWAD or PWAD file."
+
+# Profile save error
+msgid "LAUNCHER_ERROR_SAVEPROF"
+msgstr "Error Saving Profile."
+
+# Profile has invalid inputs
+msgid "LAUNCHER_ERROR_INVALIDIN"
+msgstr "Invalid inputs. Please check your inputs."
+
+# Profile could not be deleted
+msgid "LAUNCHER_ERROR_DELETE"
+msgstr "Could not determine directory to delete."
+
+msgid "PROFSET_TITLE"
+msgstr "Profile Settings"
+
+msgid "PROFSET_TAB_GENERAL"
+msgstr "General"
+
+msgid "PROFSET_TAB_LAUNCH"
+msgstr "Launch"
+
+msgid "PROFSET_TAB_FILES"
+msgstr "Files"
+
+msgid "PROFSET_TAB_OUTPUT"
+msgstr "Output"
+
+msgid "PROFSET_TAB_ADVANCED"
+msgstr "Advanced"
+
+# The Save and return button
+msgid "PROFSET_SV_RT"
+msgstr "Save and Return"
+
+# The delete profile button
+msgid "PROFSET_DELPROF"
+msgstr "Delete Profile ..."
+
+msgid "PROFSET_DELMSG"
+msgstr "Are you sure?\nThis will permanently delete the profile and all files in its directory.\n\nThis cannot be undone."
+
+msgid "PROFSET_GENERAL_TYPE"
+msgstr "Type:"
+
+msgid "PROFSET_GENERAL_DSC"
+msgstr "Description:"
+
+# shown when IWAD dialog opens
+msgid "PROFSET_GENERAL_IWADDIAG"
+msgstr "Select IWAD File"
+
+# shown when PWAD dialog opens
+msgid "PROFSET_GENERAL_PWADDIAG"
+msgstr "Select PWAD File"
+
+msgid "PROFSET_LAUNCH_MODE"
+msgstr "Launch Mode"
+
+msgid "PROFSET_LAUNCH_NORMAL"
+msgstr "Normal"
+
+msgid "PROFSET_LAUNCH_MAP"
+msgstr "Map"
+
+msgid "PROFSET_LAUNCH_SAVE"
+msgstr "Savegame"
+
+# play demo when profile launched
+msgid "PROFSET_LAUNCH_PLAYDEM"
+msgstr "Play Demo"
+
+msgid "PROFSET_LAUNCH_RECORD"
+msgstr "Record Demo"
+
+msgid "PROFSET_LAUNCH_SAVEDIAG"
+msgstr "Select Save File"
+
+msgid "PROFSET_LAUNCH_DEMODIAG"
+msgstr "Select Demo File"
+
+msgid "PROFSET_LAUNCH_GAMEPLAY"
+msgstr "Gameplay"
+
+msgid "PROFSET_LAUNCH_SKILL"
+msgstr "Skill"
+
+msgid "PROFSET_LAUNCH_SKILL1"
+msgstr "1 - Baby"
+
+msgid "PROFSET_LAUNCH_SKILL2"
+msgstr "2 - Easy"
+
+msgid "PROFSET_LAUNCH_SKILL3"
+msgstr "3 - Medium"
+
+msgid "PROFSET_LAUNCH_SKILL4"
+msgstr "4 - Hard"
+
+msgid "PROFSET_LAUNCH_SKILL5"
+msgstr "5 - Nightmare"
+
+msgid "PROFSET_LAUNCH_FMONSTER"
+msgstr "Fast Monsters"
+
+# respawn monster option
+msgid "PROFSET_LAUNCH_RMONSTER"
+msgstr "Respawn Monsters"
+
+# no monster option
+msgid "PROFSET_LAUNCH_NMONSTER"
+msgstr "No Monsters"
+
+msgid "PROFSET_LAUNCH_GAMEPLAYMORE"
+msgstr "More ..."
+
+# More gameplay option dialog title
+msgid "PROFSET_GAMEPLAY_TITLE"
+msgstr "Additional Gameplay Options"
+
+msgid "PROFSET_GAMEPLAY_FORCE"
+msgstr "Force Deathmatch-only flags for SP/Coop"
+
+msgid "PROFSET_LAUNCH_MISC"
+msgstr "Miscellaneous"
+
+msgid "PROFSET_LAUNCH_NAME"
+msgstr "Player Name:"
+
+msgid "PROFSET_LAUNCH_CLASS"
+msgstr "Player Class:"
+
+msgid "PROFSET_LAUNCH_GENDER"
+msgstr "Player Gender:"
+
+# male
+msgid "PROFSET_LAUNCH_GENDER0"
+msgstr "Male"
+
+# female
+msgid "PROFSET_LAUNCH_GENDER1"
+msgstr "Female"
+
+# neutral
+msgid "PROFSET_LAUNCH_GENDER2"
+msgstr "Neutral"
+
+# object
+msgid "PROFSET_LAUNCH_GENDER3"
+msgstr "Object"
+
+msgid "PROFSET_LAUNCH_LANG"
+msgstr "Language:"
+
+msgid "PROFSET_LAUNCH_REMOTE"
+msgstr "Remote Multiplayer"
+
+msgid "PROFSET_LAUNCH_REMADDR"
+msgstr "Remote Address:"
+
+msgid "PROFSET_LAUNCH_REMPORT"
+msgstr "Remote Port (Default 5029):"
+
+msgid "PROFSET_LAUNCH_TEAMNO"
+msgstr "Team No. (255 = Random)"
+
+msgid "PROFSET_LAUNCH_HOSTMP"
+msgstr "Host Multiplayer"
+
+msgid "PROFSET_LAUNCH_HOPORT"
+msgstr "Host Port (Default 5029):"
+
+msgid "PROFSET_LAUNCH_HOMAXP"
+msgstr "Max Players:"
+
+msgid "PROFSET_LAUNCH_HOTICK"
+msgstr "Tickrate:"
+
+msgid "PROFSET_LAUNCH_TICK25"
+msgstr "25Hz"
+
+msgid "PROFSET_LAUNCH_TICK175"
+msgstr "17.5Hz"
+
+msgid "PROFSET_LAUNCH_TICK116"
+msgstr "11.6Hz"
+
+msgid "PROFSET_LAUNCH_HOGAME"
+msgstr "Gamemode:"
+
+msgid "PROFSET_LAUNCH_COOP"
+msgstr "Cooperative"
+
+msgid "PROFSET_LAUNCH_TDM"
+msgstr "Team Deathmatch"
+
+msgid "PROFSET_LAUNCH_ATDM"
+msgstr "Alt. Team Deathmatch"
+
+msgid "PROFSET_LAUNCH_DM"
+msgstr "Deathmatch"
+
+msgid "PROFSET_LAUNCH_ADM"
+msgstr "Alt. Deathmatch"
+
+msgid "PROFSET_LAUNCH_HOMODE"
+msgstr "Network Mode:"
+
+msgid "PROFSET_LAUNCH_PACKETS"
+msgstr "Packet Server"
+
+msgid "PROFSET_LAUNCH_PEER"
+msgstr "Peer-to-Peer"
+
+msgid "PROFSET_LAUNCH_COMP"
+msgstr "Compatibility"
+
+msgid "PROFSET_LAUNCH_COMPPRE"
+msgstr "Compatibility Preset:"
+
+msgid "PROFSET_LAUNCH_COMP0"
+msgstr "0 - Default"
+
+msgid "PROFSET_LAUNCH_COMP1"
+msgstr "1 - Doom"
+
+msgid "PROFSET_LAUNCH_COMP2"
+msgstr "2 - Doom (Strict)"
+
+msgid "PROFSET_LAUNCH_COMP3"
+msgstr "3 - Boom"
+
+msgid "PROFSET_LAUNCH_COMP4"
+msgstr "4 - Boom (Strict)"
+
+msgid "PROFSET_LAUNCH_COMP5"
+msgstr "5 - MBF"
+
+msgid "PROFSET_LAUNCH_COMP6"
+msgstr "6 - MBF (Strict)"
+
+msgid "PROFSET_LAUNCH_COMP7"
+msgstr "7 - MBF21"
+
+msgid "PROFSET_LAUNCH_COMP8"
+msgstr "8 - MBF21 (Strict)"
+
+msgid "PROFSET_LAUNCH_COMP9"
+msgstr "9 - ZDoom 2.0.63"
+
+# Custom Compatibility button
+msgid "PROFSET_LAUNCH_COMPCUST"
+msgstr "Custom ..."
+
+msgid "PROFSET_COMP_TITLE"
+msgstr "Custom Compatibility Options"
+
+# warns that custom disable comp preset
+msgid "PROFSET_COMP_INFO"
+msgstr "[!] Activating any flags will disable the preset. [!]"
+
+msgid "PROFSET_FILES_CONFIG"
+msgstr "Config File:"
+
+msgid "PROFSET_FILES_SAVE"
+msgstr "Save Directory:"
+
+msgid "PROFSET_FILES_SCREEN"
+msgstr "Screenshot Dir:"
+
+msgid "PROFSET_FILES_DEMO"
+msgstr "Demo Directory:"
+
+# shown when config file dialog opens
+msgid "PROFSET_FILES_CONFIGDIAG"
+msgstr "Select Config File"
+
+# shown when save dir dialog opens
+msgid "PROFSET_FILES_SAVEDIAG"
+msgstr "Select Save Directory"
+
+# shown when screenshot dir dialog opens
+msgid "PROFSET_FILES_SCREENDIAG"
+msgstr "Select Screenshot Directory"
+
+# shown when demo file dialog opens
+msgid "PROFSET_FILES_DEMODIAG"
+msgstr "Select Demo Directory"
+
+# User can add either .pk3 or .wad as additional mod files
+msgid "PROFSET_FILES_MODS"
+msgstr "Mods (additional .wad or .pk3 files)"
+
+# the button to add mod file
+msgid "PROFSET_FILES_ADDMOD"
+msgstr "+ Add Mod File"
+
+msgid "PROFSET_OUTPUT_GENERAL"
+msgstr "General"
+
+msgid "PROFSET_OUTPUT_FULLSCREEN"
+msgstr "Fullscreen"
+
+msgid "PROFSET_OUTPUT_SUPPORTWAD"
+msgstr "Load Support WADs"
+
+msgid "PROFSET_OUTPUT_DISAUTO"
+msgstr "Disable Autoload"
+
+msgid "PROFSET_OUTPUT_RENDER"
+msgstr "Rendering Backend"
+
+msgid "PROFSET_OUTPUT_VULKAN"
+msgstr "Vulkan"
+
+msgid "PROFSET_OUTPUT_OPENGL"
+msgstr "OpenGL"
+
+msgid "PROFSET_OUTPUT_GLES"
+msgstr "OpenGL ES"
+
+msgid "PROFSET_OUTPUT_EXTRA"
+msgstr "Extra Graphics"
+
+msgid "PROFSET_OUTPUT_LIGHTS"
+msgstr "Lights"
+
+msgid "PROFSET_OUTPUT_BRIGHT"
+msgstr "Brightmaps"
+
+msgid "PROFSET_OUTPUT_WIDE"
+msgstr "Widescreen"
+
+msgid "PROFSET_ADVANCED_PREPEND"
+msgstr "Prepend additional parameters"
+
+msgid "PROFSET_ADVANCED_APPEND"
+msgstr "Append additional parameters"

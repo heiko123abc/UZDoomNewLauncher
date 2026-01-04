@@ -70,7 +70,7 @@ bool Starter::OnInit()
 		}
 	}
 
-	LauncherMainWindow *mainWindow = new LauncherMainWindow("UZDoom - Launcher (Version 5.0)");
+	LauncherMainWindow *mainWindow = new LauncherMainWindow("UZDoom - Launcher");
 
 	// Windows: Manifest MUST BE SET TO DPI AWARE
 	mainWindow->SetClientSize(mainWindow->FromDIP(wxSize(1280, 720)));

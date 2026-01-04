@@ -2021,6 +2021,47 @@ msgstr ""
 msgid "LAUNCHER_SHOW_ONUPDATED"
 msgstr ""
 
+# An engine instance is already running
+msgid "LAUNCHER_ERROR_ALRRUNNING"
+msgstr ""
+
+# An archive extraction error occured
+msgid "LAUNCHER_ERROR_EXTRACTION"
+msgstr ""
+
+# No .wad file in archive
+msgid "LAUNCHER_ERROR_NOWADARCH"
+msgstr ""
+
+# Launcher Configuration was corrupted
+msgid "LAUNCHER_ERROR_CORRUPT"
+msgstr ""
+
+msgid "LAUNCHER_DETECT_IWAD"
+msgstr ""
+
+msgid "LAUNCHER_DETECT_PWAD"
+msgstr ""
+
+# Somthing wasnt an archive
+msgid "LAUNCHER_DETECT_NOTARCHIVE"
+msgstr ""
+
+# Somthing wasnt a wad
+msgid "LAUNCHER_DETECT_NOWAD"
+msgstr ""
+
+# Profile save error
+msgid "LAUNCHER_ERROR_SAVEPROF"
+msgstr ""
+
+# Profile has invalid inputs
+msgid "LAUNCHER_ERROR_INVALIDIN"
+msgstr ""
+
+# Profile could not be deleted
+msgid "LAUNCHER_ERROR_DELETE"
+msgstr ""
 
 msgid "PROFSET_TITLE"
 msgstr ""
@@ -2062,8 +2103,10 @@ msgstr ""
 msgid "PROFSET_GENERAL_PWADDIAG"
 msgstr ""
 
-
 msgid "PROFSET_LAUNCH_MODE"
+msgstr ""
+
+msgid "PROFSET_LAUNCH_NORMAL"
 msgstr ""
 
 msgid "PROFSET_LAUNCH_MAP"

@@ -100,10 +100,6 @@ enum
 	ID_LANG_TR
 };
 
-//Variable strings for i18n
-
-std::string test1 = GStrings.GetString("PICKER_VERSION");
-
 // write back the vector to file
 void saveConfig(LauncherMainWindow *lmw)
 {
@@ -174,7 +170,15 @@ void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
 // default size for the window is 1280x720
 LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition)
 {
-	// Initilize correct language
+	// set what language it is supposed to be and init langvar
+	std::ifstream file(CONFIG_FILE.ToUTF8());
+	json          j;
+	file >> j;
+	langVar = j["lang"].get<std::string>();
+	file.close();
+	GStrings.UpdateLanguage(langVar);
+
+	// use langvar to update language
 	updateLanguage();
 
 	// This Panel is the base for all other UI components
@@ -182,7 +186,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create menu item to add Archive or WAD for new profile
 	wxMenu *AddMenu = new wxMenu;
-	AddMenu->Append(ID_ADD_WAD, test1);
+	AddMenu->Append(ID_ADD_WAD, "&Add File ...");
 	AddMenu->Append(ID_ADD_ARCHIVE, "&Add Archive ...");
 	AddMenu->AppendSeparator();
 	AddMenu->Append(wxID_EXIT, "&Exit");
@@ -386,8 +390,8 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			// check if already launched
 			if (isAlreadyLaunched)
 			{
-				wxMessageBox("A UZdoom instance is already running. Please close it before starting another.",
-				             "UZdoom Warning", wxOK | wxICON_WARNING);
+				wxMessageBox("A UZDoom instance is already running. Please close it before starting another.",
+				             "UZDoom", wxOK | wxICON_WARNING);
 				return;
 			}
 
@@ -501,22 +505,12 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 void LauncherMainWindow::updateLanguage()
 {
-	// set what language it is supposed to be and init langvar
-	std::ifstream file(CONFIG_FILE.ToUTF8());
-	json          j;
-	file >> j;
-	langVar = j["lang"].get<std::string>();
-	file.close();
-	GStrings.UpdateLanguage(langVar);
-
-	// now, trigger language update of the entire launacher ui
+	// Update all UI strings
+	this->SetTitle(GStrings.GetString("LAUNCHER_TITLE"));
 
 
-
-
-	// go to other launcher components and update them too
-
-	
+	// in case layout needs to be updated too
+	this->Layout();
 }
 
 void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)

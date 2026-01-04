@@ -979,18 +979,6 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 	advancedPanel->SetScrollRate(5, 5);
 	CreateAdvancedTab(currEdit, advancedPanel);
 
-	// finer error checking for validation fails
-	if (!generalPanel->TransferDataToWindow())
-		wxMessageBox("Error in General Tab");
-	else if (!launchPanel->TransferDataToWindow())
-		wxMessageBox("Error in Launch Tab");
-	else if (!filesPanel->TransferDataToWindow())
-		wxMessageBox("Error in Files Tab");
-	else if (!outputPanel->TransferDataToWindow())
-		wxMessageBox("Error in Output Tab");
-	else if (!advancedPanel->TransferDataToWindow())
-		wxMessageBox("Error in Advanced Tab");
-
 	// add them to the tabber
 	tabber->AddPage(generalPanel, "General");
 	tabber->AddPage(launchPanel, "Launch");
@@ -1024,7 +1012,7 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 		else
 		{
 			// validation fail
-			wxMessageBox("Invalid inputs. Please check your inputs.", "Error", wxICON_ERROR);
+			wxMessageBox("Invalid inputs. Please check your inputs.", "UZDoom", wxICON_ERROR);
 		}
 	});
 
@@ -1033,7 +1021,7 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 		wxMessageDialog check(this,
 		                      "Are you sure?\nThis will permanently delete the profile and all files in its "
 		                      "directory.\n\nThis cannot be undone.",
-		                      "Confirm Deletion", wxYES_NO | wxICON_WARNING | wxNO_DEFAULT);
+		                      "UZDoom", wxYES_NO | wxICON_WARNING | wxNO_DEFAULT);
 
 		if (check.ShowModal() == wxID_YES)
 		{
@@ -1049,7 +1037,7 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 				this->EndModal(wxID_REMOVE); // pass this back to the main window to signal deletion
 			}
 			else
-				wxMessageBox("Could not determine directory to delete.", "Error", wxICON_ERROR);
+				wxMessageBox("Could not determine directory to delete.", "UZDoom", wxICON_ERROR);
 		}
 	});
 

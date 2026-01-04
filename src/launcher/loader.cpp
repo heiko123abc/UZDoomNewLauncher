@@ -126,7 +126,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		// Did user stop?
 		if (!success)
 		{
-			wxMessageBox("Extraction was stopped.", "Error", wxICON_ERROR);
+			wxMessageBox("Extraction was stopped.", "UZDoom", wxICON_ERROR);
 			std::filesystem::remove_all(path); // Cleanup the remains
 			return;
 		}
@@ -187,7 +187,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 			{
 				// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
 				path.pop_back(); // drop the / at the end
-				wxMessageBox("Error: No .wad file found in the archive! (Or archive is too nested.)", "Error", wxICON_ERROR);
+				wxMessageBox("Error: No .wad file found in the archive! (Or archive is too nested.)", "UZDoom", wxICON_ERROR);
 				std::filesystem::remove_all(path); // delete dir since we aborted
 				return;
 			}
@@ -267,7 +267,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 			wxMessageBox(
 				"The launcher configuration file is corrupted and could not be read.\nPlease fix or delete the file: " +
 					wxString(CONFIG_FILE.data()),
-				"Error", wxOK | wxICON_ERROR);
+				"UZDoom", wxOK | wxICON_ERROR);
 		}
 		inFile.close();
 	}
@@ -286,14 +286,14 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	if (newProfile.isIWAD)
 	{
 		wxMessageBox("File was added as an IWAD.\n\nNot properly detected? It can be changed in the profile settings.",
-		             "Success on adding IWAD", wxOK | wxICON_INFORMATION);
+		             "UZDoom", wxOK | wxICON_INFORMATION);
 		return;
 	}
 	else
 	{
 		wxMessageBox("File was added as an (P)WAD.\n\nRemember to select the correct IWAD for it before "
 		             "launching.\nNot properly detected? It can be changed in the profile settings.",
-		             "Success on adding (P)WAD", wxOK | wxICON_INFORMATION);
+		             "UZDoom", wxOK | wxICON_INFORMATION);
 		return;
 	}
 }
@@ -325,7 +325,7 @@ void Loader::archiveOpener(wxWindow *window)
 	else
 	{
 		// No? Return.
-		wxMessageBox("That is not a valid archive file.", "Error", wxOK | wxICON_ERROR);
+		wxMessageBox("That is not a valid archive file.", "UZDoom", wxOK | wxICON_ERROR);
 		return;
 	}
 }
@@ -367,7 +367,7 @@ void Loader::fileOpener(wxWindow *window)
 	else
 	{
 		// No? Return.
-		wxMessageBox("That is not a valid IWAD or (P)WAD file.", "Error", wxOK | wxICON_ERROR);
+		wxMessageBox("That is not a valid IWAD or (P)WAD file.", "UZDoom", wxOK | wxICON_ERROR);
 		return;
 	}
 }

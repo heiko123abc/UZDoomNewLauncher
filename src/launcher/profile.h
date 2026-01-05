@@ -25,8 +25,6 @@ class Profile
 
   public:
 
-	FStartupSelectionInfo info; //startup object
-
 	wxString title{};
 	wxString author      = "?";
 	wxString releaseDate = "?"; // DD-MM-YYYY

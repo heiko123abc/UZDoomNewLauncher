@@ -172,6 +172,27 @@ void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
 // default size for the window is 1280x720
 LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition)
 {
+	//load lanauge for the first time
+	std::ifstream configFile(CONFIG_FILE.ToUTF8());
+	if (configFile.is_open())
+	{
+		try
+		{
+			json j;
+			configFile >> j;
+
+			if (j.contains("lang") && j["lang"].is_string())
+			{
+				langVar = j["lang"].get<std::string>();
+			}
+		}
+		catch (const json::parse_error &e)
+		{
+			wxLogError("Config JSON parse error: %s", e.what());
+		}
+	}
+	configFile.close();
+	GStrings.UpdateLanguage(langVar.c_str());
 
 	// This Panel is the base for all other UI components
 	wxPanel *panel = new wxPanel(this, wxID_ANY);
@@ -320,8 +341,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	btnColumnSizer->Add(hostServerButton, 0, wxEXPAND | wxBOTTOM, 5);
 	btnColumnSizer->Add(settingsButton, 0, wxEXPAND | wxBOTTOM, 5);
 
-	btnColumnSizer->AddStretchSpacer(1); // add a spacer between main buttons and move entry buttons and forces them
-	                                     // down
+	btnColumnSizer->AddStretchSpacer(1); // add a spacer between main buttons and move entry buttons down
 
 	btnColumnSizer->Add(refreshButton, 0, wxEXPAND | wxBOTTOM, 5);
 	btnColumnSizer->Add(moveEntryUpButton, 0, wxEXPAND, 0);
@@ -345,9 +365,6 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	panel->SetSizer(mainSizer);
 	panel->Layout(); // Force an immediate update
-
-	// use langvar to update language
-	updateLanguage();
 }
 
 void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
@@ -518,8 +535,6 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 void LauncherMainWindow::updateLanguage()
 {
 	// Make sure GStrings uses the correct language
-	wxMessageBox(langVar.c_str(), "UZDoom", wxOK | wxICON_INFORMATION);
-
 	GStrings.UpdateLanguage(langVar.c_str());
 
 	// Update all UI strings

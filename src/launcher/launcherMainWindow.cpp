@@ -28,23 +28,22 @@
 #include <wx/artprov.h>
 #include <wx/dataview.h>
 #include <wx/filedlg.h>
+#include <wx/menu.h>
 #include <wx/process.h>
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
-#include <wx/menu.h>
 
 #include "about.h"
 #include "const.h"
+#include "gstrings.h"
 #include "loader.h"
 #include "profile.h"
 #include "profileSettings.h"
-#include "gstrings.h"
 
 using json = nlohmann::json;
 
-bool     isAlreadyLaunched = false;
+bool        isAlreadyLaunched = false;
 std::string langVar           = "default";
-
 
 // reuturns a string that calculates XXhXXm
 using TimePoint = std::chrono::system_clock::time_point;
@@ -228,29 +227,36 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// the profile picker in a top to bottom list
 	profileList = new wxDataViewListCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TYPE")), wxDATAVIEW_CELL_INERT, 60,
-	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TITLE")), wxDATAVIEW_CELL_INERT, 350,
-	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS")), wxDATAVIEW_CELL_INERT, 350,
-	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE")), wxDATAVIEW_CELL_INERT, 100,
-	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED")), wxDATAVIEW_CELL_INERT, 100,
-	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME")), wxDATAVIEW_CELL_INERT, 80,
-	                              wxALIGN_CENTER, 0);
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TYPE")),
+	                              wxDATAVIEW_CELL_INERT, 60, wxALIGN_CENTER, 0);
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TITLE")),
+	                              wxDATAVIEW_CELL_INERT, 350, wxALIGN_CENTER, 0);
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS")),
+	                              wxDATAVIEW_CELL_INERT, 350, wxALIGN_CENTER, 0);
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE")),
+	                              wxDATAVIEW_CELL_INERT, 100, wxALIGN_CENTER, 0);
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED")),
+	                              wxDATAVIEW_CELL_INERT, 100, wxALIGN_CENTER, 0);
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME")),
+	                              wxDATAVIEW_CELL_INERT, 80, wxALIGN_CENTER, 0);
 
 	// Add 4 buttons to the right of the profile list
-	startGameButton  = new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_START")));
-	joinServerButton = new wxButton(panel, ID_JOIN_GAME, "Join Server");
-	hostServerButton = new wxButton(panel, ID_HOST_GAME, "Host Server");
-	settingsButton   = new wxButton(panel, ID_PROFILE_SETTINGS, "Profile Settings ...");
+	startGameButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_START")));
+	joinServerButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_JOIN")));
+	hostServerButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_HOST")));
+	settingsButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_SETTING")));
 
 	// move entry buttons + refresh
-	refreshButton       = new wxButton(panel, ID_REFRESH_LIST, "Refresh");
-	moveEntryUpButton   = new wxButton(panel, ID_MOVE_UP, "Move Up");
-	moveEntryDownButton = new wxButton(panel, ID_MOVE_DOWN, "Move Down");
+	refreshButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH")));
+	moveEntryUpButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP")));
+	moveEntryDownButton =
+		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN")));
 
 	// disable until user has clicked on item in profile list
 	startGameButton->Disable();
@@ -261,8 +267,9 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	moveEntryDownButton->Disable();
 
 	// the description box
-	wxTextCtrl *descriptionBox = new wxTextCtrl(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_SELECT")), wxDefaultPosition,
-	                                            wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+	wxTextCtrl *descriptionBox =
+		new wxTextCtrl(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_SELECT")),
+	                   wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 
 	// Menu Bindings
 	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, ID_ADD_WAD);
@@ -333,7 +340,8 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create status bar for profile count
 	CreateStatusBar();
-	SetStatusText(wxString::Format(wxString::FromUTF8(GStrings.GetString("LAUNCHER_AVAIL_STATUS")), profileList->GetItemCount()));
+	SetStatusText(
+		wxString::Format(wxString::FromUTF8(GStrings.GetString("LAUNCHER_AVAIL_STATUS")), profileList->GetItemCount()));
 
 	panel->SetSizer(mainSizer);
 	panel->Layout(); // Force an immediate update
@@ -370,14 +378,14 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 	if (event.GetId() == ID_REL_NOTES)
 	{
 		About aboutDialog;
-		aboutDialog.ReleaseNotesDialog(this,langVar);
+		aboutDialog.ReleaseNotesDialog(this, langVar);
 		aboutDialog.ShowModal(); // Force user to interact with notes before returning to main window
 	}
 
 	if (event.GetId() == ID_CREDITS)
 	{
 		About creditsDialog;
-		creditsDialog.CreditsDialog(this,langVar);
+		creditsDialog.CreditsDialog(this, langVar);
 		creditsDialog.ShowModal(); // Force user to interact with credits before returning to main window
 	}
 
@@ -392,8 +400,8 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			// check if already launched
 			if (isAlreadyLaunched)
 			{
-				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_ALRRUNNING")),
-				             "UZDoom", wxOK | wxICON_WARNING);
+				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_ALRRUNNING")), "UZDoom",
+				             wxOK | wxICON_WARNING);
 				return;
 			}
 
@@ -505,15 +513,12 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 	}
 }
 
-
 // we need to update all strings when language is changed because otherwise the user would have to restart the entire
 // launcher to see the changes
 void LauncherMainWindow::updateLanguage()
 {
 	// Make sure GStrings uses the correct language
-	langVar = nlohmann::json::parse(std::ifstream(std::string(CONFIG_FILE.ToUTF8()))).at("lang").get<std::string>();
-	wxMessageBox(langVar.c_str(), "UZDoom",
-	             wxOK | wxICON_INFORMATION);
+	wxMessageBox(langVar.c_str(), "UZDoom", wxOK | wxICON_INFORMATION);
 
 	GStrings.UpdateLanguage(langVar.c_str());
 
@@ -528,8 +533,7 @@ void LauncherMainWindow::updateLanguage()
 	moveEntryUpButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP")));
 	moveEntryDownButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN")));
 
-
-	//update entire menu bar
+	// update entire menu bar
 	if (menuBar)
 	{
 		menuBar->SetMenuLabel(0, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILE")));
@@ -657,6 +661,6 @@ void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)
 
 		saveConfig(this);
 	}
-	
+
 	updateLanguage();
 }

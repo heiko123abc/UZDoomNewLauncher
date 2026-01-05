@@ -17,11 +17,16 @@
 #include <string>
 #include <vector>
 #include "gstrings.h"
+#include "i_interface.h"
 #include <wx/string.h> // Include wxString
 
 class Profile
 {
+
   public:
+
+	FStartupSelectionInfo info; //startup object
+
 	wxString title{};
 	wxString author      = "?";
 	wxString releaseDate = "?"; // DD-MM-YYYY

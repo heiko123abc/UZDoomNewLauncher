@@ -31,6 +31,7 @@
 #include <wx/process.h>
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
+#include <wx/menu.h>
 
 #include "about.h"
 #include "const.h"
@@ -218,7 +219,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	Credinfo->Append(ID_CREDITS, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS")));
 
 	// create menu bar
-	wxMenuBar *menuBar = new wxMenuBar;
+	menuBar = new wxMenuBar;
 	menuBar->Append(AddMenu, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILE")));
 	menuBar->Append(PrefMenu, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_PREF")));
 	menuBar->Append(Credinfo, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUT")));
@@ -503,9 +504,14 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 	}
 }
 
+
+// we need to update all strings when language is changed because otherwise the user would have to restart the entire
+// launcher to see the changes
 void LauncherMainWindow::updateLanguage()
 {
 	// Make sure GStrings uses the correct language
+	wxMessageBox(langVar.c_str(), "UZDoom",
+	             wxOK | wxICON_INFORMATION);
 	GStrings.UpdateLanguage(langVar.c_str());
 
 	// Update all UI strings
@@ -518,6 +524,49 @@ void LauncherMainWindow::updateLanguage()
 	refreshButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH")));
 	moveEntryUpButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP")));
 	moveEntryDownButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN")));
+
+
+	//update entire menu bar
+	if (menuBar)
+	{
+		menuBar->SetMenuLabel(0, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILE")));
+		menuBar->SetMenuLabel(1, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_PREF")));
+		menuBar->SetMenuLabel(2, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUT")));
+
+		// File Menu
+		menuBar->FindItem(ID_ADD_WAD)
+			->SetItemLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDWAD")));
+		menuBar->FindItem(ID_ADD_ARCHIVE)
+			->SetItemLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDARCHIVE")));
+		menuBar->FindItem(wxID_EXIT)->SetItemLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILEEXIT")));
+
+		// Preferences Menu
+		wxMenu *prefMenu = menuBar->GetMenu(1);
+		if (prefMenu)
+		{
+			wxMenuItem *langItem = prefMenu->FindItemByPosition(0);
+			if (langItem)
+				langItem->SetItemLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_PREFLANG")));
+		}
+
+		// About Menu
+		menuBar->FindItem(ID_REL_NOTES)
+			->SetItemLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES")));
+		menuBar->FindItem(ID_CREDITS)
+			->SetItemLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS")));
+
+		// Update List Control Column Headers
+		if (profileList)
+		{
+			profileList->GetColumn(0)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TYPE")));
+			profileList->GetColumn(1)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TITLE")));
+			profileList->GetColumn(2)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS")));
+			profileList->GetColumn(3)->SetTitle(
+				wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE")));
+			profileList->GetColumn(4)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED")));
+			profileList->GetColumn(5)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME")));
+		}
+	}
 
 	// in case layout needs to be updated too
 	this->Layout();

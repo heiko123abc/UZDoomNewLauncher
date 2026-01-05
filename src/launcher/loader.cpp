@@ -127,7 +127,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		// Did user stop?
 		if (!success)
 		{
-			wxMessageBox(GStrings.GetString("LAUNCHER_ERROR_EXTRACTION"), "UZDoom", wxICON_ERROR);
+			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_EXTRACTION")), "UZDoom", wxICON_ERROR);
 			std::filesystem::remove_all(path); // Cleanup the remains
 			return;
 		}
@@ -187,7 +187,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 			{
 				// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
 				path.pop_back(); // drop the / at the end
-				wxMessageBox(GStrings.GetString("LAUNCHER_ERROR_NOWADARCH"), "UZDoom", wxICON_ERROR);
+				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")), "UZDoom", wxICON_ERROR);
 				std::filesystem::remove_all(path); // delete dir since we aborted
 				return;
 			}
@@ -264,7 +264,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		catch (const json::parse_error &)
 		{
 			// Throw and error about Json being corrupted
-			wxMessageBox(GStrings.GetString("LAUNCHER_ERROR_CORRUPT") + wxString(CONFIG_FILE.data()), "UZDoom",
+			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_CORRUPT")) + wxString(CONFIG_FILE.data()), "UZDoom",
 			             wxOK | wxICON_ERROR);
 		}
 		inFile.close();
@@ -283,12 +283,12 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	// profile settings later
 	if (newProfile.isIWAD)
 	{
-		wxMessageBox(GStrings.GetString("LAUNCHER_DETECT_IWAD"), "UZDoom", wxOK | wxICON_INFORMATION);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_IWAD")), "UZDoom", wxOK | wxICON_INFORMATION);
 		return;
 	}
 	else
 	{
-		wxMessageBox(GStrings.GetString("LAUNCHER_DETECT_PWAD"), "UZDoom", wxOK | wxICON_INFORMATION);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_PWAD")), "UZDoom", wxOK | wxICON_INFORMATION);
 		return;
 	}
 }
@@ -297,8 +297,8 @@ void Loader::archiveOpener(wxWindow *window)
 {
 	// This one is from the New Picker Button that opens the file dialog to add a new profile
 
-	wxFileDialog openFileDialog(window, GStrings.GetString("LAUNCHER_ARCHPICK_DIALOG_TITLE"), "", "",
-	                            GStrings.GetString("FILETYPE_ARCH"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_ARCHPICK_DIALOG_TITLE")), "", "",
+	                            wxString::FromUTF8(GStrings.GetString("FILETYPE_ARCH")), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	// Wait for user input
 	if (openFileDialog.ShowModal() == wxID_CANCEL)
@@ -319,7 +319,7 @@ void Loader::archiveOpener(wxWindow *window)
 	else
 	{
 		// No? Return.
-		wxMessageBox(GStrings.GetString("LAUNCHER_DETECT_NOTARCHIVE"), "UZDoom", wxOK | wxICON_ERROR);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_NOTARCHIVE")), "UZDoom", wxOK | wxICON_ERROR);
 		return;
 	}
 }
@@ -328,8 +328,8 @@ void Loader::fileOpener(wxWindow *window)
 {
 	// This one is from the New Picker Button that opens the file dialog to add a new profile
 
-	wxFileDialog openFileDialog(window, GStrings.GetString("LAUNCHER_WADPICK_DIALOG_TITLE"), "", "",
-	                            GStrings.GetString("FILETYPE_WAD"), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_WADPICK_DIALOG_TITLE")), "", "",
+	                            wxString::FromUTF8(GStrings.GetString("FILETYPE_WAD")), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	// Wait for user input
 	if (openFileDialog.ShowModal() == wxID_CANCEL)
@@ -360,7 +360,7 @@ void Loader::fileOpener(wxWindow *window)
 	else
 	{
 		// No? Return.
-		wxMessageBox(GStrings.GetString("LAUNCHER_DETECT_NOWAD"), "UZDoom", wxOK | wxICON_ERROR);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_NOWAD")), "UZDoom", wxOK | wxICON_ERROR);
 		return;
 	}
 }

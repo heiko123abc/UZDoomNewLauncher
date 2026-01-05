@@ -48,7 +48,7 @@ class Loader : public wxFrame
 		std::unique_ptr<wxZipEntry> upZe;
 
 		// show the user actual progress instead of guesswork
-		wxProgressDialog progress("UZDoom", GStrings.GetString("LAUNCHER_EXTRAC_PREP"), 100, parent,
+		wxProgressDialog progress("UZDoom", wxString::FromUTF8(GStrings.GetString("LAUNCHER_EXTRAC_PREP")), 100, parent,
 		                          wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_CAN_ABORT | wxPD_ELAPSED_TIME);
 
 		// pulse the bar

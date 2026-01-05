@@ -5,7 +5,8 @@
 **
 **---------------------------------------------------------------------------
 **
-** Copyright 2025 Marcus Minhorst for _ParseReleaseNotes(), _BuildReleaseNotes(), _OpenReleaseNotes(), GetReleaseNotes()
+** Copyright 2025 Marcus Minhorst for _ParseReleaseNotes() (adapted), _BuildReleaseNotes(), _OpenReleaseNotes(),
+*GetReleaseNotes()
 ** and adapted GetAboutText()
 **
 ** Copyright 2025-2026 UZDoom Maintainers and Contributors
@@ -53,74 +54,77 @@ FString _SimpleMarkdownToHtml(FString input)
 
 FString _ParseReleaseNotes(rapidxml::xml_node<char> *release)
 {
-	// braindead html to plaintext parser
+	// barebones html to plaintext parser
 
 	if (!release)
 		return GStrings.GetString("NOTES_FAIL"); // "Unable to parse release notes";
 
-	auto    description = release->first_node("description");
-	auto    version     = release->first_attribute("version");
-	auto    date        = release->first_attribute("date");
-	auto    url         = release->first_node("url");
-	FString text;
+	auto description = release->first_node("description");
+	auto version     = release->first_attribute("version");
+	auto date        = release->first_attribute("date");
+	auto url         = release->first_node("url");
 
-	auto append = [&text](FName type, char *value) {
-		if (type == "p")
+	std::string descHtml;
+
+	// simply take the already existing "html tags" inside patch notes
+	std::function<void(rapidxml::xml_node<char> *)> reconstructHtml = [&](rapidxml::xml_node<char> *node) {
+		for (auto child = node->first_node(); child; child = child->next_sibling())
 		{
-			text.AppendFormat("%s\n\n", value);
-		}
-		else if (type == "li")
-		{
-			text.AppendFormat(" - %s\n", value);
-		}
-		else if (type == "hr")
-		{
-			text.AppendFormat("---\n");
-		}
-		else
-		{
-			text.AppendFormat("%s", value);
+			if (child->type() == rapidxml::node_data || child->type() == rapidxml::node_cdata)
+			{
+				// Append text content directly
+				descHtml += child->value();
+			}
+			else if (child->type() == rapidxml::node_element)
+			{
+				std::string tagName = child->name();
+
+				// Take tags directly (e.g., <ul>, <li>, <b>, <p>)
+				descHtml += "<" + tagName + ">";
+
+				// Recursively process children
+				reconstructHtml(child);
+
+				// Close all the tags
+				descHtml += "</" + tagName + ">";
+			}
 		}
 	};
 
-	auto node = description;
-	while (node)
+	// make sure there is even something to parse
+	if (description)
 	{
-		// Only append the value if it's a data/text node with content
-		if (node->type() == rapidxml::node_data && node->value_size() > 0)
-		{
-			append(node->parent()->name(), node->value());
-		}
-
-		if (node->first_node())
-		{
-			node = node->first_node();
-		}
-		else if (node->next_sibling())
-		{
-			node = node->next_sibling();
-		}
-		else
-		{
-			while (node->parent() && node->parent() != description && !node->parent()->next_sibling())
-				node = node->parent();
-
-			node = (node->parent() != description) ? node->parent()->next_sibling() : nullptr;
-		}
+		reconstructHtml(description);
 	}
-	text.StripRight();
+	else
+	{
+		descHtml = GStrings.GetString("NOTES_EMPTY");
+	}
 
-	return FStringf{GAMENAME " %s %s, %s %s\n\n%s\n%s",
-	                GStrings.GetString("NOTES_VERSION"),                               // "version"
-	                version ? version->value() : GStrings.GetString("NOTES_UNKNOWN"),  // "Unknown"
-	                GStrings.GetString("NOTES_RELEASED"),                              // "released"
-	                date ? date->value() : GStrings.GetString("NOTES_UNKNOWN"),        // "Unknown"
-	                description ? text.GetChars() : GStrings.GetString("NOTES_EMPTY"), // "No description provided."
-	                url ? FStringf("\n%s %s",
-	                               GStrings.GetString("NOTES_DETAILS"), // "For more details see:"
-	                               url->value())
-	                          .GetChars()
-	                    : ""};
+	// get version and date strings
+	std::string versionStr =
+		version ? version->value() : wxString::FromUTF8(GStrings.GetString("NOTES_UNKNOWN")).ToStdString();
+	std::string dateStr = date ? date->value() : wxString::FromUTF8(GStrings.GetString("NOTES_UNKNOWN")).ToStdString();
+	std::string releasedStr = wxString::FromUTF8(GStrings.GetString("NOTES_RELEASED")).ToStdString();
+
+	// build final output using std::string concatenation
+	std::string finalOutput;
+	finalOutput += "<h1>" GAMENAME " " + versionStr + " <small>(" + releasedStr + " " + dateStr + ")</small></h1>";
+
+	// Body
+	finalOutput += descHtml;
+
+	// add url if present
+	if (url)
+	{
+		std::string detailsStr = wxString::FromUTF8(GStrings.GetString("NOTES_DETAILS")).ToStdString();
+		std::string urlStr     = url->value();
+
+		finalOutput += "<p><a href=\"" + urlStr + "\">" + detailsStr + "</a></p>";
+	}
+
+	// Return converted into FString
+	return FString(finalOutput.c_str());
 }
 
 FString _BuildReleaseNotes(rapidxml::xml_document<> &doc)
@@ -146,7 +150,7 @@ FString _BuildReleaseNotes(rapidxml::xml_document<> &doc)
 		if (!release || i >= NUMBER_OF_RELEASES_TO_DISPLAY)
 			break;
 
-		text.AppendFormat("\n\n---\n\n");
+		text.AppendFormat("\n\n\n\n");
 		release = release->next_sibling("release");
 	}
 
@@ -244,25 +248,28 @@ void About::ReleaseNotesDialog(wxWindow *parent, std::string lang)
 	GStrings.UpdateLanguage(lang.c_str());
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES"), wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
+	this->Create(parent, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES")),
+	             wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
 
 	// parse release notes xml from meta
 	wxString patchNotes = wxString::FromUTF8(GetReleaseNotes().GetChars());
 
 	// required to display rich text
-	wxRichTextCtrl *richTextWin = new wxRichTextCtrl(this, wxID_ANY, patchNotes, wxDefaultPosition, wxDefaultSize,
-	                                                 wxVSCROLL | wxHSCROLL | wxRE_READONLY);
+	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
 
 	// The checkbox to show/hide patch notes on update
-	wxCheckBox *showOnUpdateReq = new wxCheckBox(this, wxID_ANY, GStrings.GetString("LAUNCHER_SHOW_ONUPDATED"));
+	wxCheckBox *showOnUpdateReq =
+		new wxCheckBox(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_SHOW_ONUPDATED")));
+	htmlWin->SetPage(patchNotes);
 	showOnUpdateReq->SetValue(true); // Default to checked
 
 	// Button to close the dialog
-	wxButton *closeButton = new wxButton(this, wxID_OK, GStrings.GetString("LAUNCHER_BUTTON_CLOSE"));
+	wxButton *closeButton =
+		new wxButton(this, wxID_OK, wxString::FromUTF8(GStrings.GetString("LAUNCHER_BUTTON_CLOSE")));
 
 	// Layout using a vertical box sizer for proper arrangement
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-	vbox->Add(richTextWin, 1, wxEXPAND | wxALL, 10);
+	vbox->Add(htmlWin, 1, wxEXPAND | wxALL, 10);
 	vbox->Add(showOnUpdateReq, 0, wxALIGN_LEFT | wxLEFT | wxBOTTOM, 10);
 	vbox->Add(closeButton, 0, wxALIGN_CENTER | wxALL, 10);
 
@@ -278,15 +285,16 @@ void About::CreditsDialog(wxWindow *parent, std::string lang)
 	GStrings.UpdateLanguage(lang.c_str());
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS"), wxDefaultPosition,
-	             parent->FromDIP(wxSize(1000, 800)));
+	this->Create(parent, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS")),
+	             wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
 
 	// required to display rich text
 	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
 	htmlWin->SetPage(wxString::FromUTF8(GetAboutText().GetChars()));
 
 	// Button to close the dialog
-	wxButton *closeButton = new wxButton(this, wxID_OK, GStrings.GetString("LAUNCHER_BUTTON_CLOSE"));
+	wxButton *closeButton =
+		new wxButton(this, wxID_OK, wxString::FromUTF8(GStrings.GetString("LAUNCHER_BUTTON_CLOSE")));
 
 	// Layout using a vertical box sizer for proper arrangement
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);

@@ -177,10 +177,10 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create menu item to add Archive or WAD for new profile
 	wxMenu *AddMenu = new wxMenu;
-	AddMenu->Append(ID_ADD_WAD, GStrings.GetString("LAUNCHER_TOPBAR_FILEADDWAD"));
-	AddMenu->Append(ID_ADD_ARCHIVE, GStrings.GetString("LAUNCHER_TOPBAR_FILEADDARCHIVE"));
+	AddMenu->Append(ID_ADD_WAD, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDWAD")));
+	AddMenu->Append(ID_ADD_ARCHIVE, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDARCHIVE")));
 	AddMenu->AppendSeparator();
-	AddMenu->Append(wxID_EXIT, GStrings.GetString("LAUNCHER_TOPBAR_FILEEXIT"));
+	AddMenu->Append(wxID_EXIT, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILEEXIT")));
 
 	// create menu item to change preferences e.g language, theme, etc
 	wxMenu *PrefMenu = new wxMenu;
@@ -210,37 +210,37 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	LangToggler->Append(ID_LANG_RU, wxString::FromUTF8("Русский (Russian)"));
 	LangToggler->Append(ID_LANG_SR, wxString::FromUTF8("Српски (Serbian)"));
 	LangToggler->Append(ID_LANG_TR, wxString::FromUTF8("Türkçe (Turkish)"));
-	PrefMenu->AppendSubMenu(LangToggler, GStrings.GetString("LAUNCHER_TOPBAR_PREFLANG"));
+	PrefMenu->AppendSubMenu(LangToggler, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_PREFLANG")));
 
 	// create menu item to view credits and release notes
 	wxMenu *Credinfo = new wxMenu;
-	Credinfo->Append(ID_REL_NOTES, GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES"));
-	Credinfo->Append(ID_CREDITS, GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS"));
+	Credinfo->Append(ID_REL_NOTES, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES")));
+	Credinfo->Append(ID_CREDITS, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS")));
 
 	// create menu bar
 	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append(AddMenu, GStrings.GetString("LAUNCHER_TOPBAR_FILE"));
-	menuBar->Append(PrefMenu, GStrings.GetString("LAUNCHER_TOPBAR_PREF"));
-	menuBar->Append(Credinfo, GStrings.GetString("LAUNCHER_TOPBAR_ABOUT"));
+	menuBar->Append(AddMenu, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_FILE")));
+	menuBar->Append(PrefMenu, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_PREF")));
+	menuBar->Append(Credinfo, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_ABOUT")));
 	SetMenuBar(menuBar);
 
 	// the profile picker in a top to bottom list
 	profileList = new wxDataViewListCtrl(panel, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	profileList->AppendTextColumn(GStrings.GetString("LAUNCHER_PROFLIST_TYPE"), wxDATAVIEW_CELL_INERT, 60,
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TYPE")), wxDATAVIEW_CELL_INERT, 60,
 	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(GStrings.GetString("LAUNCHER_PROFLIST_TITLE"), wxDATAVIEW_CELL_INERT, 350,
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TITLE")), wxDATAVIEW_CELL_INERT, 350,
 	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS"), wxDATAVIEW_CELL_INERT, 350,
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS")), wxDATAVIEW_CELL_INERT, 350,
 	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE"), wxDATAVIEW_CELL_INERT, 100,
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE")), wxDATAVIEW_CELL_INERT, 100,
 	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED"), wxDATAVIEW_CELL_INERT, 100,
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED")), wxDATAVIEW_CELL_INERT, 100,
 	                              wxALIGN_CENTER, 0);
-	profileList->AppendTextColumn(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME"), wxDATAVIEW_CELL_INERT, 80,
+	profileList->AppendTextColumn(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME")), wxDATAVIEW_CELL_INERT, 80,
 	                              wxALIGN_CENTER, 0);
 
 	// Add 4 buttons to the right of the profile list
-	startGameButton  = new wxButton(panel, ID_START_GAME, GStrings.GetString("LAUNCHER_PROFBUTTON_START"));
+	startGameButton  = new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_START")));
 	joinServerButton = new wxButton(panel, ID_JOIN_GAME, "Join Server");
 	hostServerButton = new wxButton(panel, ID_HOST_GAME, "Host Server");
 	settingsButton   = new wxButton(panel, ID_PROFILE_SETTINGS, "Profile Settings ...");
@@ -259,7 +259,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	moveEntryDownButton->Disable();
 
 	// the description box
-	wxTextCtrl *descriptionBox = new wxTextCtrl(panel, wxID_ANY, GStrings.GetString("LAUNCHER_NO_DSC_SELECT"), wxDefaultPosition,
+	wxTextCtrl *descriptionBox = new wxTextCtrl(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_SELECT")), wxDefaultPosition,
 	                                            wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 
 	// Menu Bindings
@@ -331,7 +331,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create status bar for profile count
 	CreateStatusBar();
-	SetStatusText(wxString::Format(GStrings.GetString("LAUNCHER_AVAIL_STATUS"), profileList->GetItemCount()));
+	SetStatusText(wxString::Format(wxString::FromUTF8(GStrings.GetString("LAUNCHER_AVAIL_STATUS")), profileList->GetItemCount()));
 
 	panel->SetSizer(mainSizer);
 	panel->Layout(); // Force an immediate update
@@ -390,7 +390,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			// check if already launched
 			if (isAlreadyLaunched)
 			{
-				wxMessageBox(GStrings.GetString("LAUNCHER_ERROR_ALRRUNNING"),
+				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_ALRRUNNING")),
 				             "UZDoom", wxOK | wxICON_WARNING);
 				return;
 			}
@@ -509,15 +509,15 @@ void LauncherMainWindow::updateLanguage()
 	GStrings.UpdateLanguage(langVar.c_str());
 
 	// Update all UI strings
-	this->SetTitle(GStrings.GetString("LAUNCHER_TITLE") + wxString::Format(" %s", VERSION));
-	startGameButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_START"));
-	joinServerButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_JOIN"));
-	hostServerButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_HOST"));
-	settingsButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_SETTING"));
+	this->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_TITLE")) + wxString::Format(" %s", VERSION));
+	startGameButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_START")));
+	joinServerButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_JOIN")));
+	hostServerButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_HOST")));
+	settingsButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_SETTING")));
 
-	refreshButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH"));
-	moveEntryUpButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP"));
-	moveEntryDownButton->SetLabel(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN"));
+	refreshButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH")));
+	moveEntryUpButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP")));
+	moveEntryDownButton->SetLabel(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN")));
 
 	// in case layout needs to be updated too
 	this->Layout();

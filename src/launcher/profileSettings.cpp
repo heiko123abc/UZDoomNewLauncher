@@ -95,7 +95,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 	if (showForceCheck)
 	{
 		// Checkbox for DMFlags
-		wxCheckBox *forceBox = new wxCheckBox(&dlg, wxID_ANY, GStrings.GetString("PROFSET_GAMEPLAY_FORCE"));
+		wxCheckBox *forceBox = new wxCheckBox(&dlg, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_FORCE")));
 		forceBox->SetValidator(wxGenericValidator(&currEdit->alwaysapplydmflags));
 		mainSizer->Add(forceBox, 0, wxALIGN_CENTER | wxBOTTOM, 5);
 		dlg.TransferDataToWindow();
@@ -103,17 +103,17 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 	else
 	{
 		// Warning text for Compat flags
-		mainSizer->Add(new wxStaticText(&dlg, wxID_ANY, GStrings.GetString("PROFSET_COMP_INFO")), 0,
+		mainSizer->Add(new wxStaticText(&dlg, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_INFO"))), 0,
 		               wxALL | wxALIGN_CENTER, 5);
 	}
 
 	for (int i = 0; i < varCount; i++)
 	{
 		// conditional textbox rendering
-		if (title == GStrings.GetString("PROFSET_GAMEPLAY_TITLE"))
+		if (title == wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_TITLE")))
 			grid->Add(new wxStaticText(&dlg, wxID_ANY, wxString::Format("dmflags%d:", i + 1)), 0,
 			          wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
-		if (title == GStrings.GetString("PROFSET_COMP_TITLE"))
+		if (title == wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")))
 			grid->Add(new wxStaticText(&dlg, wxID_ANY, wxString::Format("compatflags%d:", i + 1)), 0,
 			          wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
 		wxTextCtrl *tc = new wxTextCtrl(&dlg, wxID_ANY, "", wxDefaultPosition, parent->FromDIP(wxSize(100, -1)));
@@ -122,7 +122,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 	}
 
 	mainSizer->Add(grid, 0, wxALIGN_CENTER | wxBOTTOM, 20);
-	mainSizer->Add(new wxButton(&dlg, wxID_OK, GStrings.GetString("LAUNCHER_BUTTON_CLOSE")), 0, wxALIGN_CENTER | wxBOTTOM,
+	mainSizer->Add(new wxButton(&dlg, wxID_OK, wxString::FromUTF8(GStrings.GetString("LAUNCHER_BUTTON_CLOSE"))), 0, wxALIGN_CENTER | wxBOTTOM,
 	               15);
 
 	auto UpdateUI = [&]() {
@@ -188,7 +188,7 @@ void advGameplay(Profile *currEdit, wxWindow *parent)
 	// Pass the 3 variables by reference in an array
 	int vars[] = {currEdit->DMFlags, currEdit->DMFlags2, currEdit->DMFlags3};
 
-	ShowFlagEditor(currEdit, parent, GStrings.GetString("PROFSET_GAMEPLAY_TITLE"), dmFlags, vars, 3, true);
+	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_TITLE")), dmFlags, vars, 3, true);
 
 	// Save back results
 	currEdit->DMFlags  = vars[0];
@@ -201,7 +201,7 @@ void advCompat(Profile *currEdit, wxWindow *parent)
 
 	int vars[] = {currEdit->compatflags, currEdit->compatflags2};
 
-	ShowFlagEditor(currEdit, parent, GStrings.GetString("PROFSET_COMP_TITLE"), compatFlags, vars, 2, false);
+	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")), compatFlags, vars, 2, false);
 
 	currEdit->compatflags  = vars[0];
 	currEdit->compatflags2 = vars[1];
@@ -209,7 +209,7 @@ void advCompat(Profile *currEdit, wxWindow *parent)
 
 // a helper to avoid duplication
 void OpenPathPicker(wxWindow *parent, wxTextCtrl *targetInput, const wxString &title, bool isFolder,
-                    const wxString &filter = GStrings.GetString("FILETYPE_ALL"))
+                    const wxString &filter = wxString::FromUTF8(GStrings.GetString("FILETYPE_ALL")))
 {
 	if (isFolder)
 	{
@@ -305,7 +305,7 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 
 	// prepend parameters field
-	wxStaticBoxSizer *pparamGroup = new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_ADVANCED_PREPEND"));
+	wxStaticBoxSizer *pparamGroup = new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_ADVANCED_PREPEND")));
 	wxTextCtrl       *pparams =
 		new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
 	                   wxTextValidator(wxFILTER_NONE, &currEdit->prependAdditionalParameters));
@@ -315,7 +315,7 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 
 	// append parameters field
 	wxStaticBoxSizer *aparamGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_ADVANCED_APPEND"));
+		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_ADVANCED_APPEND")));
 	wxTextCtrl       *aparams =
 		new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
 	                   wxTextValidator(wxFILTER_NONE, &currEdit->appendAdditionalParameters));
@@ -339,17 +339,17 @@ void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 
 	// General Settings
 	wxStaticBoxSizer *generalGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_OUTPUT_GENERAL"));
+		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_GENERAL")));
 	wxBoxSizer       *genRow       = new wxBoxSizer(wxHORIZONTAL);
-	genRow->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_FULLSCREEN"), wxDefaultPosition,
+	genRow->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_FULLSCREEN")), wxDefaultPosition,
 	                           wxDefaultSize, 0,
 	                           wxGenericValidator(&currEdit->enableFullscreen)),
 	            0, wxRIGHT, 15);
-	genRow->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_SUPPORTWAD"), wxDefaultPosition,
+	genRow->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_SUPPORTWAD")), wxDefaultPosition,
 	                           wxDefaultSize, 0,
 	                           wxGenericValidator(&currEdit->enableSupportWAD)),
 	            0, wxRIGHT, 15);
-	genRow->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_DISAUTO"), wxDefaultPosition,
+	genRow->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_DISAUTO")), wxDefaultPosition,
 	                           wxDefaultSize, 0,
 	                           wxGenericValidator(&currEdit->disableAutoload)),
 	            0);
@@ -359,14 +359,14 @@ void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 	// Rendering API Group
 
 	wxStaticBoxSizer *renderGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_OUTPUT_RENDER"));
+		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_RENDER")));
 	wxBoxSizer       *renderRow   = new wxBoxSizer(wxHORIZONTAL);
 
-	wxRadioButton *vk   = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_VULKAN"),
+	wxRadioButton *vk   = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_VULKAN")),
 	                                        wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-	wxRadioButton *gl   = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_OPENGL"),
+	wxRadioButton *gl   = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_OPENGL")),
 	                                        wxDefaultPosition, wxDefaultSize);
-	wxRadioButton *gles = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_GLES"),
+	wxRadioButton *gles = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_GLES")),
 	                                        wxDefaultPosition, wxDefaultSize);
 
 	renderRow->Add(vk, 0, wxRIGHT, 15);
@@ -383,17 +383,17 @@ void CreateOutputTab(Profile *currEdit, wxPanel *panel)
 
 	// Extra Graphics
 	wxStaticBoxSizer *graphicsGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_OUTPUT_EXTRA"));
+		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_EXTRA")));
 	wxBoxSizer       *graphRow      = new wxBoxSizer(wxHORIZONTAL);
-	graphRow->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_LIGHTS"), wxDefaultPosition,
+	graphRow->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_LIGHTS")), wxDefaultPosition,
 	                             wxDefaultSize, 0,
 	                             wxGenericValidator(&currEdit->enableLights)),
 	              0, wxRIGHT, 15);
-	graphRow->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_BRIGHT"), wxDefaultPosition,
+	graphRow->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_BRIGHT")), wxDefaultPosition,
 	                             wxDefaultSize, 0,
 	                             wxGenericValidator(&currEdit->enableBrightmaps)),
 	              0, wxRIGHT, 15);
-	graphRow->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_OUTPUT_WIDE"), wxDefaultPosition,
+	graphRow->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_OUTPUT_WIDE")), wxDefaultPosition,
 	                             wxDefaultSize, 0,
 	                             wxGenericValidator(&currEdit->enableWidescreen)),
 	              0);
@@ -412,7 +412,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	grid->AddGrowableCol(1);
 
 	// Config File Row
-	grid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_FILES_CONFIG")), 0, wxALIGN_CENTER_VERTICAL);
+	grid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_CONFIG"))), 0, wxALIGN_CENTER_VERTICAL);
 	wxBoxSizer *configBox = new wxBoxSizer(wxHORIZONTAL);
 
 	wxTextCtrl *configTxt = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -424,14 +424,14 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                 panel->FromDIP(wxSize(configTxt->GetBestSize().y * 1.2, configTxt->GetBestSize().y)));
 	// bind it
 	configButton->Bind(wxEVT_BUTTON, [panel, configTxt](wxCommandEvent &) {
-		OpenPathPicker(panel, configTxt, GStrings.GetString("PROFSET_FILES_CONFIGDIAG"), false, GStrings.GetString("FILETYPE_INI"));
+		OpenPathPicker(panel, configTxt, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_CONFIGDIAG")), false, wxString::FromUTF8(GStrings.GetString("FILETYPE_INI")));
 	});
 	configBox->Add(configTxt, 1, wxEXPAND | wxRIGHT, 5);
 	configBox->Add(configButton, 0);
 	grid->Add(configBox, 1, wxEXPAND);
 
 	// Save Directory Row
-	grid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_FILES_SAVE")), 0, wxALIGN_CENTER_VERTICAL);
+	grid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_SAVE"))), 0, wxALIGN_CENTER_VERTICAL);
 	wxBoxSizer *saveBox = new wxBoxSizer(wxHORIZONTAL);
 
 	wxTextCtrl *saveTxt = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -443,14 +443,14 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                 panel->FromDIP(wxSize(saveTxt->GetBestSize().y * 1.2, saveTxt->GetBestSize().y)));
 	// bind it
 	saveDirButton->Bind(wxEVT_BUTTON, [panel, saveTxt](wxCommandEvent &) {
-		OpenPathPicker(panel, saveTxt, GStrings.GetString("PROFSET_FILES_SAVEDIAG"), true);
+		OpenPathPicker(panel, saveTxt, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_SAVEDIAG")), true);
 	});
 	saveBox->Add(saveTxt, 1, wxEXPAND | wxRIGHT, 5);
 	saveBox->Add(saveDirButton, 0);
 	grid->Add(saveBox, 1, wxEXPAND);
 
 	// Screenshot Dir Row
-	grid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_FILES_SCREEN")), 0, wxALIGN_CENTER_VERTICAL);
+	grid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_SCREEN"))), 0, wxALIGN_CENTER_VERTICAL);
 	wxBoxSizer *shotBox = new wxBoxSizer(wxHORIZONTAL);
 
 	wxTextCtrl *shotTxt = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -462,14 +462,14 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                 panel->FromDIP(wxSize(shotTxt->GetBestSize().y * 1.2, shotTxt->GetBestSize().y)));
 	// bind it
 	scrnDirButton->Bind(wxEVT_BUTTON, [panel, shotTxt](wxCommandEvent &) {
-		OpenPathPicker(panel, shotTxt, GStrings.GetString("PROFSET_FILES_SCREENDIAG"), true);
+		OpenPathPicker(panel, shotTxt, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_SCREENDIAG")), true);
 	});
 	shotBox->Add(shotTxt, 1, wxEXPAND | wxRIGHT, 5);
 	shotBox->Add(scrnDirButton, 0);
 	grid->Add(shotBox, 1, wxEXPAND);
 
 	// Demo Directory Row
-	grid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_FILES_DEMO")), 0, wxALIGN_CENTER_VERTICAL);
+	grid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_DEMO"))), 0, wxALIGN_CENTER_VERTICAL);
 	wxBoxSizer *demoBox = new wxBoxSizer(wxHORIZONTAL);
 
 	wxTextCtrl *demoTxt = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -481,7 +481,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	                 panel->FromDIP(wxSize(demoTxt->GetBestSize().y * 1.2, demoTxt->GetBestSize().y)));
 	// bind it
 	demoDirButton->Bind(wxEVT_BUTTON, [panel, demoTxt](wxCommandEvent &) {
-		OpenPathPicker(panel, demoTxt, GStrings.GetString("PROFSET_FILES_DEMODIAG"), true);
+		OpenPathPicker(panel, demoTxt, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_DEMODIAG")), true);
 	});
 	demoBox->Add(demoTxt, 1, wxEXPAND | wxRIGHT, 5);
 	demoBox->Add(demoDirButton, 0);
@@ -491,10 +491,10 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 
 	// Mods Header
 	wxBoxSizer *modHeader = new wxBoxSizer(wxHORIZONTAL);
-	modHeader->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_FILES_MODS")), 1,
+	modHeader->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_MODS"))), 1,
 	               wxALIGN_CENTER_VERTICAL);
 
-	wxButton *addModButton = new wxButton(panel, wxID_ANY, GStrings.GetString("PROFSET_FILES_ADDMOD"));
+	wxButton *addModButton = new wxButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_FILES_ADDMOD")));
 	modHeader->Add(addModButton, 0);
 	mainSizer->Add(modHeader, 0, wxEXPAND | wxLEFT | wxRIGHT, 15);
 
@@ -507,7 +507,7 @@ void CreateFilesTab(Profile *currEdit, wxPanel *panel)
 	modList->SetSizer(modListSizer);
 
 	addModButton->Bind(wxEVT_BUTTON, [currEdit, panel, modList, modListSizer](wxCommandEvent &) {
-		wxFileDialog openFileDialog(panel, "Select Mod Files", wxGetCwd(), "", GStrings.GetString("FILETYPE_MOD"),
+		wxFileDialog openFileDialog(panel, "Select Mod Files", wxGetCwd(), "", wxString::FromUTF8(GStrings.GetString("FILETYPE_MOD")),
 		                            wxFD_OPEN | wxFD_FILE_MUST_EXIST |
 		                                wxFD_MULTIPLE); // this is a seperate case to allow for multiple selections
 
@@ -544,7 +544,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// left side
 	wxBoxSizer *leftCol = new wxBoxSizer(wxVERTICAL);
 
-	wxStaticBoxSizer *launchModeGroup = new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_LAUNCH_MODE"));
+	wxStaticBoxSizer *launchModeGroup = new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_MODE")));
 
 	// capture the radio button value manually and set values (beause wxValidator with radio buttons is not suitable)
 	auto setupRadio = [currEdit](wxRadioButton *rb, int index) {
@@ -556,7 +556,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// Normal
 	{
 		wxBoxSizer    *row = new wxBoxSizer(wxHORIZONTAL);
-		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_NORMAL"),
+		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_NORMAL")),
 		                                       wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
 		rb->SetValue(true);
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
@@ -569,7 +569,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// Map
 	{
 		wxBoxSizer    *row = new wxBoxSizer(wxHORIZONTAL);
-		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_MAP"));
+		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_MAP")));
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
 		wxSpinCtrl *mapSpinner = new wxSpinCtrl(panel, wxID_ANY, "1", wxDefaultPosition, wxDefaultSize, 0, 1, 100000);
@@ -583,7 +583,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// Savegame
 	{
 		wxBoxSizer    *row = new wxBoxSizer(wxHORIZONTAL);
-		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_SAVE"));
+		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SAVE")));
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
 		wxTextCtrl *loadSavePath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -593,7 +593,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		                 panel->FromDIP(wxSize(loadSavePath->GetBestSize().y * 1.2, loadSavePath->GetBestSize().y)));
 		// bind it
 		loadSavePathButton->Bind(wxEVT_BUTTON, [panel, loadSavePath](wxCommandEvent &) {
-			OpenPathPicker(panel, loadSavePath, GStrings.GetString("PROFSET_LAUNCH_SAVEDIAG"), false,
+			OpenPathPicker(panel, loadSavePath, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SAVEDIAG")), false,
 			               "Zdoom Save files (*.zds)|*.zds");
 		});
 		row->Add(loadSavePath, 0, wxALIGN_CENTER_VERTICAL);
@@ -606,7 +606,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// Demo Playback
 	{
 		wxBoxSizer    *row = new wxBoxSizer(wxHORIZONTAL);
-		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_PLAYDEM"));
+		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_PLAYDEM")));
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
 		wxTextCtrl *playDemPath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -616,7 +616,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		                 panel->FromDIP(wxSize(playDemPath->GetBestSize().y * 1.2, playDemPath->GetBestSize().y)));
 		// bind it
 		playDemPathButton->Bind(wxEVT_BUTTON, [panel, playDemPath](wxCommandEvent &) {
-			OpenPathPicker(panel, playDemPath, GStrings.GetString("PROFSET_LAUNCH_DEMODIAG"), false,
+			OpenPathPicker(panel, playDemPath, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_DEMODIAG")), false,
 			               "Demo Lump files (*.lmp)|*.lmp");
 		});
 		row->Add(playDemPath, 0, wxALIGN_CENTER_VERTICAL);
@@ -629,7 +629,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	// Demo Record
 	{
 		wxBoxSizer    *row = new wxBoxSizer(wxHORIZONTAL);
-		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_RECORD"));
+		wxRadioButton *rb  = new wxRadioButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_RECORD")));
 		row->Add(rb, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 		row->AddStretchSpacer();
 		wxTextCtrl *recDemPath = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
@@ -639,7 +639,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 		                 panel->FromDIP(wxSize(recDemPath->GetBestSize().y * 1.2, recDemPath->GetBestSize().y)));
 		// bind it
 		recDemPathButton->Bind(wxEVT_BUTTON, [panel, recDemPath](wxCommandEvent &) {
-			OpenPathPicker(panel, recDemPath, GStrings.GetString("PROFSET_LAUNCH_DEMODIAG"), false,
+			OpenPathPicker(panel, recDemPath, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_DEMODIAG")), false,
 			               "Demo Lump files (*.lmp)|*.lmp");
 		});
 		row->Add(recDemPath, 0, wxALIGN_CENTER_VERTICAL);
@@ -653,22 +653,22 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	// Difficulty settings
 	wxStaticBoxSizer *gameplayGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_LAUNCH_GAMEPLAY"));
+		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GAMEPLAY")));
 
 	// Skill select
 	wxBoxSizer *skillRow = new wxBoxSizer(wxHORIZONTAL);
-	skillRow->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_SKILL")), 1,
+	skillRow->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL"))), 1,
 	              wxALIGN_CENTER_VERTICAL);
 
 	wxComboBox *skillCombo =
-		new wxComboBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_SKILL3"), wxDefaultPosition, wxDefaultSize,
+		new wxComboBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL3")), wxDefaultPosition, wxDefaultSize,
 	                   0, NULL, 0,
 	                                        wxGenericValidator(&currEdit->difficultySkillRating));
-	skillCombo->Append(GStrings.GetString("PROFSET_LAUNCH_SKILL1"));
-	skillCombo->Append(GStrings.GetString("PROFSET_LAUNCH_SKILL2"));
-	skillCombo->Append(GStrings.GetString("PROFSET_LAUNCH_SKILL3"));
-	skillCombo->Append(GStrings.GetString("PROFSET_LAUNCH_SKILL4"));
-	skillCombo->Append(GStrings.GetString("PROFSET_LAUNCH_SKILL5"));
+	skillCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL1")));
+	skillCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL2")));
+	skillCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL3")));
+	skillCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL4")));
+	skillCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_SKILL5")));
 	skillCombo->SetEditable(false);
 
 	skillRow->Add(skillCombo, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
@@ -678,20 +678,20 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	// Checkboxes for modifiers
 	long chkFlags = wxLEFT | wxBOTTOM; // add space between checkboxes for better look
-	gameplayGroup->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_FMONSTER"), wxDefaultPosition,
+	gameplayGroup->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_FMONSTER")), wxDefaultPosition,
 	                                  wxDefaultSize, 0,
 	                                  wxGenericValidator(&currEdit->difficultyFastMonsters)),
 	                   0, chkFlags, 5);
-	gameplayGroup->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_RMONSTER"), wxDefaultPosition,
+	gameplayGroup->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_RMONSTER")), wxDefaultPosition,
 	                                  wxDefaultSize, 0,
 	                                  wxGenericValidator(&currEdit->difficultyRespawnMonsters)),
 	                   0, chkFlags, 5);
-	gameplayGroup->Add(new wxCheckBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_NMONSTER"), wxDefaultPosition,
+	gameplayGroup->Add(new wxCheckBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_NMONSTER")), wxDefaultPosition,
 	                                  wxDefaultSize, 0,
 	                                  wxGenericValidator(&currEdit->difficultyNoMonsters)),
 	                   0, chkFlags, 5);
 
-	wxButton *advGameplayButton = new wxButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_GAMEPLAYMORE"));
+	wxButton *advGameplayButton = new wxButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GAMEPLAYMORE")));
 	gameplayGroup->Add(advGameplayButton, 0, wxALIGN_LEFT | wxEXPAND); // botton for more options
 	// bind it
 	advGameplayButton->Bind(wxEVT_BUTTON, [currEdit, panel](wxCommandEvent &) { advGameplay(currEdit, panel); });
@@ -699,35 +699,35 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 
 	// miscellaneous
 	wxStaticBoxSizer *miscGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_LAUNCH_MISC"));
+		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_MISC")));
 	wxFlexGridSizer  *miscGrid  = new wxFlexGridSizer(0, 2, 5, 5);
 	miscGrid->AddGrowableCol(1);
 
-	miscGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_NAME")), 0,
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_NAME"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	miscGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                             wxTextValidator(wxFILTER_NONE, &currEdit->playerName)),
 	              0, wxEXPAND);
-	miscGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_CLASS")), 0,
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_CLASS"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	miscGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                             wxTextValidator(wxFILTER_NONE, &currEdit->playerClass)),
 	              0, wxEXPAND);
-	miscGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_GENDER")), 0,
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GENDER"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	wxComboBox *genderCombo =
-		new wxComboBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_GENDER0"), wxDefaultPosition, wxDefaultSize,
+		new wxComboBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GENDER0")), wxDefaultPosition, wxDefaultSize,
 	                   0, NULL, 0);
-	genderCombo->Append(GStrings.GetString("PROFSET_LAUNCH_GENDER0"), new wxStringClientData("Male"));
-	genderCombo->Append(GStrings.GetString("PROFSET_LAUNCH_GENDER1"), new wxStringClientData("Female"));
-	genderCombo->Append(GStrings.GetString("PROFSET_LAUNCH_GENDER2"), new wxStringClientData("Neutral"));
-	genderCombo->Append(GStrings.GetString("PROFSET_LAUNCH_GENDER3"), new wxStringClientData("Object"));
+	genderCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GENDER0")), new wxStringClientData("Male"));
+	genderCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GENDER1")), new wxStringClientData("Female"));
+	genderCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GENDER2")), new wxStringClientData("Neutral"));
+	genderCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_GENDER3")), new wxStringClientData("Object"));
 
 	LinkComboData(genderCombo, &currEdit->playerGender);
 	genderCombo->SetEditable(false);
 	miscGrid->Add(genderCombo, 0, wxEXPAND);
 
-	miscGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_LANG")), 0,
+	miscGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_LANG"))), 0,
 	              wxALIGN_CENTER_VERTICAL | wxTOP,
 	              panel->FromDIP(15));
 	wxComboBox *langCombo = new wxComboBox(panel, wxID_ANY, "enu", wxDefaultPosition, wxDefaultSize, 0, NULL, 0);
@@ -770,21 +770,21 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	wxBoxSizer *rightCol = new wxBoxSizer(wxVERTICAL);
 
 	// Remote Multiplayer
-	wxStaticBoxSizer *remoteGroup = new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_LAUNCH_REMOTE"));
+	wxStaticBoxSizer *remoteGroup = new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_REMOTE")));
 	wxFlexGridSizer  *remoteGrid  = new wxFlexGridSizer(3, 2, 5, 5);
 	remoteGrid->AddGrowableCol(1);
 
-	remoteGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_REMADDR")), 0,
+	remoteGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_REMADDR"))), 0,
 	                wxALIGN_CENTER_VERTICAL);
 	remoteGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                               wxTextValidator(wxFILTER_NONE, &currEdit->joinAddress)),
 	                0, wxEXPAND);
-	remoteGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_REMPORT")), 0,
+	remoteGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_REMPORT"))), 0,
 	                wxALIGN_CENTER_VERTICAL);
 	remoteGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                               wxTextValidator(wxFILTER_NONE, &currEdit->joinPort)),
 	                0, wxEXPAND);
-	remoteGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_TEAMNO")), 0,
+	remoteGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TEAMNO"))), 0,
 	                wxALIGN_CENTER_VERTICAL);
 	remoteGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                               wxTextValidator(wxFILTER_NONE, &currEdit->joinTeamNo)),
@@ -794,32 +794,32 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	rightCol->Add(remoteGroup, 0, wxEXPAND | wxALL, 5);
 
 	// Host Multiplayer
-	wxStaticBoxSizer *hostGroup = new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_LAUNCH_HOSTMP"));
+	wxStaticBoxSizer *hostGroup = new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_HOSTMP")));
 	wxFlexGridSizer  *hostGrid  = new wxFlexGridSizer(5, 2, 5, 5);
 	hostGrid->AddGrowableCol(1);
 
-	hostGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_HOPORT")), 0,
+	hostGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_HOPORT"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	hostGrid->Add(new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, 0,
 	                             wxTextValidator(wxFILTER_NONE, &currEdit->hostPort)),
 	              0, wxEXPAND);
 
-	hostGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_HOMAXP")), 0,
+	hostGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_HOMAXP"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	wxSpinCtrl *playerCounterSpin = new wxSpinCtrl(panel, wxID_ANY, "8", wxDefaultPosition, wxDefaultSize, 0, 1, 64);
 	playerCounterSpin->SetValidator(wxGenericValidator(&currEdit->hostMaxPlayers));
 	hostGrid->Add(playerCounterSpin, 0, wxEXPAND);
 
-	hostGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_HOTICK")), 0,
+	hostGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_HOTICK"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 
 	wxComboBox *TickRateCombo =
-		new wxComboBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_TICK25"), wxDefaultPosition, wxDefaultSize,
+		new wxComboBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TICK25")), wxDefaultPosition, wxDefaultSize,
 	                   0, NULL, 0);
 
-	TickRateCombo->Append(GStrings.GetString("PROFSET_LAUNCH_TICK25"), new wxStringClientData("25Hz"));
-	TickRateCombo->Append(GStrings.GetString("PROFSET_LAUNCH_TICK175"), new wxStringClientData("17.5Hz"));
-	TickRateCombo->Append(GStrings.GetString("PROFSET_LAUNCH_TICK116"), new wxStringClientData("11.6Hz"));
+	TickRateCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TICK25")), new wxStringClientData("25Hz"));
+	TickRateCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TICK175")), new wxStringClientData("17.5Hz"));
+	TickRateCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TICK116")), new wxStringClientData("11.6Hz"));
 
 	// pre select based on what is in wadLanguage
 	for (unsigned int i = 0; i < TickRateCombo->GetCount(); ++i)
@@ -848,29 +848,29 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	TickRateCombo->SetEditable(false);
 	hostGrid->Add(TickRateCombo, 0, wxEXPAND);
 
-	hostGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_HOGAME")), 0,
+	hostGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_HOGAME"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	wxComboBox *gameModeCombo =
-		new wxComboBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_COOP"), wxDefaultPosition, wxDefaultSize,
+		new wxComboBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COOP")), wxDefaultPosition, wxDefaultSize,
 	                   0,
 	                                           NULL, 0);
-	gameModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COOP"), new wxStringClientData("Cooperative"));
-	gameModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_TDM"), new wxStringClientData("Team Deathmatch"));
-	gameModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_ATDM"), new wxStringClientData("Alt. Team Deathmatch"));
-	gameModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_DM"), new wxStringClientData("Deathmatch"));
-	gameModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_ADM"), new wxStringClientData("Alt. Deathmatch"));
+	gameModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COOP")), new wxStringClientData("Cooperative"));
+	gameModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TDM")), new wxStringClientData("Team Deathmatch"));
+	gameModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_ATDM")), new wxStringClientData("Alt. Team Deathmatch"));
+	gameModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_DM")), new wxStringClientData("Deathmatch"));
+	gameModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_ADM")), new wxStringClientData("Alt. Deathmatch"));
 
 	LinkComboData(gameModeCombo, &currEdit->hostGamemode);
 	gameModeCombo->SetEditable(false);
 	hostGrid->Add(gameModeCombo, 0, wxEXPAND);
 
-	hostGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_HOMODE")), 0,
+	hostGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_HOMODE"))), 0,
 	              wxALIGN_CENTER_VERTICAL);
 	wxComboBox *netModeCombo =
-		new wxComboBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_PACKETS"), wxDefaultPosition, wxDefaultSize, 0,
+		new wxComboBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_PACKETS")), wxDefaultPosition, wxDefaultSize, 0,
 	                                          NULL, 0);
-	netModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_PACKETS"), new wxStringClientData("Packet Server"));
-	netModeCombo->Append(GStrings.GetString("PROFSET_LAUNCH_PEER"), new wxStringClientData("Peer-to-Peer"));
+	netModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_PACKETS")), new wxStringClientData("Packet Server"));
+	netModeCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_PEER")), new wxStringClientData("Peer-to-Peer"));
 
 	LinkComboData(netModeCombo, &currEdit->hostNetworkMode);
 	netModeCombo->SetEditable(false);
@@ -880,26 +880,26 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	rightCol->Add(hostGroup, 0, wxEXPAND | wxALL, 5);
 
 	// Compatibility
-	wxStaticBoxSizer *compatGroup = new wxStaticBoxSizer(wxVERTICAL, panel, GStrings.GetString("PROFSET_LAUNCH_COMP"));
+	wxStaticBoxSizer *compatGroup = new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP")));
 	wxFlexGridSizer  *compatGrid  = new wxFlexGridSizer(2, 2, 5, 5);
 	compatGrid->AddGrowableCol(1);
 
-	compatGrid->Add(new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_COMPPRE")), 0,
+	compatGrid->Add(new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMPPRE"))), 0,
 	                wxALIGN_CENTER_VERTICAL);
 	wxComboBox *complevelCombo =
-		new wxComboBox(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_COMP0"), wxDefaultPosition, wxDefaultSize,
+		new wxComboBox(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP0")), wxDefaultPosition, wxDefaultSize,
 	                   0,
 	                                            NULL, 0, wxGenericValidator(&currEdit->compatLevel));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP0"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP1"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP2"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP3"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP4"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP5"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP6"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP7"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP8"));
-	complevelCombo->Append(GStrings.GetString("PROFSET_LAUNCH_COMP9"));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP0")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP1")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP2")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP3")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP4")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP5")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP6")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP7")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP8")));
+	complevelCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMP9")));
 	complevelCombo->SetEditable(false);
 	compatGrid->Add(complevelCombo, 0, wxALIGN_TOP | wxALIGN_RIGHT | wxTOP, 5);
 
@@ -907,7 +907,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	compatGrid->Add(compStack, 1, wxEXPAND);
 
 	compatGroup->Add(compatGrid, 1, wxEXPAND | wxALL, 5);
-	wxButton *advComButton = new wxButton(panel, wxID_ANY, GStrings.GetString("PROFSET_LAUNCH_COMPCUST"));
+	wxButton *advComButton = new wxButton(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_COMPCUST")));
 	compatGroup->Add(advComButton, 0, wxALIGN_LEFT | wxEXPAND);
 	// bind it
 	advComButton->Bind(wxEVT_BUTTON, [currEdit, panel](wxCommandEvent &) { advCompat(currEdit, panel); });
@@ -927,7 +927,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	wxGridBagSizer *gbSizer = new wxGridBagSizer(10, 20);
 
 	gbSizer->Add(
-		new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", GStrings.GetString("LAUNCHER_PROFLIST_TITLE"))),
+		new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_TITLE")))),
 	             wxGBPosition(0, 0),
 	             wxGBSpan(1, 1),
 	             wxALIGN_CENTER_VERTICAL);
@@ -936,7 +936,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	             wxGBPosition(0, 1), wxGBSpan(1, 1), wxEXPAND);
 
 	gbSizer->Add(
-		new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS"))),
+		new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS")))),
 	             wxGBPosition(1, 0),
 	             wxGBSpan(1, 1),
 	             wxALIGN_CENTER_VERTICAL);
@@ -945,7 +945,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	             wxGBPosition(1, 1), wxGBSpan(1, 1), wxEXPAND);
 
 	gbSizer->Add(
-		new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE"))),
+		new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE")))),
 	             wxGBPosition(2, 0),
 	             wxGBSpan(1, 1),
 	             wxALIGN_CENTER_VERTICAL);
@@ -955,7 +955,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 
 	wxFlexGridSizer *rightSizer = new wxFlexGridSizer(2, 10, 10);
 	rightSizer->AddGrowableCol(1);
-	rightSizer->Add(new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", GStrings.GetString("PROFSET_GENERAL_TYPE"))), 0,
+	rightSizer->Add(new wxStaticText(panel, wxID_ANY, wxString::Format("%s:", wxString::FromUTF8(GStrings.GetString("PROFSET_GENERAL_TYPE")))), 0,
 	                wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
 
 	wxComboBox *typeCombo =
@@ -979,7 +979,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	iwadBox->Add(iwadButton, 0);
 	// bind it
 	iwadButton->Bind(wxEVT_BUTTON, [panel, iwadTxt](wxCommandEvent &) {
-		OpenPathPicker(panel, iwadTxt, GStrings.GetString("PROFSET_GENERAL_IWADDIAG"), false,
+		OpenPathPicker(panel, iwadTxt, wxString::FromUTF8(GStrings.GetString("PROFSET_GENERAL_IWADDIAG")), false,
 		               "WAD files (*.wad)|*.wad");
 	});
 	rightSizer->Add(iwadBox, 0, wxEXPAND);
@@ -998,7 +998,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	pwadBox->Add(pwadButton, 0);
 	// bind it
 	pwadButton->Bind(wxEVT_BUTTON, [panel, pwadTxt](wxCommandEvent &) {
-		OpenPathPicker(panel, pwadTxt, GStrings.GetString("PROFSET_GENERAL_PWADDIAG"), false, "WAD files (*.wad)|*.wad");
+		OpenPathPicker(panel, pwadTxt, wxString::FromUTF8(GStrings.GetString("PROFSET_GENERAL_PWADDIAG")), false, "WAD files (*.wad)|*.wad");
 	});
 	rightSizer->Add(pwadBox, 0, wxEXPAND);
 
@@ -1026,7 +1026,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 
 	// Description Area
 	wxBoxSizer   *descSizer = new wxBoxSizer(wxHORIZONTAL);
-	wxStaticText *descLabel = new wxStaticText(panel, wxID_ANY, GStrings.GetString("PROFSET_GENERAL_DSC"));
+	wxStaticText *descLabel = new wxStaticText(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_GENERAL_DSC")));
 	wxTextCtrl   *descText  = new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE,
 	                                         wxTextValidator(wxFILTER_NONE, &currEdit->description));
 
@@ -1048,7 +1048,7 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 	// we have read it, now fill in all fields
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, GStrings.GetString("PROFSET_TITLE"), wxDefaultPosition,
+	this->Create(parent, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_TITLE")), wxDefaultPosition,
 	             this->FromDIP(wxSize(850, 650)));
 
 	this->SetExtraStyle(GetExtraStyle() | wxWS_EX_VALIDATE_RECURSIVELY);
@@ -1080,18 +1080,18 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 	CreateAdvancedTab(currEdit, advancedPanel);
 
 	// add them to the tabber
-	tabber->AddPage(generalPanel, GStrings.GetString("PROFSET_TAB_GENERAL"));
-	tabber->AddPage(launchPanel, GStrings.GetString("PROFSET_TAB_LAUNCH"));
-	tabber->AddPage(filesPanel, GStrings.GetString("PROFSET_TAB_FILES"));
-	tabber->AddPage(outputPanel, GStrings.GetString("PROFSET_TAB_OUTPUT"));
-	tabber->AddPage(advancedPanel, GStrings.GetString("PROFSET_TAB_ADVANCED"));
+	tabber->AddPage(generalPanel, wxString::FromUTF8(GStrings.GetString("PROFSET_TAB_GENERAL")));
+	tabber->AddPage(launchPanel, wxString::FromUTF8(GStrings.GetString("PROFSET_TAB_LAUNCH")));
+	tabber->AddPage(filesPanel, wxString::FromUTF8(GStrings.GetString("PROFSET_TAB_FILES")));
+	tabber->AddPage(outputPanel, wxString::FromUTF8(GStrings.GetString("PROFSET_TAB_OUTPUT")));
+	tabber->AddPage(advancedPanel, wxString::FromUTF8(GStrings.GetString("PROFSET_TAB_ADVANCED")));
 
 	mainSizer->Add(tabber, 1, wxEXPAND | wxALL, 5);
 
 	// Buttons at the bottom of the dialog
-	wxButton *DeleteButton = new wxButton(this, wxID_ANY, GStrings.GetString("PROFSET_DELPROF"));
+	wxButton *DeleteButton = new wxButton(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_DELPROF")));
 
-	wxButton *SaveButton = new wxButton(this, wxID_ANY, GStrings.GetString("PROFSET_SV_RT"));
+	wxButton *SaveButton = new wxButton(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("PROFSET_SV_RT")));
 
 	// bind an event to save button
 	SaveButton->Bind(wxEVT_BUTTON, [currEdit, this, profilePath](wxCommandEvent &) {
@@ -1106,19 +1106,19 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 			}
 			catch (const std::exception &e)
 			{
-				wxMessageBox(e.what(), GStrings.GetString("LAUNCHER_ERROR_SAVEPROF"), wxICON_ERROR);
+				wxMessageBox(e.what(), wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_SAVEPROF")), wxICON_ERROR);
 			}
 		}
 		else
 		{
 			// validation fail
-			wxMessageBox(GStrings.GetString("LAUNCHER_ERROR_INVALIDIN"), "UZDoom", wxICON_ERROR);
+			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_INVALIDIN")), "UZDoom", wxICON_ERROR);
 		}
 	});
 
 	DeleteButton->Bind(wxEVT_BUTTON, [currEdit, this, profilePath](wxCommandEvent &) {
 		// ask the user , could be an accidental misclick
-		wxMessageDialog check(this, GStrings.GetString("PROFSET_DELMSG"),
+		wxMessageDialog check(this, wxString::FromUTF8(GStrings.GetString("PROFSET_DELMSG")),
 		                      "UZDoom", wxYES_NO | wxICON_WARNING | wxNO_DEFAULT);
 
 		if (check.ShowModal() == wxID_YES)
@@ -1135,7 +1135,7 @@ void ProfileSettings::ProfileSettingsMenu(wxWindow *parent, const wxString &titl
 				this->EndModal(wxID_REMOVE); // pass this back to the main window to signal deletion
 			}
 			else
-				wxMessageBox(GStrings.GetString("LAUNCHER_ERROR_DELETE"), "UZDoom", wxICON_ERROR);
+				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_DELETE")), "UZDoom", wxICON_ERROR);
 		}
 	});
 

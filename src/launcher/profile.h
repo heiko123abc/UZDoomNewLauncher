@@ -29,7 +29,7 @@ class Profile
 		"-"; // Current DD-MM-YYYY set from a conveterted time to string when any 3 button is pressed to launch
 	std::time_t playedTime{}; // stored as a time value to be converted to Xh:Ymin, starts at 0
 
-	wxString description = GStrings.GetString("LAUNCHER_NO_DSC_AVAIL"); // Description of the WAD
+	wxString description = wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_AVAIL")); // Description of the WAD
 	int      isIWAD{};                       // Is this an IWAD -> 1 or PWAD -> 0
 	wxString iwadFilePath{};                 // Path to the main WAD file for this profile
 	wxString pwadFilePath{};                 // Path to the main (P)WAD file for this profile

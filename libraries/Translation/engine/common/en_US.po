@@ -1921,7 +1921,7 @@ msgid "DSPLYMNU_ADVANCED"
 msgstr "Advanced Display Options"
 
 msgid "LAUNCHER_TITLE"
-msgstr "UZDoom - Launcher 5.0.0"
+msgstr "UZDoom - Launcher"
 
 msgid "LAUNCHER_TOPBAR_FILE"
 msgstr "File"
@@ -2001,7 +2001,7 @@ msgstr "No description available."
 
 # shows a the bottom e.g X Profiles(s) available.
 msgid "LAUNCHER_AVAIL_STATUS"
-msgstr "Profile(s) available."
+msgstr "%d Profile(s) available."
 
 msgid "LAUNCHER_WADPICK_DIALOG_TITLE"
 msgstr "Select a Doom PWAD or IWAD file."
@@ -2017,6 +2017,10 @@ msgstr "Show these notes upon new update."
 msgid "LAUNCHER_ERROR_ALRRUNNING"
 msgstr "A UZdoom instance is already running. Please close it before starting another."
 
+# An archive extraction is in preparation
+msgid "LAUNCHER_EXTRAC_PREP"
+msgstr "Preparing to extract..."
+
 # An archive extraction error occured
 msgid "LAUNCHER_ERROR_EXTRACTION"
 msgstr "Extraction was stopped."
@@ -2027,7 +2031,7 @@ msgstr "Error: No .wad file found in the archive! (Or archive is too nested.)"
 
 # Launcher Configuration was corrupted
 msgid "LAUNCHER_ERROR_CORRUPT"
-msgstr "The launcher configuration file is corrupted and could not be read.\nPlease fix or delete the file: "
+msgstr "The launcher configuration file is corrupted and could not be read.\nPlease fix or delete the file:"
 
 msgid "LAUNCHER_DETECT_IWAD"
 msgstr "File was added as an IWAD.\n\nNot properly detected? It can be changed in the profile settings."
@@ -2054,6 +2058,9 @@ msgstr "Invalid inputs. Please check your inputs."
 # Profile could not be deleted
 msgid "LAUNCHER_ERROR_DELETE"
 msgstr "Could not determine directory to delete."
+
+msgid "LAUNCHER_BUTTON_CLOSE"
+msgstr "Close"
 
 msgid "PROFSET_TITLE"
 msgstr "Profile Settings"
@@ -2163,7 +2170,7 @@ msgid "PROFSET_GAMEPLAY_TITLE"
 msgstr "Additional Gameplay Options"
 
 msgid "PROFSET_GAMEPLAY_FORCE"
-msgstr "Force Deathmatch-only flags for SP/Coop"
+msgstr "Force Deathmatch-only flags for SP/Coop."
 
 msgid "PROFSET_LAUNCH_MISC"
 msgstr "Miscellaneous"
@@ -2380,3 +2387,74 @@ msgstr "Prepend additional parameters"
 
 msgid "PROFSET_ADVANCED_APPEND"
 msgstr "Append additional parameters"
+
+msgid "NOTES_FAIL"
+msgstr "Unable to parse release notes."
+
+msgid "NOTES_DETAILS"
+msgstr "For more details see:"
+
+msgid "NOTES_EMPTY"
+msgstr "No description provided."
+
+msgid "NOTES_UNKNOWN"
+msgstr "Unknown"
+
+msgid "NOTES_RELEASED"
+msgstr "released"
+
+msgid "NOTES_VERSION"
+msgstr "version"
+
+# Title of the host netgame lobby screen
+msgid "NETMENU_TITLE_HOST"
+msgstr "UZDoom - Host Game Lobby"
+
+# Title of the join netgame lobby screen
+msgid "NETMENU_TITLE_JOIN"
+msgstr "UZDoom - Join Game Lobby"
+
+msgid "NETMENU_WAIT"
+msgstr "Waiting for other players..."
+
+msgid "NETMENU_LIST_INFO"
+msgstr "Info"
+
+msgid "NETMENU_LIST_PLAYER"
+msgstr "Player"
+
+msgid "NETMENU_LIST_STATUS"
+msgstr "Status"
+
+# Start the network game from lobby screen
+msgid "NETMENU_BTN_START"
+msgstr "Start Game"
+
+msgid "NETMENU_BTN_KICK"
+msgstr "Kick"
+
+msgid "NETMENU_BTN_BAN"
+msgstr "Ban"
+
+msgid "NETMENU_BTN_ABORT"
+msgstr "Abort"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_ALL"
+msgstr "All files (*.*)|*.*"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_ARCH"
+msgstr "Archive files (*.zip,*.ZIP)|*.zip|All files (*.*)|*.*"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_WAD"
+msgstr "Doom WAD files (*.wad,*.WAD)|*.wad|All files (*.*)|*.*"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_MOD"
+msgstr "Additional Mod Files (*.wad;*.pk3)|*.wad;*.pk3|All files (*.*)|*.*"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_INI"
+msgstr "INI files (*.ini)|*.ini"

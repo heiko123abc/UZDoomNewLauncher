@@ -237,11 +237,14 @@ FString GetAboutText()
 	}
 }
 
-void About::ReleaseNotesDialog(wxWindow *parent)
+void About::ReleaseNotesDialog(wxWindow *parent, std::string lang)
 {
 
+	// update language strings
+	GStrings.UpdateLanguage(lang.c_str());
+
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "Release Notes", wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
+	this->Create(parent, wxID_ANY, GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES"), wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
 
 	// parse release notes xml from meta
 	wxString patchNotes = wxString::FromUTF8(GetReleaseNotes().GetChars());
@@ -251,11 +254,11 @@ void About::ReleaseNotesDialog(wxWindow *parent)
 	                                                 wxVSCROLL | wxHSCROLL | wxRE_READONLY);
 
 	// The checkbox to show/hide patch notes on update
-	wxCheckBox *showOnUpdateReq = new wxCheckBox(this, wxID_ANY, "Show these notes upon new update");
+	wxCheckBox *showOnUpdateReq = new wxCheckBox(this, wxID_ANY, GStrings.GetString("LAUNCHER_SHOW_ONUPDATED"));
 	showOnUpdateReq->SetValue(true); // Default to checked
 
 	// Button to close the dialog
-	wxButton *closeButton = new wxButton(this, wxID_OK, "Close");
+	wxButton *closeButton = new wxButton(this, wxID_OK, GStrings.GetString("LAUNCHER_BUTTON_CLOSE"));
 
 	// Layout using a vertical box sizer for proper arrangement
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
@@ -269,18 +272,21 @@ void About::ReleaseNotesDialog(wxWindow *parent)
 	Center(); // force everything to center
 }
 
-void About::CreditsDialog(wxWindow *parent)
+void About::CreditsDialog(wxWindow *parent, std::string lang)
 {
+	// update language strings
+	GStrings.UpdateLanguage(lang.c_str());
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "Credits", wxDefaultPosition, parent->FromDIP(wxSize(1000, 800)));
+	this->Create(parent, wxID_ANY, GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS"), wxDefaultPosition,
+	             parent->FromDIP(wxSize(1000, 800)));
 
 	// required to display rich text
 	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
 	htmlWin->SetPage(wxString::FromUTF8(GetAboutText().GetChars()));
 
 	// Button to close the dialog
-	wxButton *closeButton = new wxButton(this, wxID_OK, "Close");
+	wxButton *closeButton = new wxButton(this, wxID_OK, GStrings.GetString("LAUNCHER_BUTTON_CLOSE"));
 
 	// Layout using a vertical box sizer for proper arrangement
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);

@@ -15,6 +15,7 @@
 
 #pragma once
 #include "const.h"
+#include "gstrings.h"
 #include <memory>
 #include <wx/filename.h>
 #include <wx/progdlg.h>
@@ -47,7 +48,7 @@ class Loader : public wxFrame
 		std::unique_ptr<wxZipEntry> upZe;
 
 		// show the user actual progress instead of guesswork
-		wxProgressDialog progress("Unzipping", "Preparing to extract...", 100, parent,
+		wxProgressDialog progress("UZDoom", GStrings.GetString("LAUNCHER_EXTRAC_PREP"), 100, parent,
 		                          wxPD_APP_MODAL | wxPD_AUTO_HIDE | wxPD_CAN_ABORT | wxPD_ELAPSED_TIME);
 
 		// pulse the bar
@@ -56,7 +57,7 @@ class Loader : public wxFrame
 		while (upZe.reset(zis.GetNextEntry()), upZe)
 		{
 
-			wxString statusMsg = wxString::Format("Extracting: %s", upZe->GetName());
+			wxString statusMsg = wxString::Format("./: %s", upZe->GetName());
 			bool     keepGoing = progress.Pulse(statusMsg);
 
 			if (!keepGoing)

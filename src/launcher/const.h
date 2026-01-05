@@ -34,6 +34,8 @@ inline wxString CONFIG_FILE;
 // default language is u.s english
 inline std::string_view DEFAULT_LANG = "default";
 
+inline std::string VERSION = "5.0.0";
+
 // Simple struct to hold all data for a single flag
 struct FlagInfo
 {

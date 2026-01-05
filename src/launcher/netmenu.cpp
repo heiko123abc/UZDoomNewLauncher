@@ -14,16 +14,19 @@
 */
 
 #include "netmenu.h"
+#include "gstrings.h"
+
 #include <wx/listctrl.h>
 
 void Netmenu::hostGameLobby(wxWindow *parent, const wxString &title, int playerslots)
 {
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "UZDoom - Host Game Lobby", wxDefaultPosition,  parent->FromDIP(wxSize(500, 800)));
+	this->Create(parent, wxID_ANY, GStrings.GetString("NETMENU_TITLE_HOST"), wxDefaultPosition,
+	             parent->FromDIP(wxSize(500, 800)));
 
 	wxBoxSizer   *mainSizer = new wxBoxSizer(wxVERTICAL);
-	wxStaticText *lblStatus = new wxStaticText(this, wxID_ANY, "Waiting for other players...");
+	wxStaticText *lblStatus = new wxStaticText(this, wxID_ANY, GStrings.GetString("NETMENU_WAIT"));
 	wxStaticText *lblCount  = new wxStaticText(this, wxID_ANY, "X/X");
 
 	// Add labels to sizer (Centered horizontally)
@@ -36,9 +39,9 @@ void Netmenu::hostGameLobby(wxWindow *parent, const wxString &title, int players
 
 	// Create Columns to showcase
 	playerList->InsertColumn(0, "#", wxLIST_FORMAT_LEFT, 30);
-	playerList->InsertColumn(1, "Info", wxLIST_FORMAT_CENTER, 40);
-	playerList->InsertColumn(2, "Player", wxLIST_FORMAT_LEFT, 180);
-	playerList->InsertColumn(3, "Status", wxLIST_FORMAT_LEFT, 80);
+	playerList->InsertColumn(1, GStrings.GetString("NETMENU_LIST_INFO"), wxLIST_FORMAT_CENTER, 40);
+	playerList->InsertColumn(2, GStrings.GetString("NETMENU_LIST_PLAYER"), wxLIST_FORMAT_LEFT, 180);
+	playerList->InsertColumn(3, GStrings.GetString("NETMENU_LIST_STATUS"), wxLIST_FORMAT_LEFT, 80);
 
 	// Add player code tbd
 
@@ -49,10 +52,10 @@ void Netmenu::hostGameLobby(wxWindow *parent, const wxString &title, int players
 	wxBoxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	// Create the buttons
-	wxButton *btnStart = new wxButton(this, wxID_ANY, "Start Game");
-	wxButton *btnKick  = new wxButton(this, wxID_ANY, "Kick");
-	wxButton *btnBan   = new wxButton(this, wxID_ANY, "Ban");
-	wxButton *btnAbort = new wxButton(this, wxID_ANY, "Abort");
+	wxButton *btnStart = new wxButton(this, wxID_ANY, GStrings.GetString("NETMENU_BTN_START"));
+	wxButton *btnKick  = new wxButton(this, wxID_ANY, GStrings.GetString("NETMENU_BTN_KICK"));
+	wxButton *btnBan   = new wxButton(this, wxID_ANY, GStrings.GetString("NETMENU_BTN_BAN"));
+	wxButton *btnAbort = new wxButton(this, wxID_ANY, GStrings.GetString("NETMENU_BTN_ABORT"));
 
 	// Add buttons to the horizontal sizer
 	// Proportion 1 ensures they split the width equally
@@ -75,10 +78,10 @@ void Netmenu::joinGameLobby(wxWindow *parent, const wxString &title)
 {
 
 	// create the window here since above is not a constructor
-	this->Create(parent, wxID_ANY, "UZDoom - Join Game Lobby", wxDefaultPosition,  parent->FromDIP(wxSize(500, 800)));
+	this->Create(parent, wxID_ANY, GStrings.GetString("NETMENU_TITLE_JOIN"), wxDefaultPosition, parent->FromDIP(wxSize(500, 800)));
 
 	wxBoxSizer   *mainSizer = new wxBoxSizer(wxVERTICAL);
-	wxStaticText *lblStatus = new wxStaticText(this, wxID_ANY, "Waiting for other players...");
+	wxStaticText *lblStatus = new wxStaticText(this, wxID_ANY, GStrings.GetString("NETMENU_WAIT"));
 	wxStaticText *lblCount  = new wxStaticText(this, wxID_ANY, "X/X");
 
 	// Add labels to sizer (Centered horizontally)
@@ -91,9 +94,9 @@ void Netmenu::joinGameLobby(wxWindow *parent, const wxString &title)
 
 	// Create Columns to showcase
 	playerList->InsertColumn(0, "#", wxLIST_FORMAT_LEFT, 30);
-	playerList->InsertColumn(1, "Info", wxLIST_FORMAT_CENTER, 40);
-	playerList->InsertColumn(2, "Player", wxLIST_FORMAT_LEFT, 180);
-	playerList->InsertColumn(3, "Status", wxLIST_FORMAT_LEFT, 80);
+	playerList->InsertColumn(1, GStrings.GetString("NETMENU_LIST_INFO"), wxLIST_FORMAT_CENTER, 40);
+	playerList->InsertColumn(2, GStrings.GetString("NETMENU_LIST_PLAYER"), wxLIST_FORMAT_LEFT, 180);
+	playerList->InsertColumn(3, GStrings.GetString("NETMENU_LIST_STATUS"), wxLIST_FORMAT_LEFT, 80);
 
 	// Add player code tbd
 
@@ -104,7 +107,7 @@ void Netmenu::joinGameLobby(wxWindow *parent, const wxString &title)
 	wxBoxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	// Create the buttons (joiner has only abort button)
-	wxButton *btnAbort = new wxButton(this, wxID_ANY, "Abort");
+	wxButton *btnAbort = new wxButton(this, wxID_ANY, GStrings.GetString("NETMENU_BTN_ABORT"));
 
 	// Add buttons to the horizontal sizer
 	btnSizer->Add(btnAbort, 1, wxALL, 2);

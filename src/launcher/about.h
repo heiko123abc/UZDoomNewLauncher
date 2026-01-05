@@ -22,6 +22,6 @@ class About : public wxDialog
 {
 
   public:
-	void ReleaseNotesDialog(wxWindow *parent);
-	void CreditsDialog(wxWindow *parent);
+	void ReleaseNotesDialog(wxWindow *parent, std::string lang);
+	void CreditsDialog(wxWindow *parent, std::string lang);
 };

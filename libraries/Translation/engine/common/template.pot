@@ -1928,9 +1928,6 @@ msgstr ""
 msgid "DSPLYMNU_ADVANCED"
 msgstr ""
 
-msgid "LAUNCHER_TITLE"
-msgstr ""
-
 msgid "LAUNCHER_TOPBAR_FILE"
 msgstr ""
 
@@ -2025,6 +2022,10 @@ msgstr ""
 msgid "LAUNCHER_ERROR_ALRRUNNING"
 msgstr ""
 
+# An archive extraction is in preparation
+msgid "LAUNCHER_EXTRAC_PREP"
+msgstr ""
+
 # An archive extraction error occured
 msgid "LAUNCHER_ERROR_EXTRACTION"
 msgstr ""
@@ -2061,6 +2062,9 @@ msgstr ""
 
 # Profile could not be deleted
 msgid "LAUNCHER_ERROR_DELETE"
+msgstr ""
+
+msgid "LAUNCHER_BUTTON_CLOSE"
 msgstr ""
 
 msgid "PROFSET_TITLE"
@@ -2384,4 +2388,78 @@ msgid "PROFSET_ADVANCED_PREPEND"
 msgstr ""
 
 msgid "PROFSET_ADVANCED_APPEND"
+msgstr ""
+
+msgid "NOTES_FAIL"
+msgstr ""
+
+msgid "NOTES_DETAILS"
+msgstr ""
+
+msgid "NOTES_EMPTY"
+msgstr ""
+
+msgid "NOTES_UNKNOWN"
+msgstr ""
+
+msgid "NOTES_RELEASED"
+msgstr ""
+
+msgid "NOTES_VERSION"
+msgstr ""
+
+# Title of the host netgame lobby screen
+msgid "NETMENU_TITLE_HOST"
+msgstr ""
+
+# Title of the join netgame lobby screen
+msgid "NETMENU_TITLE_JOIN"
+msgstr ""
+
+msgid "NETMENU_WAIT"
+msgstr ""
+
+msgid "NETMENU_LIST_INFO"
+msgstr ""
+
+msgid "NETMENU_LIST_PLAYER"
+msgstr ""
+
+msgid "NETMENU_LIST_STATUS"
+msgstr ""
+
+# Start the network game from lobby screen
+msgid "NETMENU_BTN_START"
+msgstr ""
+
+msgid "NETMENU_BTN_KICK"
+msgstr ""
+
+msgid "NETMENU_BTN_BAN"
+msgstr ""
+
+msgid "NETMENU_BTN_ABORT"
+msgstr ""
+
+msgid "NETMENU_BTN_ABORT"
+msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_ALL"
+msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_ARCH"
+msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_WAD"
+msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_MOD"
+msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_INI"
 msgstr ""

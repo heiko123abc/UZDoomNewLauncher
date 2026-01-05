@@ -43,7 +43,7 @@
 using json = nlohmann::json;
 
 bool     isAlreadyLaunched = false;
-std::string langVar           = "";
+std::string langVar           = "default";
 
 
 // reuturns a string that calculates XXhXXm
@@ -143,6 +143,7 @@ void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
 		catch (const json::parse_error &e)
 		{
 			// The file is corrupt or unreadable?
+			file.close();
 			wxLogError("Config JSON parse error: %s", e.what());
 			return;
 		}
@@ -510,8 +511,10 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 void LauncherMainWindow::updateLanguage()
 {
 	// Make sure GStrings uses the correct language
+	langVar = nlohmann::json::parse(std::ifstream(std::string(CONFIG_FILE.ToUTF8()))).at("lang").get<std::string>();
 	wxMessageBox(langVar.c_str(), "UZDoom",
 	             wxOK | wxICON_INFORMATION);
+
 	GStrings.UpdateLanguage(langVar.c_str());
 
 	// Update all UI strings

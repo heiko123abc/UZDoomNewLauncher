@@ -33,6 +33,7 @@
 #include <regex>
 #include <string>
 #include <wx/richtext/richtextctrl.h>
+#include <wx/utils.h>
 
 constexpr unsigned NUMBER_OF_RELEASES_TO_DISPLAY = 3;
 
@@ -256,6 +257,11 @@ void About::ReleaseNotesDialog(wxWindow *parent, std::string lang)
 
 	// required to display rich text
 	wxHtmlWindow *htmlWin = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxHW_SCROLLBAR_AUTO);
+
+	// handle link clicks to open in default browser
+	htmlWin->Bind(wxEVT_HTML_LINK_CLICKED, [](wxHtmlLinkEvent &event) {
+		wxLaunchDefaultBrowser(event.GetLinkInfo().GetHref());
+	});
 
 	// The checkbox to show/hide patch notes on update
 	wxCheckBox *showOnUpdateReq =

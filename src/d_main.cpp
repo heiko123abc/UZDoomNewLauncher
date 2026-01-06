@@ -4168,14 +4168,17 @@ void SignalHandler(int signal)
 
 int GameMain()
 {
-	//if -file is there, skip the ui directly into game.
-	const char *value = Args->CheckValue(FArg_file);
-
-	if (!value)
-	{
-		wxKickStarter(); // call the wxWidgets starter here to begin
-	}
-
+	// On Windows, prefer the native win32 backend.
+	// On other platforms, use SDL until the other backends are more mature.
+	auto zwidget = DisplayBackend::TryCreateWin32();
+	if (!zwidget)
+		zwidget = DisplayBackend::TryCreateSDL2();
+	if (!zwidget)
+    {
+		fprintf(stderr, "Unable to create init zwidget\n");
+		return -1;
+    }
+	DisplayBackend::Set(std::move(zwidget));
 	int ret = 0;
 	GameTicRate = TICRATE;
 	I_InitTime();

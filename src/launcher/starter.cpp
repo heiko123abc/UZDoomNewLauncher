@@ -39,7 +39,7 @@ bool wxKickStarter(FStartupSelectionInfo &info)
 	wxApp::SetInstance(new Starter(info)); // set this as the instance
 	wxEntry(argc, argv);
 
-	return true; // true if user launch, false if cancelled
+	return execResult; // true if user launch via button, false if else
 }
 
 

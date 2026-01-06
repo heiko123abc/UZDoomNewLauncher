@@ -14,6 +14,7 @@
 */
 
 #include "profile.h"
+#include "starter.h"
 #include "i_interface.h"
 
 #include <nlohmann/json.hpp> //for JSON file support
@@ -352,4 +353,5 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 
 	// command strung together, give it to info
 	info.DefaultArgs = cmd.str();
+	execResult       = true;
 }

@@ -800,7 +800,7 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 #	endif
 #endif
 
-		I_FatalError(
+	/* I_FatalError(
 			"Cannot find a game IWAD (doom.wad, heretic.wad, etc)!\n"
 			"Did you install " GAMENAME " properly?\n"
 			"\n"
@@ -809,7 +809,7 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 			"2. Edit your %s by adding your iwad folders beneath [IWADSearch.Directories]"
 			"%s",
 			gamedir, cfgfile, extrasteps
-		);
+		);*/
 	}
 	int pick = 0;
 

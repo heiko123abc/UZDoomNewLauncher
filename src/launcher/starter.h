@@ -17,12 +17,13 @@
 #include <wx/wx.h>
 
 struct FStartupSelectionInfo;
+static bool execResult = false;
 
 class Starter : public wxApp
 {
+
   public:
 	Starter(FStartupSelectionInfo &info);
-
 	bool OnInit();
 	void OnFatalException();
 

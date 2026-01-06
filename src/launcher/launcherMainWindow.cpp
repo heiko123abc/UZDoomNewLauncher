@@ -475,7 +475,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 				delete process;
 			});
 
-			wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
+			//wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
 		}
 
 		if (event.GetId() == ID_PROFILE_SETTINGS)

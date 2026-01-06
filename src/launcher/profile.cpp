@@ -14,8 +14,8 @@
 */
 
 #include "profile.h"
-#include "starter.h"
 #include "i_interface.h"
+#include "starter.h"
 
 #include <nlohmann/json.hpp> //for JSON file support
 
@@ -71,10 +71,10 @@ void Profile::saveToFile(const std::string &filepath)
 	j["launch"]["difficultyRespawnMonsters"]  = this->difficultyRespawnMonsters;
 	j["launch"]["difficultyNoMonsters"]       = this->difficultyNoMonsters;
 	j["launch"]["compatLevel"]                = this->compatLevel;
-	j["launch"]["playerName"]                = this->playerName;
+	j["launch"]["playerName"]                 = this->playerName;
 	j["launch"]["playerClass"]                = this->playerClass;
-	j["launch"]["playerGender"]                = this->playerGender;
-	j["launch"]["wadLanguage"]               = this->wadLanguage;
+	j["launch"]["playerGender"]               = this->playerGender;
+	j["launch"]["wadLanguage"]                = this->wadLanguage;
 	j["launch"]["hostPort"]                   = this->hostPort;
 	j["launch"]["hostMaxPlayers"]             = this->hostMaxPlayers;
 	j["launch"]["hostTickRate"]               = this->hostTickRate;
@@ -197,8 +197,7 @@ void Profile::loadFromFile(const std::string &filepath)
 }
 
 // Put it all together into a launch command for info
-void Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode,
-                                       FStartupSelectionInfo& info)
+void Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info)
 {
 	// init the profile
 	this->loadFromFile(filepath);
@@ -209,10 +208,23 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 	if (!prependAdditionalParameters.empty())
 		cmd << prependAdditionalParameters << " ";
 
-	cmd << "-iwad  \"" << this->iwadFilePath << "\" ";
+	// hook in a DefaultWAD
+	cmd << "-iwad \"" << this->iwadFilePath << "\" ";
+	cmd << "+set queryiwad 0 ";
+
+	// hook in a DefaultWAD
+	TArray<WadStuff> wads;
+	WadStuff         stuff;
+	stuff.Name = "dummy";
+	stuff.Path = this->iwadFilePath.ToStdString();
+	wads.Push(stuff);
+
+	FArgs *dummyArgs;
+	info = FStartupSelectionInfo(wads, *dummyArgs, 0);
+
 	if (!this->isIWAD)
 	{
-		// load the (P)Wad file
+		// load the PWad file
 		cmd << "-file \"" << this->pwadFilePath << "\" ";
 	}
 
@@ -251,6 +263,8 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 	//... or are we HOSTING a multiplayer game.
 	if (mode == "host")
 	{
+		info.bNetStart = true; // we are networking
+
 		cmd << "-host " << this->hostMaxPlayers << " -extratic ";
 		if (this->hostNetworkMode == "Peer-to-Peer")
 		{
@@ -294,12 +308,11 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 	if (alwaysapplydmflags)
 		cmd << "+set alwaysapplydmflags 1 ";
 
-        //apply names,class and gender (and language)
-        cmd << "+set name " << this->playerName << " ";
-        cmd << "+set playerclass " << this->playerClass << " ";
-        cmd << "+set gender " << this->playerGender << " ";
-		cmd << "+set language " << this->wadLanguage << " ";
-
+	// apply names,class and gender (and language)
+	cmd << "+set name " << this->playerName << " ";
+	cmd << "+set playerclass " << this->playerClass << " ";
+	cmd << "+set gender " << this->playerGender << " ";
+	cmd << "+set language " << this->wadLanguage << " ";
 
 	// pass directories
 	cmd << "-config " << this->configFilePath << " ";

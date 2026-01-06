@@ -35,7 +35,7 @@ class Profile
 	wxString description = wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_AVAIL")); // Description of the WAD
 	int      isIWAD{};                       // Is this an IWAD -> 1 or PWAD -> 0
 	wxString iwadFilePath{};                 // Path to the main WAD file for this profile
-	wxString pwadFilePath{};                 // Path to the main (P)WAD file for this profile
+	wxString pwadFilePath{};                 // Path to the main PWAD file for this profile
 
 	int      launchParameters{}; // Stores the mode. e.g Normal,mapstart etc
 	int      selectedLaunchMap{};

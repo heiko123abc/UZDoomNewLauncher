@@ -4179,6 +4179,7 @@ int GameMain()
 		return -1;
     }
 	DisplayBackend::Set(std::move(zwidget));
+	
 	int ret = 0;
 	GameTicRate = TICRATE;
 	I_InitTime();
@@ -4204,8 +4205,7 @@ int GameMain()
 	}
 	catch (const std::exception &error)
 	{
-		//wxWidgets provides its own crash handler
-		//I_ShowFatalError(error.what());
+		I_ShowFatalError(error.what());
 		ret = -1;
 	}
 	// Unless something really bad happened, the game should only exit through this single point in the code.

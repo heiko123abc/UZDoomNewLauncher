@@ -17,7 +17,7 @@
 #include <wx/wx.h>
 
 struct FStartupSelectionInfo;
-static bool execResult = false;
+extern bool execResult;
 
 class Starter : public wxApp
 {

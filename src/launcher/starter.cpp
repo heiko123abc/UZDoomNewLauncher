@@ -23,6 +23,7 @@
 #include <wx/wx.h>
 
 using json = nlohmann::json;
+bool execResult = false;
 
 Starter::Starter(FStartupSelectionInfo &info) : hidden_info(info) // store info reference
 {

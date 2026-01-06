@@ -38,8 +38,8 @@
 #include "gstrings.h"
 #include "loader.h"
 #include "profile.h"
-#include "starter.h"
 #include "profileSettings.h"
+#include "starter.h"
 
 using json = nlohmann::json;
 
@@ -173,7 +173,7 @@ void refreshList(wxDataViewListCtrl *profileList, LauncherMainWindow *lmw)
 // default size for the window is 1280x720
 LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition)
 {
-	//load lanauge for the first time
+	// load lanauge for the first time
 	std::ifstream configFile(CONFIG_FILE.ToUTF8());
 	if (configFile.is_open())
 	{
@@ -440,6 +440,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			if (event.GetId() == ID_HOST_GAME)
 				tp.giveLaunchCommand(selectedRowPath, "host", app->GetStartInfo());
 
+			/*
 			// below bind a listener that monitors if uzdoom closes/ends
 			this->Iconize(true); // Minimize immediately
 
@@ -448,34 +449,37 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 			// Capture process end
 			this->Bind(wxEVT_END_PROCESS, [this, selectedRowPath, startingPoint, process](wxProcessEvent &event) {
-				TimePoint doneTime = std::chrono::system_clock::now();
-				long long secondsPlayed =
-					std::chrono::duration_cast<std::chrono::seconds>(doneTime - startingPoint).count();
+			    TimePoint doneTime = std::chrono::system_clock::now();
+			    long long secondsPlayed =
+			        std::chrono::duration_cast<std::chrono::seconds>(doneTime - startingPoint).count();
 
-				Profile p;
-				p.loadFromFile(selectedRowPath);
+			    Profile p;
+			    p.loadFromFile(selectedRowPath);
 
-				// update last played to now
-				p.lastPlayedDate = std::format("{:%d-%m-%Y}", std::chrono::system_clock::now());
-				p.playedTime += secondsPlayed;
+			    // update last played to now
+			    p.lastPlayedDate = std::format("{:%d-%m-%Y}", std::chrono::system_clock::now());
+			    p.playedTime += secondsPlayed;
 
-				// Save back to actual file
-				p.saveToFile(selectedRowPath);
+			    // Save back to actual file
+			    p.saveToFile(selectedRowPath);
 
-				// make ui visible again
-				this->Iconize(false);
-				this->Raise();
-				this->Show(true);
+			    // make ui visible again
+			    this->Iconize(false);
+			    this->Raise();
+			    this->Show(true);
 
-				// refresh at once for time update
-				refreshList(profileList, this);
+			    // refresh at once for time update
+			    refreshList(profileList, this);
 
-				isAlreadyLaunched = false; // reset flag
+			    isAlreadyLaunched = false; // reset flag
 
-				delete process;
+			    delete process;
 			});
 
-			//wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
+			 wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
+			*/
+
+			wxTheApp->ExitMainLoop(); // end the UI
 		}
 
 		if (event.GetId() == ID_PROFILE_SETTINGS)

@@ -266,19 +266,19 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	startGameButton =
 		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_START")));
 	joinServerButton =
-		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_JOIN")));
+		new wxButton(panel, ID_JOIN_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_JOIN")));
 	hostServerButton =
-		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_HOST")));
+		new wxButton(panel, ID_HOST_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_HOST")));
 	settingsButton =
-		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_SETTING")));
+		new wxButton(panel, ID_PROFILE_SETTINGS, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_SETTING")));
 
 	// move entry buttons + refresh
 	refreshButton =
-		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH")));
+		new wxButton(panel, ID_REFRESH_LIST, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH")));
 	moveEntryUpButton =
-		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP")));
+		new wxButton(panel, ID_MOVE_UP, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP")));
 	moveEntryDownButton =
-		new wxButton(panel, ID_START_GAME, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN")));
+		new wxButton(panel, ID_MOVE_DOWN, wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN")));
 
 	// disable until user has clicked on item in profile list
 	startGameButton->Disable();

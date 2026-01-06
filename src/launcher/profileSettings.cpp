@@ -821,29 +821,7 @@ void CreateLaunchTab(Profile *currEdit, wxPanel *panel)
 	TickRateCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TICK175")), new wxStringClientData("17.5Hz"));
 	TickRateCombo->Append(wxString::FromUTF8(GStrings.GetString("PROFSET_LAUNCH_TICK116")), new wxStringClientData("11.6Hz"));
 
-	// pre select based on what is in wadLanguage
-	for (unsigned int i = 0; i < TickRateCombo->GetCount(); ++i)
-	{
-		wxStringClientData *data = static_cast<wxStringClientData *>(TickRateCombo->GetClientObject(i));
-		if (data && data->GetData() == currEdit->hostTickRate)
-		{
-			langCombo->SetSelection(i);
-			break;
-		}
-	}
-
-	// get selection and save it
-	langCombo->Bind(wxEVT_COMBOBOX, [langCombo, currEdit](wxCommandEvent &) {
-		int sel = langCombo->GetSelection();
-		if (sel != wxNOT_FOUND)
-		{
-			wxStringClientData *data = static_cast<wxStringClientData *>(langCombo->GetClientObject(sel));
-			if (data)
-			{
-				currEdit->wadLanguage = data->GetData();
-			}
-		}
-	});
+	LinkComboData(TickRateCombo, &currEdit->hostTickRate);
 
 	TickRateCombo->SetEditable(false);
 	hostGrid->Add(TickRateCombo, 0, wxEXPAND);

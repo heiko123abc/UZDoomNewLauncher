@@ -14,6 +14,7 @@
 */
 
 #include "profile.h"
+#include "i_interface.h"
 
 #include <nlohmann/json.hpp> //for JSON file support
 
@@ -194,10 +195,10 @@ void Profile::loadFromFile(const std::string &filepath)
 	file.close();
 }
 
-// WE ASSUME THE LAUNCHER WHERE UZDOOM executeable USUALLY RESIDES IN
-std::string Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode)
+// Put it all together into a launch command for info
+void Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode,
+                                       FStartupSelectionInfo& info)
 {
-
 	// init the profile
 	this->loadFromFile(filepath);
 
@@ -206,18 +207,6 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	// is there something to prepend?
 	if (!prependAdditionalParameters.empty())
 		cmd << prependAdditionalParameters << " ";
-
-	// check for OS
-#if defined(_WIN32)
-	cmd << "uzdoom.exe ";
-#elif defined(__linux__)
-	cmd << "./Linux-*UZDoom-*.AppImage ";
-#elif defined(__APPLE__)
-	cmd << "./uzdoom.app ";
-#else
-	// Fallback for unknown OS (not officaly supported)
-#error "Not supported operating system"
-#endif
 
 	cmd << "-iwad  \"" << this->iwadFilePath << "\" ";
 	if (!this->isIWAD)
@@ -361,6 +350,6 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	if (!appendAdditionalParameters.empty())
 		cmd << appendAdditionalParameters;
 
-	// command strung together, return it
-	return cmd.str();
+	// command strung together, give it to info
+	info.DefaultArgs = cmd.str();
 }

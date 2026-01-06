@@ -67,6 +67,7 @@
 #include "i_mainwindow.h"
 
 #include "launcherMainWindow.h"
+#include "starter.h"
 
 // MACROS ------------------------------------------------------------------
 
@@ -354,7 +355,7 @@ bool I_PickIWad(bool showwin, FStartupSelectionInfo& info)
 {
 	if (showwin)
 	{
-		//return LauncherWindow::ExecModal(info);
+		return wxKickStarter(info);
 	}
 	return true;
 }

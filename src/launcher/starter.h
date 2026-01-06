@@ -16,11 +16,23 @@
 #pragma once
 #include <wx/wx.h>
 
+struct FStartupSelectionInfo;
+
 class Starter : public wxApp
 {
   public:
+	Starter(FStartupSelectionInfo &info);
+
 	bool OnInit();
 	void OnFatalException();
+
+	FStartupSelectionInfo &GetStartInfo()
+	{
+		return hidden_info;
+	}
+
+	private:
+	FStartupSelectionInfo &hidden_info;
 };
 
-int wxKickStarter();
+bool wxKickStarter(FStartupSelectionInfo &info);

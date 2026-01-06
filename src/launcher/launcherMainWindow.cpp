@@ -38,6 +38,7 @@
 #include "gstrings.h"
 #include "loader.h"
 #include "profile.h"
+#include "starter.h"
 #include "profileSettings.h"
 
 using json = nlohmann::json;
@@ -430,12 +431,14 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 			TimePoint startingPoint = std::chrono::system_clock::now();
 
+			Starter *app = static_cast<Starter *>(wxTheApp);
+
 			if (event.GetId() == ID_START_GAME)
-				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "").c_str();
+				tp.giveLaunchCommand(selectedRowPath, "", app->GetStartInfo());
 			if (event.GetId() == ID_JOIN_GAME)
-				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "join").c_str();
+				tp.giveLaunchCommand(selectedRowPath, "join", app->GetStartInfo());
 			if (event.GetId() == ID_HOST_GAME)
-				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host").c_str();
+				tp.giveLaunchCommand(selectedRowPath, "host", app->GetStartInfo());
 
 			// below bind a listener that monitors if uzdoom closes/ends
 			this->Iconize(true); // Minimize immediately

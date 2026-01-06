@@ -53,6 +53,7 @@
 #include "i_interface.h"
 #include "i_sound.h"
 #include "launcherMainWindow.h"
+#include "starter.h"
 #include "m_argv.h"
 #include "palutil.h"
 #include "printf.h"
@@ -326,7 +327,7 @@ bool I_PickIWad (bool showwin, FStartupSelectionInfo& info)
 	}
 	return false;
 #else
-	return LauncherWindow::ExecModal(info);
+	return wxKickStarter(info);
 #endif
 }
 

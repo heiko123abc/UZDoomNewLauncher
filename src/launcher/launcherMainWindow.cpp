@@ -34,7 +34,6 @@
 #include <wx/utils.h>
 
 #include "about.h"
-#include "const.h"
 #include "gstrings.h"
 #include "loader.h"
 #include "profile.h"

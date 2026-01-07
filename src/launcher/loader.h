@@ -14,8 +14,8 @@
 */
 
 #pragma once
-#include "const.h"
 #include "gstrings.h"
+#include "const.h"
 #include <memory>
 #include <wx/filename.h>
 #include <wx/progdlg.h>

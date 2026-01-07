@@ -14,7 +14,6 @@
 */
 
 #include "profileSettings.h"
-#include "const.h"
 #include "gstrings.h"
 #include <filesystem>
 #include <fstream>
@@ -188,8 +187,8 @@ void advGameplay(Profile *currEdit, wxWindow *parent)
 	// Pass the 3 variables by reference in an array
 	int vars[] = {currEdit->DMFlags, currEdit->DMFlags2, currEdit->DMFlags3};
 
-	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_TITLE")), dmFlagsList,
-	               vars, 3,
+	std::vector<FlagInfo> flags = getDMFlagsList();
+	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_TITLE")), flags, vars, 3,
 	               true);
 
 	// Save back results
@@ -203,7 +202,8 @@ void advCompat(Profile *currEdit, wxWindow *parent)
 
 	int vars[] = {currEdit->compatflags, currEdit->compatflags2};
 
-	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")), compatFlagsList, vars, 2,
+	std::vector<FlagInfo> flags = getCompatFlagsList();
+	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")), flags, vars, 2,
 	               false);
 
 	currEdit->compatflags  = vars[0];
@@ -310,9 +310,9 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 	/*
 	// prepend parameters field
 	wxStaticBoxSizer *pparamGroup =
-		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_ADVANCED_PREPEND")));
+	    new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_ADVANCED_PREPEND")));
 	wxTextCtrl *pparams =
-		new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
+	    new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
 	                   wxTextValidator(wxFILTER_NONE, &currEdit->prependAdditionalParameters));
 	pparamGroup->Add(pparams, 1, wxEXPAND);
 

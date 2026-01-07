@@ -15,6 +15,7 @@
 
 #pragma once
 #include <wx/wx.h>
+#include "const.h"
 
 struct FStartupSelectionInfo;
 extern bool execResult;

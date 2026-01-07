@@ -343,7 +343,8 @@ void Loader::fileOpener(wxWindow *window)
 
 	// Is User trying to cheat and add somthing that isn't a even a WAD? (we assume the user doesnt mess file
 	// internally)
-	if (filePath.EndsWith(wxString(".wad")) || filePath.EndsWith(wxString(".WAD")))
+	if (filePath.EndsWith(wxString(".wad")) || filePath.EndsWith(wxString(".WAD")) ||
+	    filePath.EndsWith(wxString(".iwad")) || filePath.EndsWith(wxString(".IWAD")))
 	{
 		// At this point we have a valid WAD file, now we need to check if it's an IWAD or PWAD
 		if (isThisAnIWAD(std::string(filePath.ToUTF8())))

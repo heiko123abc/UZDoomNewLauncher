@@ -23,6 +23,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <filesystem>
 
 using json = nlohmann::json;
 
@@ -208,19 +209,14 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 	if (!prependAdditionalParameters.empty())
 		cmd << prependAdditionalParameters << " ";
 
-	// hook in a DefaultWAD
-	cmd << "-iwad \"" << this->iwadFilePath << "\" ";
-	cmd << "+set queryiwad 0 ";
-
-	// hook in a DefaultWAD
-	TArray<WadStuff> wads;
-	WadStuff         stuff;
+	// load the IWad file and erase . at start of ./ path to make an absolute path
+	TArray<WadStuff> *Wads{};
+	WadStuff          stuff{};
 	stuff.Name = "dummy";
-	stuff.Path = this->iwadFilePath.ToStdString();
-	wads.Push(stuff);
+	stuff.Path = std::filesystem::current_path().string() + this->iwadFilePath.ToStdString().erase(0, 1);
+	Wads->Push(stuff);
 
-	FArgs *dummyArgs;
-	info = FStartupSelectionInfo(wads, *dummyArgs, 0);
+	//cmd << "-iwad \"" << std::filesystem::current_path().string() + this->iwadFilePath.ToStdString().erase(0,1) << "\" ";	
 
 	if (!this->isIWAD)
 	{
@@ -257,6 +253,8 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 
 	// are we JOINING a multiplayer game?
 	if (mode == "join")
+		info.bNetStart = true; // we are networking
+
 		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
 		                   this->joinTeamNo.ToStdString());
 

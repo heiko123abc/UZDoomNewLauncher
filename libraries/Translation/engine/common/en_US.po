@@ -2458,3 +2458,11 @@ msgstr "Additional Mod Files (*.wad;*.pk3)|*.wad;*.pk3|All files (*.*)|*.*"
 # dont translate .extentsions and *.*
 msgid "FILETYPE_INI"
 msgstr "INI files (*.ini)|*.ini"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_ZDS"
+msgstr "Zdoom Save files (*.zds)|*.zds"
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_LMP"
+msgstr "Demo Lump files (*.lmp)|*.lmp"

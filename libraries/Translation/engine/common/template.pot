@@ -2463,3 +2463,11 @@ msgstr ""
 # dont translate .extentsions and *.*
 msgid "FILETYPE_INI"
 msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_ZDS"
+msgstr ""
+
+# dont translate .extentsions and *.*
+msgid "FILETYPE_LMP"
+msgstr ""

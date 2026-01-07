@@ -220,7 +220,7 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 	if (!this->isIWAD)
 	{
 		// load the PWad file
-		cmd << "-file \"" << this->pwadFilePath << "\" ";
+		cmd << "-file " << this->pwadFilePath << " ";
 	}
 
 	// determine launch mode if it isnt normal

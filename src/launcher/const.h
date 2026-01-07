@@ -41,8 +41,8 @@ inline std::string VERSION = "5.0.0";
 // Simple struct to hold all data for a single flag
 struct FlagInfo
 {
-	const char *label;
-	const char *tooltip;
+	wxString label;
+	wxString tooltip;
 	int         setIdx; // 0 = dmflags or compatflags, 1 = dmflags2, compatflags2 etc.
 	int         bitVal; // The actual value 1 << [flag index starting from 0]
 	bool        invert; // true = Unchecking the box adds the flag (because some are default checked)
@@ -50,7 +50,7 @@ struct FlagInfo
 };
 
 // store flags here
-static std::vector<FlagInfo> dmFlags = {
+inline std::vector<FlagInfo> dmFlagsList = {
 
 	// DMFLAGS
 	{		   wxString::FromUTF8(GStrings.GetString("DMFLAGS_ALLOWHEALTH")),
@@ -180,7 +180,7 @@ static std::vector<FlagInfo> dmFlags = {
      wxString::FromUTF8(GStrings.GetString("DMFLAGS3_PISTOLSTART_TOOLTIP")), 2,  1 << 7, false          }
 };
 
-static std::vector<FlagInfo> compatFlags = {
+inline std::vector<FlagInfo> compatFlagsList = {
 
 	// compatflags
 	{		   wxString::FromUTF8(GStrings.GetString("COMPAT_SHORTTEX")),

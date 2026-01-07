@@ -188,7 +188,8 @@ void advGameplay(Profile *currEdit, wxWindow *parent)
 	// Pass the 3 variables by reference in an array
 	int vars[] = {currEdit->DMFlags, currEdit->DMFlags2, currEdit->DMFlags3};
 
-	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_TITLE")), dmFlags, vars, 3,
+	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_GAMEPLAY_TITLE")), dmFlagsList,
+	               vars, 3,
 	               true);
 
 	// Save back results
@@ -202,7 +203,7 @@ void advCompat(Profile *currEdit, wxWindow *parent)
 
 	int vars[] = {currEdit->compatflags, currEdit->compatflags2};
 
-	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")), compatFlags, vars, 2,
+	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")), compatFlagsList, vars, 2,
 	               false);
 
 	currEdit->compatflags  = vars[0];

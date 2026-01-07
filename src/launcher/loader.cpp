@@ -249,7 +249,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	newProfile.modsDirPath       = path + "mods";
 
 	// save the profile in the respective foler
-	newProfile.saveToFile(path + profileFilename + ".txt");
+	newProfile.saveToFile(path + profileFilename + ".ini");
 
 	// add the final product to the list of profiles by adding the config file path to the launcher.cfg file
 
@@ -270,7 +270,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		inFile.close();
 	}
 
-	j["profiles"].push_back(path + profileFilename + ".txt");
+	j["profiles"].push_back(path + profileFilename + ".ini");
 
 	std::ofstream outFile(CONFIG_FILE.ToUTF8());
 	if (outFile.is_open())

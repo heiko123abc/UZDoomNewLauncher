@@ -613,6 +613,7 @@ FString FIWadManager::IWADPathFileSearch(const FString &file)
 int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char *iwad, const char *zdoom_wad, const char *optional_wad)
 {
 	const char *iwadparm = Args->CheckValue (FArg_iwad);
+
 	FString custwad;
 
 	CollectSearchPaths();
@@ -627,6 +628,26 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 		AddIWADCandidates(dir.GetChars(), false);
 	}
 	unsigned numFoundWads = mFoundWads.Size();
+
+	TArray<WadStuff>      wads;
+	FStartupSelectionInfo info2 = FStartupSelectionInfo(wads, *Args, 0);
+
+	if (!iwadparm) // -iwad always has priority
+	{
+		// we hook the launcher in here and set iwadparm accordingly to the profile
+
+		if (I_PickIWad(queryiwad || HoldingQueryKey(queryiwad_key), info2))
+		{
+			info2.SaveInfo();
+			iwadparm   = info2.Wads->operator[](0).Path.GetChars();
+			havepicked = true;
+			delete info2.Wads;
+		}
+		else
+		{
+			return -1; // we left the UI without launching anything
+		}
+	}
 
 	if (iwadparm)
 	{
@@ -800,7 +821,7 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 #	endif
 #endif
 
-	/* I_FatalError(
+	 I_FatalError(
 			"Cannot find a game IWAD (doom.wad, heretic.wad, etc)!\n"
 			"Did you install " GAMENAME " properly?\n"
 			"\n"
@@ -809,7 +830,7 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 			"2. Edit your %s by adding your iwad folders beneath [IWADSearch.Directories]"
 			"%s",
 			gamedir, cfgfile, extrasteps
-		);*/
+		);
 	}
 	int pick = 0;
 

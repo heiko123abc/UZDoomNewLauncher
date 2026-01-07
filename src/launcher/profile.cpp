@@ -210,11 +210,12 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 		cmd << prependAdditionalParameters << " ";
 
 	// load the IWad file and erase . at start of ./ path to make an absolute path
-	TArray<WadStuff> *Wads{};
-	WadStuff          stuff{}; // TODO???
+	TArray<WadStuff>* Wads = new TArray<WadStuff>();
+	WadStuff          stuff;
 	stuff.Name = "dummy";
 	stuff.Path = this->iwadFilePath.ToStdString();
 	Wads->Push(stuff);
+	info.Wads = Wads;
 
 	if (!this->isIWAD)
 	{
@@ -251,10 +252,12 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 
 	// are we JOINING a multiplayer game?
 	if (mode == "join")
+	{
 		info.bNetStart = true; // we are networking
 
-	cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
-	                   this->joinTeamNo.ToStdString());
+		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
+		                   this->joinTeamNo.ToStdString());
+	}
 
 	//... or are we HOSTING a multiplayer game.
 	if (mode == "host")
@@ -362,5 +365,6 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 
 	// command strung together, give it to info
 	info.DefaultArgs = cmd.str();
+	info.bSaveArgs = false;
 	execResult       = true;
 }

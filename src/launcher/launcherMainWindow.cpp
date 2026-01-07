@@ -209,30 +209,80 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 
 	// create toggler
 	wxMenu *LangToggler = new wxMenu();
-	LangToggler->Append(ID_LANG_ENU, wxString::FromUTF8("English (US)"));
-	LangToggler->Append(ID_LANG_ENG, wxString::FromUTF8("English (UK)"));
-	LangToggler->Append(ID_LANG_CS, wxString::FromUTF8("Česky (Czech)"));
-	LangToggler->Append(ID_LANG_DA, wxString::FromUTF8("Dansk (Danish)"));
-	LangToggler->Append(ID_LANG_DE, wxString::FromUTF8("Deutsch (German)"));
-	LangToggler->Append(ID_LANG_ES, wxString::FromUTF8("Español (España) (Castilian Spanish)"));
-	LangToggler->Append(ID_LANG_ESM, wxString::FromUTF8("Español (Latino) (Latin American Spanish)"));
-	LangToggler->Append(ID_LANG_EO, wxString::FromUTF8("Esperanto"));
-	LangToggler->Append(ID_LANG_FI, wxString::FromUTF8("Suomi (Finnish)"));
-	LangToggler->Append(ID_LANG_FR, wxString::FromUTF8("Français (French)"));
-	LangToggler->Append(ID_LANG_HU, wxString::FromUTF8("Magyar (Hungarian)"));
-	LangToggler->Append(ID_LANG_IT, wxString::FromUTF8("Italiano (Italian)"));
-	LangToggler->Append(ID_LANG_JP, wxString::FromUTF8("日本語 (Japanese)"));
-	LangToggler->Append(ID_LANG_KO, wxString::FromUTF8("한국어 (Korean)"));
-	LangToggler->Append(ID_LANG_NL, wxString::FromUTF8("Nederlands (Dutch)"));
-	LangToggler->Append(ID_LANG_NB, wxString::FromUTF8("Norsk Bokmål (Norwegian)"));
-	LangToggler->Append(ID_LANG_PL, wxString::FromUTF8("Polski (Polish)"));
-	LangToggler->Append(ID_LANG_PTG, wxString::FromUTF8("Português (European Portuguese)"));
-	LangToggler->Append(ID_LANG_PT, wxString::FromUTF8("Português do Brasil (Brazilian Portuguese)"));
-	LangToggler->Append(ID_LANG_RO, wxString::FromUTF8("Română (Romanian)"));
-	LangToggler->Append(ID_LANG_RU, wxString::FromUTF8("Русский (Russian)"));
-	LangToggler->Append(ID_LANG_SR, wxString::FromUTF8("Српски (Serbian)"));
-	LangToggler->Append(ID_LANG_TR, wxString::FromUTF8("Türkçe (Turkish)"));
+	LangToggler->AppendRadioItem(ID_LANG_ENU, wxString::FromUTF8("English (US)"));
+	LangToggler->AppendRadioItem(ID_LANG_ENG, wxString::FromUTF8("English (UK)"));
+	LangToggler->AppendRadioItem(ID_LANG_CS, wxString::FromUTF8("Česky (Czech)"));
+	LangToggler->AppendRadioItem(ID_LANG_DA, wxString::FromUTF8("Dansk (Danish)"));
+	LangToggler->AppendRadioItem(ID_LANG_DE, wxString::FromUTF8("Deutsch (German)"));
+	LangToggler->AppendRadioItem(ID_LANG_ES, wxString::FromUTF8("Español (España) (Castilian Spanish)"));
+	LangToggler->AppendRadioItem(ID_LANG_ESM, wxString::FromUTF8("Español (Latino) (Latin American Spanish)"));
+	LangToggler->AppendRadioItem(ID_LANG_EO, wxString::FromUTF8("Esperanto"));
+	LangToggler->AppendRadioItem(ID_LANG_FI, wxString::FromUTF8("Suomi (Finnish)"));
+	LangToggler->AppendRadioItem(ID_LANG_FR, wxString::FromUTF8("Français (French)"));
+	LangToggler->AppendRadioItem(ID_LANG_HU, wxString::FromUTF8("Magyar (Hungarian)"));
+	LangToggler->AppendRadioItem(ID_LANG_IT, wxString::FromUTF8("Italiano (Italian)"));
+	LangToggler->AppendRadioItem(ID_LANG_JP, wxString::FromUTF8("日本語 (Japanese)"));
+	LangToggler->AppendRadioItem(ID_LANG_KO, wxString::FromUTF8("한국어 (Korean)"));
+	LangToggler->AppendRadioItem(ID_LANG_NL, wxString::FromUTF8("Nederlands (Dutch)"));
+	LangToggler->AppendRadioItem(ID_LANG_NB, wxString::FromUTF8("Norsk Bokmål (Norwegian)"));
+	LangToggler->AppendRadioItem(ID_LANG_PL, wxString::FromUTF8("Polski (Polish)"));
+	LangToggler->AppendRadioItem(ID_LANG_PTG, wxString::FromUTF8("Português (European Portuguese)"));
+	LangToggler->AppendRadioItem(ID_LANG_PT, wxString::FromUTF8("Português do Brasil (Brazilian Portuguese)"));
+	LangToggler->AppendRadioItem(ID_LANG_RO, wxString::FromUTF8("Română (Romanian)"));
+	LangToggler->AppendRadioItem(ID_LANG_RU, wxString::FromUTF8("Русский (Russian)"));
+	LangToggler->AppendRadioItem(ID_LANG_SR, wxString::FromUTF8("Српски (Serbian)"));
+	LangToggler->AppendRadioItem(ID_LANG_TR, wxString::FromUTF8("Türkçe (Turkish)"));
 	PrefMenu->AppendSubMenu(LangToggler, wxString::FromUTF8(GStrings.GetString("LAUNCHER_TOPBAR_PREFLANG")));
+
+	// pre check the current language
+	int idToCheck = ID_LANG_ENU; // Default fallback
+	if (langVar == "default")
+		idToCheck = ID_LANG_ENU;
+	else if (langVar == "eng")
+		idToCheck = ID_LANG_ENG;
+	else if (langVar == "cs")
+		idToCheck = ID_LANG_CS;
+	else if (langVar == "da")
+		idToCheck = ID_LANG_DA;
+	else if (langVar == "de")
+		idToCheck = ID_LANG_DE;
+	else if (langVar == "es")
+		idToCheck = ID_LANG_ES;
+	else if (langVar == "esm")
+		idToCheck = ID_LANG_ESM;
+	else if (langVar == "eo")
+		idToCheck = ID_LANG_EO;
+	else if (langVar == "fi")
+		idToCheck = ID_LANG_FI;
+	else if (langVar == "fr")
+		idToCheck = ID_LANG_FR;
+	else if (langVar == "hu")
+		idToCheck = ID_LANG_HU;
+	else if (langVar == "it")
+		idToCheck = ID_LANG_IT;
+	else if (langVar == "jp")
+		idToCheck = ID_LANG_JP;
+	else if (langVar == "ko")
+		idToCheck = ID_LANG_KO;
+	else if (langVar == "nl")
+		idToCheck = ID_LANG_NL;
+	else if (langVar == "no")
+		idToCheck = ID_LANG_NB;
+	else if (langVar == "pl")
+		idToCheck = ID_LANG_PL;
+	else if (langVar == "ptg")
+		idToCheck = ID_LANG_PTG;
+	else if (langVar == "pt")
+		idToCheck = ID_LANG_PT;
+	else if (langVar == "ro")
+		idToCheck = ID_LANG_RO;
+	else if (langVar == "ru")
+		idToCheck = ID_LANG_RU;
+	else if (langVar == "sr")
+		idToCheck = ID_LANG_SR;
+	else if (langVar == "tr")
+		idToCheck = ID_LANG_TR;
+	LangToggler->Check(idToCheck, true);
 
 	// create menu item to view credits and release notes
 	wxMenu *Credinfo = new wxMenu;
@@ -288,7 +338,7 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	moveEntryDownButton->Disable();
 
 	// the description box
-	wxTextCtrl *descriptionBox =
+	descriptionBox =
 		new wxTextCtrl(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_SELECT")),
 	                   wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 
@@ -430,7 +480,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 			TimePoint startingPoint = std::chrono::system_clock::now();
 
-			Starter *app = static_cast<Starter *>(wxTheApp);
+			Starter *app = dynamic_cast<Starter *>(wxTheApp);
 
 			if (event.GetId() == ID_START_GAME)
 				tp.giveLaunchCommand(selectedRowPath, "", app->GetStartInfo());
@@ -593,12 +643,17 @@ void LauncherMainWindow::updateLanguage()
 				wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE")));
 			profileList->GetColumn(4)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED")));
 			profileList->GetColumn(5)->SetTitle(wxString::FromUTF8(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME")));
+
+			profileList->Refresh();
 		}
 	}
+
+	refreshList(profileList, this);
 
 	// in case layout needs to be updated too
 	this->Layout();
 	this->Refresh();
+	this->Update();
 }
 
 void LauncherMainWindow::OnLanguageChanged(wxCommandEvent &event)

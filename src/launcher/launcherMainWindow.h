@@ -38,6 +38,7 @@ class LauncherMainWindow : public wxFrame
 	wxButton *moveEntryDownButton;
 
 	wxMenuBar *menuBar;
+	wxTextCtrl *descriptionBox;
 
 	void updateLanguage();
 	void OnButtonClicked(wxCommandEvent &event);

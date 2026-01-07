@@ -19,11 +19,11 @@
 
 #include <nlohmann/json.hpp> //for JSON file support
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <filesystem>
 
 using json = nlohmann::json;
 
@@ -211,12 +211,10 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 
 	// load the IWad file and erase . at start of ./ path to make an absolute path
 	TArray<WadStuff> *Wads{};
-	WadStuff          stuff{};
+	WadStuff          stuff{}; // TODO???
 	stuff.Name = "dummy";
-	stuff.Path = std::filesystem::current_path().string() + this->iwadFilePath.ToStdString().erase(0, 1);
+	stuff.Path = this->iwadFilePath.ToStdString();
 	Wads->Push(stuff);
-
-	//cmd << "-iwad \"" << std::filesystem::current_path().string() + this->iwadFilePath.ToStdString().erase(0,1) << "\" ";	
 
 	if (!this->isIWAD)
 	{
@@ -255,8 +253,8 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 	if (mode == "join")
 		info.bNetStart = true; // we are networking
 
-		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
-		                   this->joinTeamNo.ToStdString());
+	cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
+	                   this->joinTeamNo.ToStdString());
 
 	//... or are we HOSTING a multiplayer game.
 	if (mode == "host")

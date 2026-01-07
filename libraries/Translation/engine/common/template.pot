@@ -88,7 +88,7 @@ msgid "MNU_NOFILES"
 msgstr ""
 
 msgid "MNU_DELETESG"
-msgstr "\n"
+msgstr ""
 
 msgid "OPTVAL_OFF"
 msgstr ""
@@ -2470,4 +2470,586 @@ msgstr ""
 
 # dont translate .extentsions and *.*
 msgid "FILETYPE_LMP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWHEALTH"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWHEALTH_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWPOWERUPS"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWPOWERUPS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_WEAPONSSTAY"
+msgstr ""
+
+msgid "DMFLAGS_WEAPONSSTAY_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_FALLINGDAMAGEOLD"
+msgstr ""
+
+msgid "DMFLAGS_FALLINGDAMAGEOLD_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_FALLINGDAMAGEHEXEN"
+msgstr ""
+
+msgid "DMFLAGS_FALLINGDAMAGEHEXEN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_FALLINGDAMAGESTRIFE"
+msgstr ""
+
+msgid "DMFLAGS_FALLINGDAMAGESTRIFE_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_SAMEMAP"
+msgstr ""
+
+msgid "DMFLAGS_SAMEMAP_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_SPAWNFARTHEST"
+msgstr ""
+
+msgid "DMFLAGS_SPAWNFARTHEST_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_FORCERESPAWN"
+msgstr ""
+
+msgid "DMFLAGS_FORCERESPAWN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWARMOR"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWARMOR_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWEXIT"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWEXIT_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_INFINITEAMMO"
+msgstr ""
+
+msgid "DMFLAGS_INFINITEAMMO_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_NOMONSTERS"
+msgstr ""
+
+msgid "DMFLAGS_NOMONSTERS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_MONSTERSRESPAWN"
+msgstr ""
+
+msgid "DMFLAGS_MONSTERSRESPAWN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ITEMSRESPAWN"
+msgstr ""
+
+msgid "DMFLAGS_ITEMSRESPAWN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_FASTMONSTERS"
+msgstr ""
+
+msgid "DMFLAGS_FASTMONSTERS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWJUMP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWJUMP_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWFREELOOK"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWFREELOOK_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWFOV"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWFOV_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_SPAWNMULTIWEAPONS"
+msgstr ""
+
+msgid "DMFLAGS_SPAWNMULTIWEAPONS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWCROUCH"
+msgstr ""
+
+msgid "DMFLAGS_ALLOWCROUCH_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_LOSEINVENTORY"
+msgstr ""
+
+msgid "DMFLAGS_LOSEINVENTORY_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_KEEPKEYS"
+msgstr ""
+
+msgid "DMFLAGS_KEEPKEYS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_KEEPWEAPONS"
+msgstr ""
+
+msgid "DMFLAGS_KEEPWEAPONS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_KEEPARMOR"
+msgstr ""
+
+msgid "DMFLAGS_KEEPARMOR_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_KEEPPOWERUPS"
+msgstr ""
+
+msgid "DMFLAGS_KEEPPOWERUPS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_KEEPAMMO"
+msgstr ""
+
+msgid "DMFLAGS_KEEPAMMO_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS_LOSEHALFAMMO"
+msgstr ""
+
+msgid "DMFLAGS_LOSEHALFAMMO_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_DROPWEAPON"
+msgstr ""
+
+msgid "DMFLAGS2_DROPWEAPON_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_NOTEAMCHANGING"
+msgstr ""
+
+msgid "DMFLAGS2_NOTEAMCHANGING_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_DOUBLEAMMO"
+msgstr ""
+
+msgid "DMFLAGS2_DOUBLEAMMO_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_DEGENERATION"
+msgstr ""
+
+msgid "DMFLAGS2_DEGENERATION_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWBFGAIMING"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWBFGAIMING_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_BARRELSRESPAWN"
+msgstr ""
+
+msgid "DMFLAGS2_BARRELSRESPAWN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_RESPAWNPROTECTION"
+msgstr ""
+
+msgid "DMFLAGS2_RESPAWNPROTECTION_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_SPAWNWHEREDIED"
+msgstr ""
+
+msgid "DMFLAGS2_SPAWNWHEREDIED_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_KEEPFRAGSGAINED"
+msgstr ""
+
+msgid "DMFLAGS2_KEEPFRAGSGAINED_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_NORESPAWN"
+msgstr ""
+
+msgid "DMFLAGS2_NORESPAWN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_LOSEFRAGONDEATH"
+msgstr ""
+
+msgid "DMFLAGS2_LOSEFRAGONDEATH_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_INFINITEINVENTORY"
+msgstr ""
+
+msgid "DMFLAGS2_INFINITEINVENTORY_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_NOMONSTERSTOEXIT"
+msgstr ""
+
+msgid "DMFLAGS2_NOMONSTERSTOEXIT_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWAUTOMAP"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWAUTOMAP_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_AUTOMAPALLIES"
+msgstr ""
+
+msgid "DMFLAGS2_AUTOMAPALLIES_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWSPYING"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWSPYING_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_CHASECAMCHEAT"
+msgstr ""
+
+msgid "DMFLAGS2_CHASECAMCHEAT_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_DISALLOWSUICIDE"
+msgstr ""
+
+msgid "DMFLAGS2_DISALLOWSUICIDE_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWAUTOAIM"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWAUTOAIM_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_CHECKAMMOSWITCH"
+msgstr ""
+
+msgid "DMFLAGS2_CHECKAMMOSWITCH_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_IOSDEATHKILLSSPAWNS"
+msgstr ""
+
+msgid "DMFLAGS2_IOSDEATHKILLSSPAWNS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_ENDSECTORKILL"
+msgstr ""
+
+msgid "DMFLAGS2_ENDSECTORKILL_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_BIGPOWERUPSRESPAWN"
+msgstr ""
+
+msgid "DMFLAGS2_BIGPOWERUPSRESPAWN_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWVERTICALSPREAD"
+msgstr ""
+
+msgid "DMFLAGS2_ALLOWVERTICALSPREAD_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_NOPLAYERCLIPPING"
+msgstr ""
+
+msgid "DMFLAGS3_NOPLAYERCLIPPING_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_SHAREKEYS"
+msgstr ""
+
+msgid "DMFLAGS3_SHAREKEYS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_LOCALPICKUPS"
+msgstr ""
+
+msgid "DMFLAGS3_LOCALPICKUPS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_NOLOCALPICKUPSDROPPED"
+msgstr ""
+
+msgid "DMFLAGS3_NOLOCALPICKUPSDROPPED_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_NOCOOPONLYITEMS"
+msgstr ""
+
+msgid "DMFLAGS3_NOCOOPONLYITEMS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_NOCOOPONLYTHINGS"
+msgstr ""
+
+msgid "DMFLAGS3_NOCOOPONLYTHINGS_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_REMEMBERLASTWEAPON"
+msgstr ""
+
+msgid "DMFLAGS3_REMEMBERLASTWEAPON_TOOLTIP"
+msgstr ""
+
+msgid "DMFLAGS3_PISTOLSTART"
+msgstr ""
+
+msgid "DMFLAGS3_PISTOLSTART_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SHORTTEX"
+msgstr ""
+
+msgid "COMPAT_SHORTTEX_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_STAIRS"
+msgstr ""
+
+msgid "COMPAT_STAIRS_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_LIMITPAIN"
+msgstr ""
+
+msgid "COMPAT_LIMITPAIN_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SILENTPICKUP"
+msgstr ""
+
+msgid "COMPAT_SILENTPICKUP_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_NOVERTICALCOLLISION"
+msgstr ""
+
+msgid "COMPAT_NOVERTICALCOLLISION_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SILENT_BFG"
+msgstr ""
+
+msgid "COMPAT_SILENT_BFG_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_WALLRUN"
+msgstr ""
+
+msgid "COMPAT_WALLRUN_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_NOTOSSDROPS"
+msgstr ""
+
+msgid "COMPAT_NOTOSSDROPS_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_USEBLOCKING"
+msgstr ""
+
+msgid "COMPAT_USEBLOCKING_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_NODOORLIGHT"
+msgstr ""
+
+msgid "COMPAT_NODOORLIGHT_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_RAVENSCROLL"
+msgstr ""
+
+msgid "COMPAT_RAVENSCROLL_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SOUNDTARGET"
+msgstr ""
+
+msgid "COMPAT_SOUNDTARGET_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_DEHHEALTH"
+msgstr ""
+
+msgid "COMPAT_DEHHEALTH_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_TRACE"
+msgstr ""
+
+msgid "COMPAT_TRACE_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_DROPOFF"
+msgstr ""
+
+msgid "COMPAT_DROPOFF_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_BOOMSCROLL"
+msgstr ""
+
+msgid "COMPAT_BOOMSCROLL_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_INVISIBILITY"
+msgstr ""
+
+msgid "COMPAT_INVISIBILITY_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SILENTINSTANTFLOORS"
+msgstr ""
+
+msgid "COMPAT_SILENTINSTANTFLOORS_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SECTORSOUNDS"
+msgstr ""
+
+msgid "COMPAT_SECTORSOUNDS_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_MISSILECLIP"
+msgstr ""
+
+msgid "COMPAT_MISSILECLIP_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_CROSSDROPOFF"
+msgstr ""
+
+msgid "COMPAT_CROSSDROPOFF_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_ANYBOSSDEATH"
+msgstr ""
+
+msgid "COMPAT_ANYBOSSDEATH_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_MINOTAUR"
+msgstr ""
+
+msgid "COMPAT_MINOTAUR_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_MUSHROOM"
+msgstr ""
+
+msgid "COMPAT_MUSHROOM_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_MBFMONSTERMOVE"
+msgstr ""
+
+msgid "COMPAT_MBFMONSTERMOVE_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_CORPSEGIBS"
+msgstr ""
+
+msgid "COMPAT_CORPSEGIBS_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_NOBLOCKFRIENDS"
+msgstr ""
+
+msgid "COMPAT_NOBLOCKFRIENDS_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_SPRITESORT"
+msgstr ""
+
+msgid "COMPAT_SPRITESORT_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_HITSCAN"
+msgstr ""
+
+msgid "COMPAT_HITSCAN_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_LIGHT"
+msgstr ""
+
+msgid "COMPAT_LIGHT_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_POLYOBJ"
+msgstr ""
+
+msgid "COMPAT_POLYOBJ_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT_MASKEDMIDTEX"
+msgstr ""
+
+msgid "COMPAT_MASKEDMIDTEX_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT2_BADANGLES"
+msgstr ""
+
+msgid "COMPAT2_BADANGLES_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT2_FLOORMOVE"
+msgstr ""
+
+msgid "COMPAT2_FLOORMOVE_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT2_SOUNDCUTOFF"
+msgstr ""
+
+msgid "COMPAT2_SOUNDCUTOFF_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT2_POINTONLINE"
+msgstr ""
+
+msgid "COMPAT2_POINTONLINE_TOOLTIP"
+msgstr ""
+
+msgid "COMPAT2_MULTIEXIT"
+msgstr ""
+
+msgid "COMPAT2_MULTIEXIT_TOOLTIP"
 msgstr ""

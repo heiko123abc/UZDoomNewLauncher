@@ -2466,3 +2466,585 @@ msgstr "Zdoom Save files (*.zds)|*.zds"
 # dont translate .extentsions and *.*
 msgid "FILETYPE_LMP"
 msgstr "Demo Lump files (*.lmp)|*.lmp"
+
+msgid "DMFLAGS_ALLOWHEALTH"
+msgstr "Allow Health (Deathmatch)"
+
+msgid "DMFLAGS_ALLOWHEALTH_TOOLTIP"
+msgstr "Allows players to pick up items which restore health"
+
+msgid "DMFLAGS_ALLOWPOWERUPS"
+msgstr "Allow Powerups (Deathmatch)"
+
+msgid "DMFLAGS_ALLOWPOWERUPS_TOOLTIP"
+msgstr "Allows players to pick up and use powerup items"
+
+msgid "DMFLAGS_WEAPONSSTAY"
+msgstr "Weapons Stay (Deathmatch)"
+
+msgid "DMFLAGS_WEAPONSSTAY_TOOLTIP"
+msgstr "Weapons aren't removed from the map when a player picks them up; Doesn't work with weapons dropped by enemies"
+
+msgid "DMFLAGS_FALLINGDAMAGEOLD"
+msgstr "Falling damage (Old)"
+
+msgid "DMFLAGS_FALLINGDAMAGEOLD_TOOLTIP"
+msgstr "Damages the player when they fall too far; uses old ZDoom damage calculation"
+
+msgid "DMFLAGS_FALLINGDAMAGEHEXEN"
+msgstr "Falling damage (Hexen)"
+
+msgid "DMFLAGS_FALLINGDAMAGEHEXEN_TOOLTIP"
+msgstr "Damages the player when they fall too far; uses Hexen's damage calculation"
+
+msgid "DMFLAGS_FALLINGDAMAGESTRIFE"
+msgstr "Falling damage (Strife)"
+
+msgid "DMFLAGS_FALLINGDAMAGESTRIFE_TOOLTIP"
+msgstr "Damages the player when they fall too far; uses Strife's damage calculation"
+
+msgid "DMFLAGS_SAMEMAP"
+msgstr "Same Map (Deathmatch)"
+
+msgid "DMFLAGS_SAMEMAP_TOOLTIP"
+msgstr "After exiting, the current map is started over instead of proceeding to the next"
+
+msgid "DMFLAGS_SPAWNFARTHEST"
+msgstr "Spawn Farthest (Deathmatch)"
+
+msgid "DMFLAGS_SPAWNFARTHEST_TOOLTIP"
+msgstr "Tries to spawn players far away from each other in a Deathmatch game"
+
+msgid "DMFLAGS_FORCERESPAWN"
+msgstr "Force Respawn"
+
+msgid "DMFLAGS_FORCERESPAWN_TOOLTIP"
+msgstr "Forces the player to respawn a few seconds after death"
+
+msgid "DMFLAGS_ALLOWARMOR"
+msgstr "Allow Armor (Deathmatch)"
+
+msgid "DMFLAGS_ALLOWARMOR_TOOLTIP"
+msgstr "Allows players to pick up items which give armor"
+
+msgid "DMFLAGS_ALLOWEXIT"
+msgstr "Allow Exit (Deathmatch)"
+
+msgid "DMFLAGS_ALLOWEXIT_TOOLTIP"
+msgstr "If off, trying to exit the level by normal means will kill the offending player instead"
+
+msgid "DMFLAGS_INFINITEAMMO"
+msgstr "Infinite Ammo"
+
+msgid "DMFLAGS_INFINITEAMMO_TOOLTIP"
+msgstr "All players have infinite ammo"
+
+msgid "DMFLAGS_NOMONSTERS"
+msgstr "No Monsters"
+
+msgid "DMFLAGS_NOMONSTERS_TOOLTIP"
+msgstr "Monsters placed in the map don't appear; does not stop monsters from spawning via scripts, however"
+
+msgid "DMFLAGS_MONSTERSRESPAWN"
+msgstr "Monsters Respawn"
+
+msgid "DMFLAGS_MONSTERSRESPAWN_TOOLTIP"
+msgstr "Monsters who are killed automatically respawn; this is the default behavior for the Nightmare skill setting"
+
+msgid "DMFLAGS_ITEMSRESPAWN"
+msgstr "Items Respawn"
+
+msgid "DMFLAGS_ITEMSRESPAWN_TOOLTIP"
+msgstr "Basic items, such as weapons and ammo, respawn after being picked up"
+
+msgid "DMFLAGS_FASTMONSTERS"
+msgstr "Fast Monsters"
+
+msgid "DMFLAGS_FASTMONSTERS_TOOLTIP"
+msgstr "Monsters move and react faster; this is the default behavior for the Nightmare skill setting"
+
+msgid "DMFLAGS_ALLOWJUMP"
+msgstr "Allow Jump"
+
+msgid "DMFLAGS_ALLOWJUMP_TOOLTIP"
+msgstr "Players are allowed to jump; can be overridden in the MAPINFO lump"
+
+msgid "DMFLAGS_ALLOWFREELOOK"
+msgstr "Allow Freelook"
+
+msgid "DMFLAGS_ALLOWFREELOOK_TOOLTIP"
+msgstr "Players are allowed to look up and down; can be overridden in the MAPINFO lump"
+
+msgid "DMFLAGS_ALLOWFOV"
+msgstr "Allow FOV"
+
+msgid "DMFLAGS_ALLOWFOV_TOOLTIP"
+msgstr "Players are allowed to change their FOV (Field of Vision) from the default"
+
+msgid "DMFLAGS_SPAWNMULTIWEAPONS"
+msgstr "Spawn Multi. Weapons"
+
+msgid "DMFLAGS_SPAWNMULTIWEAPONS_TOOLTIP"
+msgstr "If off, weapons marked as Multiplayer Only in the map won't appear in Cooperative games"
+
+msgid "DMFLAGS_ALLOWCROUCH"
+msgstr "Allow Crouch"
+
+msgid "DMFLAGS_ALLOWCROUCH_TOOLTIP"
+msgstr "Players are allowed to crouch; can be overridden in the MAPINFO lump"
+
+msgid "DMFLAGS_LOSEINVENTORY"
+msgstr "Lose Inventory (Cooperative)"
+
+msgid "DMFLAGS_LOSEINVENTORY_TOOLTIP"
+msgstr "Players lose everything in their inventory upon death (Cooperative only)"
+
+msgid "DMFLAGS_KEEPKEYS"
+msgstr "Keep Keys (Cooperative)"
+
+msgid "DMFLAGS_KEEPKEYS_TOOLTIP"
+msgstr "If off, players lose keys upon death (Cooperative only)"
+
+msgid "DMFLAGS_KEEPWEAPONS"
+msgstr "Keep Weapons (Cooperative)"
+
+msgid "DMFLAGS_KEEPWEAPONS_TOOLTIP"
+msgstr "If off, players lose all weapons upon death and are given the standard pistol and 50 bullets on respawn (Cooperative only)"
+
+msgid "DMFLAGS_KEEPARMOR"
+msgstr "Keep Armor (Cooperative)"
+
+msgid "DMFLAGS_KEEPARMOR_TOOLTIP"
+msgstr "If off, armor is reset to 0% on death (Cooperative only)"
+
+msgid "DMFLAGS_KEEPPOWERUPS"
+msgstr "Keep Powerups (Cooperative)"
+
+msgid "DMFLAGS_KEEPPOWERUPS_TOOLTIP"
+msgstr "If off, powerups are lost on death (Cooperative only)"
+
+msgid "DMFLAGS_KEEPAMMO"
+msgstr "Keep Ammo (Cooperative)"
+
+msgid "DMFLAGS_KEEPAMMO_TOOLTIP"
+msgstr "If off, ammo is lost on death and the player starts with only 50 bullets (Cooperative only)"
+
+msgid "DMFLAGS_LOSEHALFAMMO"
+msgstr "Lose Half Ammo (Cooperative)"
+
+msgid "DMFLAGS_LOSEHALFAMMO_TOOLTIP"
+msgstr "If on, half of the player's ammo is removed on death (Cooperative only)"
+
+msgid "DMFLAGS2_DROPWEAPON"
+msgstr "Drop Weapon"
+
+msgid "DMFLAGS2_DROPWEAPON_TOOLTIP"
+msgstr "Drops the player's currently selected weapon on death"
+
+msgid "DMFLAGS2_NOTEAMCHANGING"
+msgstr "No Team Changing (Deathmatch)"
+
+msgid "DMFLAGS2_NOTEAMCHANGING_TOOLTIP"
+msgstr "If on, players cannot change teams in a teamplay match after the map has started."
+
+msgid "DMFLAGS2_DOUBLEAMMO"
+msgstr "Double Ammo"
+
+msgid "DMFLAGS2_DOUBLEAMMO_TOOLTIP"
+msgstr "If on, ammo pickups are doubled."
+
+msgid "DMFLAGS2_DEGENERATION"
+msgstr "Degeneration"
+
+msgid "DMFLAGS2_DEGENERATION_TOOLTIP"
+msgstr "Players have their health slowly drained when over 100%"
+
+msgid "DMFLAGS2_ALLOWBFGAIMING"
+msgstr "Allow BFG Aiming"
+
+msgid "DMFLAGS2_ALLOWBFGAIMING_TOOLTIP"
+msgstr "Players are allowed to aim BFG shots up and down; turn off to prevent the BFG from being fired into the ground to generate instant tracers"
+
+msgid "DMFLAGS2_BARRELSRESPAWN"
+msgstr "Barrels Respawn (Deathmatch)"
+
+msgid "DMFLAGS2_BARRELSRESPAWN_TOOLTIP"
+msgstr "Respawns barrels in a Deathmatch game"
+
+msgid "DMFLAGS2_RESPAWNPROTECTION"
+msgstr "Respawn Protection (Deathmatch)"
+
+msgid "DMFLAGS2_RESPAWNPROTECTION_TOOLTIP"
+msgstr "Players who are respawning are invulnerable for a few seconds"
+
+msgid "DMFLAGS2_SPAWNWHEREDIED"
+msgstr "Spawn Where Died (Cooperative)"
+
+msgid "DMFLAGS2_SPAWNWHEREDIED_TOOLTIP"
+msgstr "If on, players respawn at the spot they died, unless they died in an instant-death sector (Sector type 115). (Coop only)"
+
+msgid "DMFLAGS2_KEEPFRAGSGAINED"
+msgstr "Keep Frags Gained (Deathmatch)"
+
+msgid "DMFLAGS2_KEEPFRAGSGAINED_TOOLTIP"
+msgstr "If on, players keep their frag count from one map to the next."
+
+msgid "DMFLAGS2_NORESPAWN"
+msgstr "No Respawn"
+
+msgid "DMFLAGS2_NORESPAWN_TOOLTIP"
+msgstr "If enabled, players will not be able to respawn after dying."
+
+msgid "DMFLAGS2_LOSEFRAGONDEATH"
+msgstr "Lose Frag on Death (Deathmatch)"
+
+msgid "DMFLAGS2_LOSEFRAGONDEATH_TOOLTIP"
+msgstr "Players lose a frag each time they die."
+
+msgid "DMFLAGS2_INFINITEINVENTORY"
+msgstr "Infinite Inventory"
+
+msgid "DMFLAGS2_INFINITEINVENTORY_TOOLTIP"
+msgstr "Inventory items aren't removed when used."
+
+msgid "DMFLAGS2_NOMONSTERSTOEXIT"
+msgstr "No Monsters to Exit"
+
+msgid "DMFLAGS2_NOMONSTERSTOEXIT_TOOLTIP"
+msgstr "Players cannot exit the map until all monsters are killed."
+
+msgid "DMFLAGS2_ALLOWAUTOMAP"
+msgstr "Allow Automap"
+
+msgid "DMFLAGS2_ALLOWAUTOMAP_TOOLTIP"
+msgstr "Players are allowed to access their automap."
+
+msgid "DMFLAGS2_AUTOMAPALLIES"
+msgstr "Automap Allies"
+
+msgid "DMFLAGS2_AUTOMAPALLIES_TOOLTIP"
+msgstr "Players can see other friendly players on the automap"
+
+msgid "DMFLAGS2_ALLOWSPYING"
+msgstr "Allow Spying"
+
+msgid "DMFLAGS2_ALLOWSPYING_TOOLTIP"
+msgstr "Players can use the spynext command to see through their allies' eyes."
+
+msgid "DMFLAGS2_CHASECAMCHEAT"
+msgstr "Chasecam Cheat"
+
+msgid "DMFLAGS2_CHASECAMCHEAT_TOOLTIP"
+msgstr "Players are allowed to use the third-person chase cam."
+
+msgid "DMFLAGS2_DISALLOWSUICIDE"
+msgstr "Disallow Suicide"
+
+msgid "DMFLAGS2_DISALLOWSUICIDE_TOOLTIP"
+msgstr "Players cannot die due to self-inflicted damage."
+
+msgid "DMFLAGS2_ALLOWAUTOAIM"
+msgstr "Allow Autoaim"
+
+msgid "DMFLAGS2_ALLOWAUTOAIM_TOOLTIP"
+msgstr "Player weapons cannot auto aim if off."
+
+msgid "DMFLAGS2_CHECKAMMOSWITCH"
+msgstr "Check Ammo Switch"
+
+msgid "DMFLAGS2_CHECKAMMOSWITCH_TOOLTIP"
+msgstr "Check ammo on weapon switch"
+
+msgid "DMFLAGS2_IOSDEATHKILLSSPAWNS"
+msgstr "IoS Death Kills Spawns"
+
+msgid "DMFLAGS2_IOSDEATHKILLSSPAWNS_TOOLTIP"
+msgstr "Icon of Sin (a.k.a Romero) death kills its spawns."
+
+msgid "DMFLAGS2_ENDSECTORKILL"
+msgstr "End Sector Kill %"
+
+msgid "DMFLAGS2_ENDSECTORKILL_TOOLTIP"
+msgstr "End sector counts for total kill percentage."
+
+msgid "DMFLAGS2_BIGPOWERUPSRESPAWN"
+msgstr "Big Powerups Respawn"
+
+msgid "DMFLAGS2_BIGPOWERUPSRESPAWN_TOOLTIP"
+msgstr "Powerups with the Inventory.BIGPOWERUP flag, respawn after being picked up."
+
+msgid "DMFLAGS2_ALLOWVERTICALSPREAD"
+msgstr "Allow vertical bullet spread"
+
+msgid "DMFLAGS2_ALLOWVERTICALSPREAD_TOOLTIP"
+msgstr "Vertical bullet spread for weapons is allowed"
+
+msgid "DMFLAGS3_NOPLAYERCLIPPING"
+msgstr "No player clipping (Cooperative)"
+
+msgid "DMFLAGS3_NOPLAYERCLIPPING_TOOLTIP"
+msgstr "Players can walk through and shoot through each other"
+
+msgid "DMFLAGS3_SHAREKEYS"
+msgstr "Share keys (Cooperative)"
+
+msgid "DMFLAGS3_SHAREKEYS_TOOLTIP"
+msgstr "Keys and other core items will be given to all players in coop."
+
+msgid "DMFLAGS3_LOCALPICKUPS"
+msgstr "Local pickups (Cooperative)"
+
+msgid "DMFLAGS3_LOCALPICKUPS_TOOLTIP"
+msgstr "Items are picked up client-side rather than fully taken by the client who picked it up."
+
+msgid "DMFLAGS3_NOLOCALPICKUPSDROPPED"
+msgstr "No local pickups of dropped items (Cooperative)"
+
+msgid "DMFLAGS3_NOLOCALPICKUPSDROPPED_TOOLTIP"
+msgstr "Drops from Actors aren't picked up locally."
+
+msgid "DMFLAGS3_NOCOOPONLYITEMS"
+msgstr "Don't spawn coop-only items (Cooperative)"
+
+msgid "DMFLAGS3_NOCOOPONLYITEMS_TOOLTIP"
+msgstr "Items that only appear in co-op are disabled."
+
+msgid "DMFLAGS3_NOCOOPONLYTHINGS"
+msgstr "Don't spawn coop-only things (Cooperative)"
+
+msgid "DMFLAGS3_NOCOOPONLYTHINGS_TOOLTIP"
+msgstr "Any Actor that only appears in co-op is disabled."
+
+msgid "DMFLAGS3_REMEMBERLASTWEAPON"
+msgstr "Remember last weapon (Cooperative)"
+
+msgid "DMFLAGS3_REMEMBERLASTWEAPON_TOOLTIP"
+msgstr "When respawning in co-op, keep the last used weapon out instead of switching to the best new one."
+
+msgid "DMFLAGS3_PISTOLSTART"
+msgstr "Pistol start (Cooperative)"
+
+msgid "DMFLAGS3_PISTOLSTART_TOOLTIP"
+msgstr "Clears player inventory when exiting to the next level."
+
+msgid "COMPAT_SHORTTEX"
+msgstr "Find shortest textures like Doom"
+
+msgid "COMPAT_SHORTTEX_TOOLTIP"
+msgstr "If enabled, Doom includes the first texture (normally treated as null) when determining move distance for specials that act upon the shortest surrounding texture (e.g. Floor_RaiseByTexture)."
+
+msgid "COMPAT_STAIRS"
+msgstr "Use buggier stair building"
+
+msgid "COMPAT_STAIRS_TOOLTIP"
+msgstr "If enabled, Doom's buggier stair-building code is used for the line specials that build stairs. See also the stair specials articles."
+
+msgid "COMPAT_LIMITPAIN"
+msgstr "Limit Pain Elementals' Lost Souls"
+
+msgid "COMPAT_LIMITPAIN_TOOLTIP"
+msgstr "Enables Doom's default behavior where pain elementals are now allowed to spawn new lost souls if there are already more than twenty on the map. Some older WADs took advantage of this limitation to create traps or ambushes where several Pain Elementals threaten the player but at first are unable to attack until the player grabs a powerup or otherwise triggers an action which kills enough Lost Souls to allow them to begin spawning more."
+
+msgid "COMPAT_SILENTPICKUP"
+msgstr "Don't let others hear your pickups"
+
+msgid "COMPAT_SILENTPICKUP_TOOLTIP"
+msgstr "In Doom, other players in a multiplayer match were not able to hear each other pick up items or weapons (the pickup sounds only played for the local player). ZDoom changes this so that players can hear other players' pickups. Enable this option to restore the original behavior."
+
+msgid "COMPAT_NOVERTICALCOLLISION"
+msgstr "Actors are infinitely tall"
+
+msgid "COMPAT_NOVERTICALCOLLISION_TOOLTIP"
+msgstr "Doom did not allow one actor to pass over the top of another; in fact, all actors were considered to be infinitely tall for the purposes of collision-detection with each other. ZDoom and other advanced ports change this so that objects can realistically move over or under each other. Enable this option to revert to Doom's original behavior."
+
+msgid "COMPAT_SILENT_BFG"
+msgstr "Cripple sound for silent BFG trick"
+
+msgid "COMPAT_SILENT_BFG_TOOLTIP"
+msgstr "If enabled, players will only be allowed to emit one sound at a time. This Doom behavior can be exploited in multiplayer matches to mask certain sound effects (most notably the BFG firing sound) from other players. Note that this compatibility option heavily cripples ZDoom's sound system to achieve this effect and so players need to be aware of potential side-effects if they opt to enable this behavior."
+
+msgid "COMPAT_WALLRUN"
+msgstr "Enable wall running"
+
+msgid "COMPAT_WALLRUN_TOOLTIP"
+msgstr "Doom's collision-detection and movement routines were very basic and contained several known bugs that could be exploited to allow things that weren't originally intended. One of these was the ability to move extremely fast along walls oriented at a certain angle on the map. ZDoom's movement code fixes most of these issues, so it is no longer possible to use the \"wall - running\" cheat. A few maps however may have been designed with it in mind and become impossible to play without it, so this option is available in those cases. However, this heavily cripples ZDoom's movement code and re-introduces a number of bugs and inaccuracies. It is recommended to only use this option if absolutely necessary to complete the map."
+
+msgid "COMPAT_NOTOSSDROPS"
+msgstr "Spawn item drops on the floor"
+
+msgid "COMPAT_NOTOSSDROPS_TOOLTIP"
+msgstr "When monsters are killed in ZDoom, any items they drop are \"tossed\" into the air and then drop to the ground before coming to rest. Enable this option to restore the original behavior and make dropped items appear already on the floor."
+
+msgid "COMPAT_USEBLOCKING"
+msgstr "All special lines can block <use>"
+
+msgid "COMPAT_USEBLOCKING_TOOLTIP"
+msgstr "Doom contained a limitation where any line with a special (even one that does not activate anything when used) would intercept the player's use action and would not allow any lines behind it to trigger. By default ZDoom allows all lines within the player's reach to be triggered at once. Enable this option to restore the original behavior."
+
+msgid "COMPAT_NODOORLIGHT"
+msgstr "Disable Boom door light effect"
+
+msgid "COMPAT_NODOORLIGHT_TOOLTIP"
+msgstr "Boom (and ZDoom) add the ability to specify tagged sectors whose light level changes as a matching-tagged door is opened and closed. However, some older maps with incorrectly-tagged doors may inadvertently trigger this effect. Enable this option to prevent the light change from occuring in these instances."
+
+msgid "COMPAT_RAVENSCROLL"
+msgstr "Raven scrollers use original speed"
+
+msgid "COMPAT_RAVENSCROLL_TOOLTIP"
+msgstr "Heretic and Hexen floor scrollers had the odd effect of visibly moving the floor texture at a slower rate than the player was carried. ZDoom corrects this glitch. The original effect can be restored by enabling this compatibility option."
+
+msgid "COMPAT_SOUNDTARGET"
+msgstr "Use original sound target handling"
+
+msgid "COMPAT_SOUNDTARGET_TOOLTIP"
+msgstr "Doom and older versions of ZDoom (up to 2.0.63a) used a sector flag to determine when monsters in each sector had heard the player. Since the flag never got reset once activated, monsters spawned into the map at a later time could wake up immediately without having to actually see or hear the player. Newer versions of ZDoom use a more realistic method by which enemies spawned into the map begin dormant and must be woken up in the usual way. However, certain older maps may rely on the original behavior and so enemies which are supposed to wake up immediately may remain dormant. Enable this option to restore the original functionality."
+
+msgid "COMPAT_DEHHEALTH"
+msgstr "DEH health settings like Doom2.exe"
+
+msgid "COMPAT_DEHHEALTH_TOOLTIP"
+msgstr "Boom introduced a known bug that caused DeHackEd's max health value to affect stimpacks and medikits in addition to health bonuses. ZDoom retains that same bug to allow maps to define a new maximum health value for players to remain compatible. To restore the original (correct) Doom behavior, enable this option."
+
+msgid "COMPAT_TRACE"
+msgstr "Self-referencing sectors don't block shots"
+
+msgid "COMPAT_TRACE_TOOLTIP"
+msgstr "Doom ignored lines which had both sides in the same sector when determining whether a hitscan attack will pass through. ZDoom uses a more accurate routine which takes these lines into account. Enable this option to restore Doom's less accurate method."
+
+msgid "COMPAT_DROPOFF"
+msgstr "Monsters get stuck over dropoffs"
+
+msgid "COMPAT_DROPOFF_TOOLTIP"
+msgstr "Originally, monsters using Doom's AI could get stuck if they were pushed onto a ledge and would be unable to move. ZDoom adds code that specifically checks for such a situation and finds a valid direction for the monster to move away from the ledge. This option disables that new movement code and allows monsters to remain stuck."
+
+msgid "COMPAT_BOOMSCROLL"
+msgstr "Boom scrollers are additive"
+
+msgid "COMPAT_BOOMSCROLL_TOOLTIP"
+msgstr "Boom's texture scrolling specials were designed to stack with each other and with Doom's default scroll types, however ZDoom does not use this additive behavior. Enable this option to use Boom's method and allow them to stack with each other."
+
+msgid "COMPAT_INVISIBILITY"
+msgstr "Monsters see invisible players"
+
+msgid "COMPAT_INVISIBILITY_TOOLTIP"
+msgstr "Enemies in ZDoom will not normally wake up when they \"see\" a player who is using an invisibility powerup. Enable this option to restore Doom's original behavior where enemies would always wake up in these circumstances."
+
+msgid "COMPAT_SILENTINSTANTFLOORS"
+msgstr "Instant moving floors are not silent"
+
+msgid "COMPAT_SILENTINSTANTFLOORS_TOOLTIP"
+msgstr "If a sector moves instantly from one height to another, ZDoom will normally prevent any associated movement sounds from playing. This option re-enables the original Doom behavior where only the stop sound would be played in this cases."
+
+msgid "COMPAT_SECTORSOUNDS"
+msgstr "Sector sounds use center as source"
+
+msgid "COMPAT_SECTORSOUNDS_TOOLTIP"
+msgstr "Doom and older versions of ZDoom considered the center of a sector to be the original point of any sounds that sector makes. In certain cases, this could cause the sound position to be inaccurate or players to hear a directional sound while standing within the sector that is generating it. This has since been fixed to where players hear the sound coming from the point of the sector nearest to them, ensuring an equal level of sound throughout the sector. This option will restore the older, less accurate sound behavior."
+
+msgid "COMPAT_MISSILECLIP"
+msgstr "Use Doom heights for missile clipping"
+
+msgid "COMPAT_MISSILECLIP_TOOLTIP"
+msgstr "If enabled, actors use their original heights for the purposes of projectile collision. This allows for decorations to be pass-through for projectiles as they were originally in Doom while still blocking other actors correctly. Specifically, this affects actors with negative values defined for their ProjectilePassHeight property."
+
+msgid "COMPAT_CROSSDROPOFF"
+msgstr "Monsters cannot cross dropoffs"
+
+msgid "COMPAT_CROSSDROPOFF_TOOLTIP"
+msgstr "Doom's physics code prevented enemies from being pushed off of ledges that are greater than the monster's maxstepheight property. ZDoom normally allows monsters to be pushed over these dropoffs by outside force. If enabled, this CVAR restores the original Doom behavior."
+
+msgid "COMPAT_ANYBOSSDEATH"
+msgstr "Allow any bossdeath for level special"
+
+msgid "COMPAT_ANYBOSSDEATH_TOOLTIP"
+msgstr "Early versions of Doom executed the level's special action whenever the last monster of a kind that called A_BossDeath died. This allowed to have several different bosses on the same map, and have the special action repeated as many times, a fact that was used notably by 'Doomsday of UAC' to free a Cyberdemon once all Barons of Hell were defeated, and to make a red skull key accessible once the Cyberdemon was slain. Id Software considered this behavior a bug and fixed it, breaking this level."
+
+msgid "COMPAT_MINOTAUR"
+msgstr "No Minotaur floor flames in water"
+
+msgid "COMPAT_MINOTAUR_TOOLTIP"
+msgstr "Heretic introduced two new elements to the Doom engine: floor clipping to simulate actors wading through shallow water (or other liquids), and floor-hugging projectiles. The combination of the two, however, was not properly tested. When a maulotaur had its feet clipped by terrain and used its floor-hugging attack, the missiles were created below the floor, and were instantly destroyed as a result. Enabling this option prevents minotaurs from successfully creating their floor flames if their feet are clipped. Other floor-hugging projectiles are not affected."
+
+msgid "COMPAT_MUSHROOM"
+msgstr "Original A_Mushroom speed in DEH mods"
+
+msgid "COMPAT_MUSHROOM_TOOLTIP"
+msgstr "Doom originally calculated a missile's velocity on the X and Y axes based on its Speed property, and then added a Z velocity to reach the point aimed at. In other words, the horizontal velocity was the same regardless of the angle, meaning that the higher you aimed, the faster the projectile actually was overall. Since ZDoom allows, through freelook, to aim much higher or much lower than is normally possible in Doom, the effect at steep angles looked visibly bugged and the formula was changed to derive all three components of the actor's velocity from its angle and pitch. However, MBF introduced a codepointer, A_Mushroom, that aimed projectiles at very steep angles, and the new ZDoom formula caused the effects of A_Mushroom to be very different in ZDoom compared to MBF. Enable this option to let A_Mushroom use the old formula when called from a state that was modified by DeHackEd."
+
+msgid "COMPAT_MBFMONSTERMOVE"
+msgstr "Monster movement is affected by effects"
+
+msgid "COMPAT_MBFMONSTERMOVE_TOOLTIP"
+msgstr "Boom introduced sector friction and pusher/puller effects, and MBF subjected monsters to them. ZDoom, by default, does not, as the AI is unaware of such effects and incapable of coping up with them. Use this option to enable the MBF behavior. This does not affect \"conveyor belt\" effects."
+
+msgid "COMPAT_CORPSEGIBS"
+msgstr "Crushed monsters can be resurrected"
+
+msgid "COMPAT_CORPSEGIBS_TOOLTIP"
+msgstr "Doom originally changed the state of an actor's corpse to the \"crushed gibs\" state if they were ground by a closing door, raising elevator, crusher, or similar effect. This behavior later led to a bug with the skin code in ZDoom as when a player's corpse was crushed, only its sprite's letter was changed, not the full sprite name, meaning that a crushed player corpse looked like a standing player. To solve the problem, the fix at the time was to remove the corpse and spawn in its place a gibs actor, and this in turn led to the result that arch-viles or similar monsters could no longer raise the monsters whose corpses had been crushed. Enabling this option to restore the original Doom behavior of changing the actor's state instead of replacing the actor. Note that player corpses are not affected, and any actor with a custom Crush state will use it in all cases."
+
+msgid "COMPAT_NOBLOCKFRIENDS"
+msgstr "Friendly monsters aren't blocked"
+
+msgid "COMPAT_NOBLOCKFRIENDS_TOOLTIP"
+msgstr "Friendly monsters are still monsters, and therefore blocked by monster-blocking lines. This can severely limit their utility, as for example a friendly monster summoned at the start of 'MAP01: Entryway' in Doom II will be unable to climb the steps of the triangle stairway. To counter this, MBF allowed any friendly monster to pass through monster-blocking lines. Enable this option to do the same."
+
+msgid "COMPAT_SPRITESORT"
+msgstr "Invert sprite sorting"
+
+msgid "COMPAT_SPRITESORT_TOOLTIP"
+msgstr "ZDoom normally does not display overlapping sprites in the same order they were in Doom. Certain mods use overlapping sprites to achieve certain types of special effects, combining two different decorations into seemingly a single one. However, some mods require the original Doom order to work as intended, and others require the inverted ZDoom order. This compatibility option, if enabled, restores the original Doom order for sprite sorting."
+
+msgid "COMPAT_HITSCAN"
+msgstr "Use Doom code for hitscan checks"
+
+msgid "COMPAT_HITSCAN_TOOLTIP"
+msgstr "ZDoom fixed a couple of bugs in the hitscan trace routines, which had the effect of making hitscan attacks more efficient overall as in the original code they would sometimes \"magically\" miss. The first is that it is a monster's cross-section, rather than its bounding box, that is used to check for impact; this makes attacks with a limited range (especially player melee attacks) unlikely to hit very wide monsters. The second is the blockmap bug: if an actor crosses block boundaries and its center is in a different block than the one in which the impact happens, then there is no collision at all, letting attacks pass through it harmlessly. If enabled, this option restores the original, flawed behavior."
+
+msgid "COMPAT_LIGHT"
+msgstr "Find neighboring light like Doom"
+
+msgid "COMPAT_LIGHT_TOOLTIP"
+msgstr "Doom had a logical bug in its algorithm to search for the highest light level in neighboring sectors, which prevented it from looking past the first tagged sector's neighbors. This bug was fixed in Boom, and later ZDoom adopted the fix as well. If enabled, this option uses the Doom behavior rather than the corrected Boom one."
+
+msgid "COMPAT_POLYOBJ"
+msgstr "Draw polyobjects like Hexen"
+
+msgid "COMPAT_POLYOBJ_TOOLTIP"
+msgstr "Uses the old flawed polyobject system, for maps that relied on its glitches."
+
+msgid "COMPAT_MASKEDMIDTEX"
+msgstr "Ignore Y offsets on masked midtextures"
+
+msgid "COMPAT_MASKEDMIDTEX_TOOLTIP"
+msgstr "This option emulates a vanilla renderer glitch by ignoring the Y locations of patches drawn on two-sided midtextures and instead always drawing them at the top of the texture."
+
+msgid "COMPAT2_BADANGLES"
+msgstr "Cannot travel straight NSEW"
+
+msgid "COMPAT2_BADANGLES_TOOLTIP"
+msgstr "This option emulates the error in the original engine's sine table by offsetting player angle when spawning or teleporting by one fineangle (approximatively 0.044°), preventing the player from facing directly in a cardinal direction."
+
+msgid "COMPAT2_FLOORMOVE"
+msgstr "Use Doom's floor motion behavior"
+
+msgid "COMPAT2_FLOORMOVE_TOOLTIP"
+msgstr "Vanilla Doom allows floors to move up past their ceilings, and ceilings to move down past their floors. ZDoom adopted a Boom fix to prevents this from happening. This compatibility option allows to turn off this fix."
+
+msgid "COMPAT2_SOUNDCUTOFF"
+msgstr "Sounds stop when actor vanishes"
+
+msgid "COMPAT2_SOUNDCUTOFF_TOOLTIP"
+msgstr "If enabled, a playing sound gets cut off if its source no longer exists in the game world."
+
+msgid "COMPAT2_POINTONLINE"
+msgstr "Use Doom's point-on-line algorithm"
+
+msgid "COMPAT2_POINTONLINE_TOOLTIP"
+msgstr "Re-enables Doom's original, bugged behaviour for deciding exactly what side of a line a point that sits exactly on a line should be on."
+
+msgid "COMPAT2_MULTIEXIT"
+msgstr "Level exit can be triggered more than once"
+
+msgid "COMPAT2_MULTIEXIT_TOOLTIP"
+msgstr "Allows level exits to be triggered multiple times. This is required by (and automatically applied to) Daedalus: Alien Defense's \"Travel Tube\" maps to work around some faulty scripting."

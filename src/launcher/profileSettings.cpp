@@ -306,6 +306,7 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 {
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 
+	/*
 	// prepend parameters field
 	wxStaticBoxSizer *pparamGroup =
 		new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_ADVANCED_PREPEND")));
@@ -314,7 +315,8 @@ void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 	                   wxTextValidator(wxFILTER_NONE, &currEdit->prependAdditionalParameters));
 	pparamGroup->Add(pparams, 1, wxEXPAND);
 
-	mainSizer->Add(pparamGroup, 1, wxEXPAND | wxALL, 10);
+	//mainSizer->Add(pparamGroup, 1, wxEXPAND | wxALL, 10);
+	*/
 
 	// append parameters field
 	wxStaticBoxSizer *aparamGroup =

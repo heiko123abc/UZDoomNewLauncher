@@ -425,6 +425,8 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 	if (event.GetId() == ID_REFRESH_LIST)
 	{
 		refreshList(profileList, this);
+		SetStatusText(wxString::Format(wxString::FromUTF8(GStrings.GetString("LAUNCHER_AVAIL_STATUS")),
+		                               profileList->GetItemCount()));
 		return;
 	}
 

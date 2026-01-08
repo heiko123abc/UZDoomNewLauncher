@@ -293,7 +293,7 @@ public:
 	// serialization handler. let's keep it here so that I don't get lost in serialized/not serialized fields
 	void Serialize(FSerializer& arc) override
 	{
-		Super::Serialize(arc);
+		Serialize(arc);
 		/*
 		if (arc.isReading())
 		{

@@ -638,14 +638,11 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 
 		if (I_PickIWad(queryiwad || HoldingQueryKey(queryiwad_key), info2))
 		{
-			info2.SaveInfo();
-			iwadparm   = info2.Wads->operator[](0).Path.GetChars();
-			havepicked = true;
-			delete info2.Wads;
+			return -1; // UI was closed
 		}
 		else
 		{
-			return -1; // we left the UI without launching anything
+			return -1; // UI was closed
 		}
 	}
 

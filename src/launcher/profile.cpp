@@ -210,12 +210,7 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 		cmd << prependAdditionalParameters << " ";
 
 	// load the IWad file and erase . at start of ./ path to make an absolute path
-	TArray<WadStuff>* Wads = new TArray<WadStuff>();
-	WadStuff          stuff;
-	stuff.Name = "dummy";
-	stuff.Path = this->iwadFilePath.ToStdString();
-	Wads->Push(stuff);
-	info.Wads = Wads;
+	cmd << "-iwad " << this->iwadFilePath << " ";
 
 	if (!this->isIWAD)
 	{

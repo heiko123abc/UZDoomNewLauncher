@@ -30,6 +30,7 @@
 #include <wx/filedlg.h>
 #include <wx/menu.h>
 #include <wx/process.h>
+#include <wx/stdpaths.h>
 #include <wx/spinctrl.h>
 #include <wx/utils.h>
 
@@ -489,7 +490,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			if (event.GetId() == ID_HOST_GAME)
 				tp.giveLaunchCommand(selectedRowPath, "host", app->GetStartInfo());
 
-			/*
+			
 			// below bind a listener that monitors if uzdoom closes/ends
 			this->Iconize(true); // Minimize immediately
 
@@ -525,10 +526,12 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			    delete process;
 			});
 
-			 wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
-			*/
+			//what is currently being run
+			wxString exePath = wxStandardPaths::Get().GetExecutablePath();
 
-			wxTheApp->ExitMainLoop(); // end the UI
+			dispatchedCmd = exePath.ToStdString() + " " + app->GetStartInfo().DefaultArgs.GetChars();
+
+			wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
 		}
 
 		if (event.GetId() == ID_PROFILE_SETTINGS)

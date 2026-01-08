@@ -15,325 +15,236 @@
 **
 */
 
-#include <miniz.h>
-#include <zwidget/core/image.h>
-#include <zwidget/systemdialogs/save_file_dialog.h>
-#include <zwidget/widgets/pushbutton/pushbutton.h>
-#include <zwidget/widgets/scrollbar/scrollbar.h>
-
 #include "errorwindow.h"
 #include "printf.h"
-#include "utf8.h"
-#include "v_font.h"
-#include "version.h"
+#include "gstrings.h"
 
-bool ErrorWindow::ExecModal(const std::string& text, const std::string& log, std::vector<uint8_t> minidump)
+#include <miniz.h>
+#include <wx/clipbrd.h>
+#include <wx/display.h>
+#include <wx/filedlg.h>
+#include <wx/wfstream.h>
+#include <wx/wx.h>
+
+class CrashReporter : public wxApp
 {
-	Size screenSize = GetScreenSize();
-	double windowWidth = 1200.0;
-	double windowHeight = 700.0;
+  public:
+	virtual bool OnInit()
+	{
+		return true;
+	}
+};
 
-	auto window = std::make_unique<ErrorWindow>(std::move(minidump));
-	window->SetText(text, log);
-	window->SetFrameGeometry((screenSize.width - windowWidth) * 0.5, (screenSize.height - windowHeight) * 0.5, windowWidth, windowHeight);
-	window->Show();
+bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std::vector<uint8_t> minidump)
+{
+	// since this is called seperate from the main laucher, init wxWidgets on its own if needed
 
-	DisplayWindow::RunLoop();
+	bool isWxInit = (wxTheApp != nullptr);
 
-	return window->Restart;
+	if (!isWxInit)
+	{
+		wxApp::SetInstance(new CrashReporter());
+		static int   argc   = 0;
+		static char *argv[] = {nullptr};
+
+		// start gui here
+		if (!wxEntryStart(argc, argv))
+		{
+			// Fallback to print to stderr
+			fprintf(stderr, "Fatal Error: %s\n", text.c_str());
+			return false;
+		}
+		wxTheApp->OnInit();
+	}
+
+	{
+		ErrorWindow dlg(text, log, std::move(minidump));
+		dlg.ShowModal();
+	}
+
+	if (!isWxInit)
+	{
+		wxEntryCleanup(); // cleanup
+	}
+
+	return false;
 }
 
-ErrorWindow::ErrorWindow(std::vector<uint8_t> initminidump) : Widget(nullptr, WidgetType::Window), minidump(std::move(initminidump))
+ErrorWindow::ErrorWindow(const std::string &text, const std::string &log, std::vector<uint8_t> initminidump)
+	: wxDialog(nullptr, wxID_ANY, "Fatal Error", wxDefaultPosition), minidump(std::move(initminidump))
 {
-	FStringf caption("Fatal Error - " GAMENAME " %s (%s)", GetVersionString(), GetGitTime());
-	SetWindowTitle(caption.GetChars());
+	SetTitle(wxString::FromUTF8(GStrings.GetString("CRASHREPORT_TITLE"))); // title of the crash window
+	SetBackgroundColour(wxColour(38, 38, 38));
 
-	LogView = new LogViewer(this);
-	ClipboardButton = new PushButton(this);
-	ClipboardButton->OnClick = [=]() { OnClipboardButtonClicked(); };
-	ClipboardButton->SetText("Copy to clipboard");
+	this->SetClientSize(this->FromDIP(wxSize(1200, 700)));
 
+	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
+
+	logView = new wxRichTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxRE_READONLY | wxBORDER_NONE);
+	logView->SetBackgroundColour(wxColour(38, 38, 38));
+
+	// Default style
+	wxRichTextAttr defaultStyle;
+	defaultStyle.SetFont(wxFont(10, wxFONTFAMILY_TELETYPE, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
+	defaultStyle.SetTextColour(wxColour(255, 255, 255));
+	logView->SetBasicStyle(defaultStyle);
+
+	mainSizer->Add(logView, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(20));
+
+	// make sure the buttons are on lighter background
+	wxPanel *btnPanel = new wxPanel(this, wxID_ANY);
+	btnPanel->SetBackgroundColour(wxColour(204, 196, 194));
+
+	wxBoxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	btnClipboard = new wxButton(btnPanel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("CRASHREPORT_COPYCLIP")));
+	btnClipboard->Bind(wxEVT_BUTTON, &ErrorWindow::OnClipboard, this);
+
+	btnSizer->Add(btnClipboard, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxTOP | wxBOTTOM, FromDIP(20));
+	btnSizer->AddStretchSpacer(1);
+
+	// Save button (only if minidump exists)
 	if (minidump.empty())
 	{
-		RestartButton = new PushButton(this);
-		RestartButton->OnClick = [=]() { OnRestartButtonClicked(); };
-		RestartButton->SetText("Restart");
+		btnAction = new wxButton(btnPanel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("CRASHREPORT_NOSAVE")));
+		btnAction->Disable();
 	}
 	else
 	{
-		SaveReportButton = new PushButton(this);
-		SaveReportButton->OnClick = [=]() { OnSaveReportButtonClicked(); };
-		SaveReportButton->SetText("Save Report");
+		btnAction = new wxButton(btnPanel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("CRASHREPORT_SAVE")));
+		btnAction->Bind(wxEVT_BUTTON, &ErrorWindow::OnSaveReport, this);
 	}
+	btnSizer->Add(btnAction, 0, wxALIGN_CENTER_VERTICAL | wxTOP | wxBOTTOM, FromDIP(20));
 
-	LogView->SetFocus();
+	btnSizer->AddStretchSpacer(1);
+
+	btnAction2 = new wxButton(btnPanel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("CRASHREPORT_QUIT")));
+	btnAction2->Bind(wxEVT_BUTTON, &ErrorWindow::OnQuit, this);
+
+	btnSizer->Add(btnAction2, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT | wxTOP | wxBOTTOM, FromDIP(20));
+
+	btnPanel->SetSizer(btnSizer);
+
+	// Add the panel to the main sizer
+	mainSizer->Add(btnPanel, 0, wxEXPAND);
+
+	SetSizer(mainSizer);
+	Layout();
+	CenterOnScreen();
+
+	ParseAndAddLog(log, text);
+
+	logView->SetFocus();
 }
 
-void ErrorWindow::SetText(const std::string& text, const std::string& log)
+ErrorWindow::~ErrorWindow()
 {
-	LogView->SetText(text, log);
+}
 
-	clipboardtext.clear();
-	clipboardtext.reserve(log.size() + text.size() + 100);
+void ErrorWindow::ParseAndAddLog(const std::string &log, const std::string &errorText)
+{
+	std::string processedLog;
+	processedLog.reserve(log.size());
 
-	// Strip the color escapes from the log
-	const uint8_t* cptr = (const uint8_t*)log.data();
-	while (int chr = GetCharFromString(cptr))
+	for (unsigned char chr : log)
 	{
-		if (chr != TEXTCOLOR_ESCAPE)
+		if (chr == TEXTCOLOR_ESCAPE)
+			continue; // Strip color escape codes
+
+		// Replace control range with Box Drawings Double Horizontal
+		if (chr >= 0x1D && chr <= 0x1F)
 		{
-			// The bar characters, most commonly used to indicate map changes
-			if (chr >= 0x1D && chr <= 0x1F)
-			{
-				chr = 0x2550;	// Box Drawings Double Horizontal
-			}
-			clipboardtext += MakeUTF8(chr);
+			processedLog += "\xE2\x95\x90";
+		}
+		else
+		{
+			processedLog += chr;
 		}
 	}
 
-	clipboardtext += "\nExecution could not continue.\n";
-	clipboardtext += text;
-	clipboardtext += "\n";
+	// become the clipboard text
+	cleanClipboardText = processedLog + "\n\nExecution could not continue.\n" + errorText + "\n";
+
+	logView->Freeze();
+	logView->Clear();
+
+	// write the log
+	logView->BeginTextColour(wxColour(255, 255, 255));
+	logView->WriteText(wxString::FromUTF8(processedLog));
+	logView->EndTextColour();
+
+	logView->WriteText("\n\n");
+
+	// simply a helper lambda to write styled text easily
+	auto WriteStyled = [&](const wxString &text, const wxColour &color) {
+		logView->BeginTextColour(color);
+		logView->BeginFontSize(12);
+		logView->WriteText(text);
+		logView->EndFontSize();
+		logView->EndTextColour();
+	};
+
+	// Error Header (Red)
+	WriteStyled("Execution could not continue.\n", wxColour(255, 170, 170));
+
+	// Body (Yellow)
+	WriteStyled(wxString::FromUTF8(errorText), wxColour(255, 255, 170));
+
+	logView->ShowPosition(logView->GetLastPosition());
+	logView->Thaw();
 }
 
-void ErrorWindow::OnClipboardButtonClicked()
+void ErrorWindow::OnClipboard(wxCommandEvent &event)
 {
-	SetClipboardText(clipboardtext);
-}
-
-void ErrorWindow::OnRestartButtonClicked()
-{
-	Restart = true;
-	DisplayWindow::ExitLoop();
-}
-
-void ErrorWindow::OnSaveReportButtonClicked()
-{
-	auto dialog = SaveFileDialog::Create(this);
-	dialog->AddFilter("Crash Report Zip Files", "*.zip");
-	dialog->AddFilter("All Files", "*.*");
-	dialog->SetFilename("CrashReport.zip");
-	dialog->SetDefaultExtension("zip");
-	if (dialog->Show())
+	if (wxTheClipboard->Open())
 	{
-		std::string filename = dialog->Filename();
+		// clean text only
+		wxTheClipboard->SetData(new wxTextDataObject(wxString::FromUTF8(cleanClipboardText)));
+		wxTheClipboard->Close();
+	}
+}
+
+void ErrorWindow::OnQuit(wxCommandEvent &event)
+{
+	EndModal(wxID_OK);
+}
+
+void ErrorWindow::OnSaveReport(wxCommandEvent &event)
+{
+	wxFileDialog dialog(this, wxString::FromUTF8(GStrings.GetString("CRASHREPORT_SAVEDIAG")), "",
+	                    "UZDoomCrashReport.zip", wxString::FromUTF8(GStrings.GetString("CRASHREPORT_SAVEZIP")),
+	                    wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+	if (dialog.ShowModal() == wxID_OK)
+	{
+		std::string filename = dialog.GetPath().ToStdString();
 
 		mz_zip_archive zip = {};
 		if (mz_zip_writer_init_heap(&zip, 0, 16 * 1024 * 1024))
 		{
+			// Add Minidump
 			mz_zip_writer_add_mem(&zip, "minidump.dmp", minidump.data(), minidump.size(), MZ_DEFAULT_COMPRESSION);
-			mz_zip_writer_add_mem(&zip, "log.txt", clipboardtext.data(), clipboardtext.size(), MZ_DEFAULT_COMPRESSION);
+
+			// Add Log text
+			mz_zip_writer_add_mem(&zip, "log.txt", cleanClipboardText.data(), cleanClipboardText.size(),
+			                      MZ_DEFAULT_COMPRESSION);
 		}
-		void* buffer = nullptr;
+
+		// Finalize Zip
+		void  *buffer     = nullptr;
 		size_t buffersize = 0;
 		mz_zip_writer_finalize_heap_archive(&zip, &buffer, &buffersize);
 		mz_zip_writer_end(&zip);
 
-		std::unique_ptr<FileWriter> f(FileWriter::Open(filename.c_str()));
-		if (f)
+		// Write to disk using wxFile (or standard fstream)
+		wxFile file(filename, wxFile::write);
+		if (file.IsOpened())
 		{
-			f->Write(buffer, buffersize);
-			f->Close();
+			file.Write(buffer, buffersize);
+			file.Close();
 		}
+
+		// Free the buffer allocated by miniz
+		mz_free(buffer);
 	}
-}
-
-void ErrorWindow::OnClose()
-{
-	Restart = false;
-	DisplayWindow::ExitLoop();
-}
-
-void ErrorWindow::OnGeometryChanged()
-{
-	double w = GetWidth();
-	double h = GetHeight();
-
-	double y = GetHeight() - 15.0 - ClipboardButton->GetPreferredHeight();
-	ClipboardButton->SetFrameGeometry(20.0, y, 170.0, ClipboardButton->GetPreferredHeight());
-	if (RestartButton)
-		RestartButton->SetFrameGeometry(GetWidth() - 20.0 - 100.0, y, 100.0, RestartButton->GetPreferredHeight());
-	else if (SaveReportButton)
-		SaveReportButton->SetFrameGeometry(GetWidth() - 20.0 - 100.0, y, 100.0, SaveReportButton->GetPreferredHeight());
-	y -= 20.0;
-
-	LogView->SetFrameGeometry(Rect::xywh(0.0, 0.0, w, y));
-}
-
-/////////////////////////////////////////////////////////////////////////////
-
-LogViewer::LogViewer(Widget* parent) : Widget(parent)
-{
-	SetNoncontentSizes(8.0, 8.0, 3.0, 8.0);
-
-	scrollbar = new Scrollbar(this);
-	scrollbar->FuncScroll = [=]() { OnScrollbarScroll(); };
-}
-
-void LogViewer::SetText(const std::string& text, const std::string& log)
-{
-	lines.clear();
-
-	std::string::size_type start = 0;
-	std::string::size_type end = log.find('\n');
-	while (end != std::string::npos)
-	{
-		lines.push_back(CreateLineLayout(log.substr(start, end - start)));
-		start = end + 1;
-		end = log.find('\n', start);
-	}
-
-	lines.push_back(CreateLineLayout(log.substr(start)));
-
-	// Add an empty line as a bit of spacing
-	lines.push_back(CreateLineLayout({}));
-
-	SpanLayout layout;
-	//layout.AddImage(Image::LoadResource("widgets/erroricon.svg"), -8.0);
-	layout.AddText("Execution could not continue.", largefont, Colorf::fromRgba8(255, 170, 170));
-	lines.push_back(layout);
-
-	layout.Clear();
-	layout.AddText(text, largefont, Colorf::fromRgba8(255, 255, 170));
-	lines.push_back(layout);
-
-	scrollbar->SetRanges(0.0, (double)lines.size(), 1.0, 100.0);
-	scrollbar->SetPosition((double)lines.size() - 1.0);
-
-	Update();
-}
-
-SpanLayout LogViewer::CreateLineLayout(const std::string& text)
-{
-	SpanLayout layout;
-
-	Colorf curcolor = Colorf::fromRgba8(255, 255, 255);
-	std::string curtext;
-
-	const uint8_t* cptr = (const uint8_t*)text.data();
-	while (int chr = GetCharFromString(cptr))
-	{
-		if (chr != TEXTCOLOR_ESCAPE)
-		{
-			// The bar characters, most commonly used to indicate map changes
-			if (chr >= 0x1D && chr <= 0x1F)
-			{
-				chr = 0x2550;	// Box Drawings Double Horizontal
-			}
-			curtext += MakeUTF8(chr);
-		}
-		else
-		{
-			EColorRange range = V_ParseFontColor(cptr, CR_UNTRANSLATED, CR_YELLOW);
-			if (range != CR_UNDEFINED)
-			{
-				if (!curtext.empty())
-					layout.AddText(curtext, font, curcolor);
-				curtext.clear();
-
-				PalEntry color = V_LogColorFromColorRange(range);
-				curcolor = Colorf::fromRgba8(color.r, color.g, color.b);
-			}
-		}
-	}
-
-	curtext.push_back(' ');
-	layout.AddText(curtext, font, curcolor);
-
-	return layout;
-}
-
-void LogViewer::OnPaintFrame(Canvas* canvas)
-{
-	double w = GetFrameGeometry().width;
-	double h = GetFrameGeometry().height;
-	Colorf bordercolor = Colorf::fromRgba8(100, 100, 100);
-	canvas->fillRect(Rect::xywh(0.0, 0.0, w, h), Colorf::fromRgba8(38, 38, 38));
-	//canvas->fillRect(Rect::xywh(0.0, 0.0, w, 1.0), bordercolor);
-	//canvas->fillRect(Rect::xywh(0.0, h - 1.0, w, 1.0), bordercolor);
-	//canvas->fillRect(Rect::xywh(0.0, 0.0, 1.0, h - 0.0), bordercolor);
-	//canvas->fillRect(Rect::xywh(w - 1.0, 0.0, 1.0, h - 0.0), bordercolor);
-}
-
-void LogViewer::OnPaint(Canvas* canvas)
-{
-	double width = GetWidth() - scrollbar->GetFrameGeometry().width;
-	double y = GetHeight();
-	size_t start = std::min((size_t)std::round(scrollbar->GetPosition() + 1.0), lines.size());
-	for (size_t i = start; i > 0 && y > 0.0; i--)
-	{
-		SpanLayout& layout = lines[i - 1];
-		layout.Layout(canvas, width);
-		layout.SetPosition(Point(0.0, y - layout.GetSize().height));
-		layout.DrawLayout(canvas);
-		y -= layout.GetSize().height;
-	}
-}
-
-bool LogViewer::OnMouseWheel(const Point& pos, InputKey key)
-{
-	if (key == InputKey::MouseWheelUp)
-	{
-		ScrollUp(4);
-	}
-	else if (key == InputKey::MouseWheelDown)
-	{
-		ScrollDown(4);
-	}
-	return true;
-}
-
-void LogViewer::OnKeyDown(InputKey key)
-{
-	if (key == InputKey::Home)
-	{
-		scrollbar->SetPosition(0.0f);
-		Update();
-	}
-	if (key == InputKey::End)
-	{
-		scrollbar->SetPosition(scrollbar->GetMax());
-		Update();
-	}
-	else if (key == InputKey::PageUp)
-	{
-		ScrollUp(20);
-	}
-	else if (key == InputKey::PageDown)
-	{
-		ScrollDown(20);
-	}
-	else if (key == InputKey::Up)
-	{
-		ScrollUp(4);
-	}
-	else if (key == InputKey::Down)
-	{
-		ScrollDown(4);
-	}
-}
-
-void LogViewer::OnScrollbarScroll()
-{
-	Update();
-}
-
-void LogViewer::OnGeometryChanged()
-{
-	double w = GetWidth();
-	double h = GetHeight();
-	double sw = scrollbar->GetPreferredWidth();
-	scrollbar->SetFrameGeometry(Rect::xywh(w - sw, 0.0, sw, h));
-}
-
-void LogViewer::ScrollUp(int lines)
-{
-	scrollbar->SetPosition(std::max(scrollbar->GetPosition() - (double)lines, 0.0));
-	Update();
-}
-
-void LogViewer::ScrollDown(int lines)
-{
-	scrollbar->SetPosition(std::min(scrollbar->GetPosition() + (double)lines, scrollbar->GetMax()));
-	Update();
 }

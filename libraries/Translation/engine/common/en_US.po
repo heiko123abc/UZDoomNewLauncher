@@ -3048,3 +3048,25 @@ msgstr "Level exit can be triggered more than once"
 
 msgid "COMPAT2_MULTIEXIT_TOOLTIP"
 msgstr "Allows level exits to be triggered multiple times. This is required by (and automatically applied to) Daedalus: Alien Defense's \"Travel Tube\" maps to work around some faulty scripting."
+
+# Title of the Crash Reporter
+msgid "CRASHREPORT_TITLE"
+msgstr "UZDoom - Crashed :("
+
+msgid "CRASHREPORT_QUIT"
+msgstr "Quit"
+
+msgid "CRASHREPORT_COPYCLIP"
+msgstr "Copy to clipboard"
+
+msgid "CRASHREPORT_NOSAVE"
+msgstr "Save Report (No minidump available.)"
+
+msgid "CRASHREPORT_SAVE"
+msgstr "Save Report"
+
+msgid "CRASHREPORT_SAVEZIP"
+msgstr "Crash Report Zip Files (*.zip)|*.zip|All Files (*.*)|*.*"
+
+msgid "CRASHREPORT_SAVEDIAG"
+msgstr "Save Crash Report"

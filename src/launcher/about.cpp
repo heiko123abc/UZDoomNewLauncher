@@ -6,8 +6,7 @@
 **---------------------------------------------------------------------------
 **
 ** Copyright 2025 Marcus Minhorst for _ParseReleaseNotes() (adapted), _BuildReleaseNotes(), _OpenReleaseNotes(),
-*GetReleaseNotes()
-** and adapted GetAboutText()
+** GetReleaseNotes() and adapted GetAboutText()
 **
 ** Copyright 2025-2026 UZDoom Maintainers and Contributors
 **
@@ -121,7 +120,7 @@ FString _ParseReleaseNotes(rapidxml::xml_node<char> *release)
 		std::string detailsStr = wxString::FromUTF8(GStrings.GetString("NOTES_DETAILS")).ToStdString();
 		std::string urlStr     = url->value();
 
-		finalOutput += "<p><a href=\"" + urlStr + "\">" + detailsStr + "</a></p>";
+		finalOutput += "<p>" + detailsStr + " <a href =\"" + urlStr + "\">" + urlStr + "</a></p>";
 	}
 
 	// Return converted into FString

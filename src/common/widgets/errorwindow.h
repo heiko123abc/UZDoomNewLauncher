@@ -17,66 +17,36 @@
 
 #pragma once
 
-#include <zwidget/core/widget.h>
-#include <zwidget/core/span_layout.h>
+#include <string>
+#include <vector>
+#include <wx/dialog.h>
+#include <wx/richtext/richtextctrl.h>
+#include <wx/wx.h>
 
-class LogViewer;
-class PushButton;
-class Scrollbar;
-
-class ErrorWindow : public Widget
+class ErrorWindow : public wxDialog
 {
-public:
-	static bool ExecModal(const std::string& text, const std::string& log, std::vector<uint8_t> minidump = {});
+  public:
+	static bool ExecModal(const std::string &text, const std::string &log, std::vector<uint8_t> minidump);
 
-	ErrorWindow(std::vector<uint8_t> minidump);
+	ErrorWindow(const std::string &text, const std::string &log, std::vector<uint8_t> minidump);
+	virtual ~ErrorWindow();
 
-	bool Restart = false;
+  private:
+	// Internal helpers
+	void     ParseAndAddLog(const std::string &log, const std::string &errorText);
 
-protected:
-	void OnClose() override;
-	void OnGeometryChanged() override;
+	// Event Handlers
+	void OnClipboard(wxCommandEvent &event);
+	void OnQuit(wxCommandEvent &event);
+	void OnSaveReport(wxCommandEvent &event);
 
-private:
-	void SetText(const std::string& text, const std::string& log);
-
-	void OnClipboardButtonClicked();
-	void OnRestartButtonClicked();
-	void OnSaveReportButtonClicked();
-
-	LogViewer* LogView = nullptr;
-	PushButton* ClipboardButton = nullptr;
-	PushButton* RestartButton = nullptr;
-	PushButton* SaveReportButton = nullptr;
-
+	// Data
 	std::vector<uint8_t> minidump;
-	std::string clipboardtext;
-};
+	std::string          cleanClipboardText;
 
-class LogViewer : public Widget
-{
-public:
-	LogViewer(Widget* parent);
-
-	void SetText(const std::string& text, const std::string& log);
-
-protected:
-	void OnPaintFrame(Canvas* canvas) override;
-	void OnPaint(Canvas* canvas) override;
-	bool OnMouseWheel(const Point& pos, InputKey key) override;
-	void OnKeyDown(InputKey key) override;
-	void OnGeometryChanged() override;
-
-private:
-	void OnScrollbarScroll();
-	void ScrollUp(int lines);
-	void ScrollDown(int lines);
-
-	SpanLayout CreateLineLayout(const std::string& text);
-
-	Scrollbar* scrollbar = nullptr;
-
-	std::shared_ptr<Font> largefont = Font::Create("Poppins", 16.0);
-	std::shared_ptr<Font> font = Font::Create("Poppins", 12.0);
-	std::vector<SpanLayout> lines;
+	// GUI Controls
+	wxRichTextCtrl *logView;
+	wxButton       *btnClipboard;
+	wxButton       *btnAction;
+	wxButton       *btnAction2;
 };

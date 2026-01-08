@@ -3053,3 +3053,25 @@ msgstr ""
 
 msgid "COMPAT2_MULTIEXIT_TOOLTIP"
 msgstr ""
+
+# Title of the Crash Reporter
+msgid "CRASHREPORT_TITLE"
+msgstr ""
+
+msgid "CRASHREPORT_QUIT"
+msgstr ""
+
+msgid "CRASHREPORT_COPYCLIP"
+msgstr ""
+
+msgid "CRASHREPORT_NOSAVE"
+msgstr ""
+
+msgid "CRASHREPORT_SAVE"
+msgstr ""
+
+msgid "CRASHREPORT_SAVEZIP"
+msgstr ""
+
+msgid "CRASHREPORT_SAVEDIAG"
+msgstr ""

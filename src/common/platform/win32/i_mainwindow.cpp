@@ -137,7 +137,7 @@ void MainWindow::ShowErrorPane(const char* text)
 	for (const FString& line : bufferedConsoleStuff)
 		alltext.append(line.GetChars(), line.Len());
 
-	restartrequest = ErrorWindow::ExecModal(text, alltext);
+	restartrequest = ErrorWindow::ExecModal(text, alltext, {});
 }
 
 void MainWindow::NetInit(const char* message, bool host)

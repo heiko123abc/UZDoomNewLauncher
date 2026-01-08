@@ -327,7 +327,7 @@ bool I_PickIWad (bool showwin, FStartupSelectionInfo& info)
 	}
 	return false;
 #else
-	return wxKickStarter(info);
+	return wxKickStarter();
 #endif
 }
 

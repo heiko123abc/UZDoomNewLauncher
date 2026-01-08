@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 #include "gstrings.h"
-#include "i_interface.h"
 #include <wx/string.h> // Include wxString
 
 class Profile
@@ -95,5 +94,5 @@ class Profile
 	void loadFromFile(const std::string &filepath);
 
 	// build launch command
-	std::string giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info);
+	std::string giveLaunchCommand(const std::string &filepath, const std::string &mode);
 };

@@ -198,7 +198,7 @@ void Profile::loadFromFile(const std::string &filepath)
 }
 
 // Put it all together into a launch command for info
-std::string Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info)
+std::string Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode)
 {
 	// init the profile
 	this->loadFromFile(filepath);
@@ -248,8 +248,6 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	// are we JOINING a multiplayer game?
 	if (mode == "join")
 	{
-		info.bNetStart = true; // we are networking
-
 		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
 		                   this->joinTeamNo.ToStdString());
 	}
@@ -257,9 +255,9 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	//... or are we HOSTING a multiplayer game.
 	if (mode == "host")
 	{
-		info.bNetStart = true; // we are networking
 
 		cmd << "-host " << this->hostMaxPlayers << " -extratic ";
+
 		if (this->hostNetworkMode == "Peer-to-Peer")
 		{
 			cmd << "-netmode 0" << " ";

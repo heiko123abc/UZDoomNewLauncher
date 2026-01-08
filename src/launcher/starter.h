@@ -24,17 +24,8 @@ class Starter : public wxApp
 {
 
   public:
-	Starter(FStartupSelectionInfo &info);
 	bool OnInit();
 	void OnFatalException();
-
-	FStartupSelectionInfo &GetStartInfo()
-	{
-		return hidden_info;
-	}
-
-	private:
-	FStartupSelectionInfo &hidden_info;
 };
 
-bool wxKickStarter(FStartupSelectionInfo &info);
+bool wxKickStarter();

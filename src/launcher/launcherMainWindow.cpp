@@ -484,11 +484,11 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			Starter *app = dynamic_cast<Starter *>(wxTheApp);
 
 			if (event.GetId() == ID_START_GAME)
-				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "", app->GetStartInfo());
+				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "");
 			if (event.GetId() == ID_JOIN_GAME)
-				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "join", app->GetStartInfo());
+				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "join");
 			if (event.GetId() == ID_HOST_GAME)
-				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host", app->GetStartInfo());
+				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host");
 
 			
 			// below bind a listener that monitors if uzdoom closes/ends

@@ -25,19 +25,15 @@
 using json = nlohmann::json;
 bool execResult = false;
 
-Starter::Starter(FStartupSelectionInfo &info) : hidden_info(info) // store info reference
-{
-}
-
 // This is called from outside to kickstart the launcher ui and logics
-bool wxKickStarter(FStartupSelectionInfo &info)
+bool wxKickStarter()
 {
 	int   argc = 1;
 	char *argv[2];
 	argv[0] = (char *)"UZDoom";
 	argv[1] = nullptr;
 
-	wxApp::SetInstance(new Starter(info)); // set this as the instance
+	wxApp::SetInstance(new Starter()); // set this as the instance
 	wxEntry(argc, argv);
 
 	return execResult; // true if user launch via button, false if else

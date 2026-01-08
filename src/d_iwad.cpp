@@ -632,9 +632,9 @@ int FIWadManager::IdentifyVersion (std::vector<std::string>&wadfiles, const char
 	TArray<WadStuff>      wads;
 	FStartupSelectionInfo info2 = FStartupSelectionInfo(wads, *Args, 0);
 
-	if (!iwadparm) // -iwad always has priority
+	if (!iwadparm) // only show if no argument was given
 	{
-		// we hook the launcher in here and set iwadparm accordingly to the profile
+		// we hook the launcher in here and set launch accordingly to the profile
 
 		if (I_PickIWad(queryiwad || HoldingQueryKey(queryiwad_key), info2))
 		{

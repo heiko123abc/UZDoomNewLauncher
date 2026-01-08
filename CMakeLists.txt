@@ -54,6 +54,9 @@ endif()
 find_package(Threads REQUIRED)
 find_package(Python3 3.6 REQUIRED)
 
+# this is needed because deprecated marcos from wxWidgets comflict with UZDooms own project files
+add_compile_definitions(WXWIN_COMPATIBILITY_2_8=0)
+
 list( APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake )
 include( FindPackageHandleStandardArgs )
 

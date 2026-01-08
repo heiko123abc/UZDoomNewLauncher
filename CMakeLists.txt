@@ -31,6 +31,9 @@ endif()
 
 project(UZDoom)
 
+# wxWidget has deprecated macros which conflict
+add_compile_definitions(WXWIN_COMPATIBILITY_2_8=0)
+
 if (WIN32 AND VCPKG_TOOLCHAIN)
 	option(LIBVPX_VCPKG "Use libvpx from vcpkg" OFF)
 endif()

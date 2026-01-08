@@ -6232,7 +6232,7 @@ enum ESetAnimationFlags
 
 class DAnimationFrame : public DObject
 {
-	DECL_ABSTRACT_CLASS(DAnimationFrame, DObject);
+	DECLARE_ABSTRACT_CLASS(DAnimationFrame, DObject);
 };
 
 IMPLEMENT_CLASS(DAnimationFrame, true, false);

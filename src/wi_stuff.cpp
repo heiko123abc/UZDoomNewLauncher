@@ -94,7 +94,7 @@ static const char *WI_Cmd[] = {
 
 class DInterBackground : public DObject
 {
-	DECL_ABSTRACT_CLASS(DInterBackground, DObject)
+	DECLARE_ABSTRACT_CLASS(DInterBackground, DObject)
 	
 	// These animation variables, structures, etc. are used for the
 	// DOOM/Ultimate DOOM intermission screen animations.  This is

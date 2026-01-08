@@ -102,7 +102,7 @@ struct ClassReg : FAutoSegEntry<ClassReg>
 	void SetupClass(PClass *cls);
 };
 
-#define DECL_ABSTRACT_CLASS(cls,parent) \
+#define DECLARE_ABSTRACT_CLASS(cls,parent) \
 public: \
 	PClass *StaticType() const override; \
 	static ClassReg RegistrationInfo, * const RegistrationInfoPtr; \
@@ -110,18 +110,18 @@ public: \
 private: \
 	typedef cls ThisClass;
 
-#define DECL_ABSTRACT_CLASS_WITH_META(cls,parent,meta) \
-	DECL_ABSTRACT_CLASS(cls,parent) \
+#define DECLARE_ABSTRACT_CLASS_WITH_META(cls,parent,meta) \
+	DECLARE_ABSTRACT_CLASS(cls,parent) \
 public: \
 	typedef meta MetaClass; \
 	MetaClass *GetClass() const { return static_cast<MetaClass *>(DObject::GetClass()); }
 
 #define DECLARE_CLASS(cls,parent) \
-	DECL_ABSTRACT_CLASS(cls,parent) \
+	DECLARE_ABSTRACT_CLASS(cls,parent) \
 		private: static void InPlaceConstructor (void *mem);
 
 #define DECLARE_CLASS_WITH_META(cls,parent,meta) \
-	DECL_ABSTRACT_CLASS_WITH_META(cls,parent,meta) \
+	DECLARE_ABSTRACT_CLASS_WITH_META(cls,parent,meta) \
 		private: static void InPlaceConstructor (void *mem);
 
 #define HAS_OBJECT_POINTERS \

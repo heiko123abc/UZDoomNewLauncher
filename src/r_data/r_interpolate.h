@@ -37,7 +37,7 @@ class DInterpolation : public DObject
 {
 	friend struct FInterpolator;
 
-	DECL_ABSTRACT_CLASS(DInterpolation, DObject)
+	DECLARE_ABSTRACT_CLASS(DInterpolation, DObject)
 	HAS_OBJECT_POINTERS
 
 	TObjPtr<DInterpolation*> Next;

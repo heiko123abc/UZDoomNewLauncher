@@ -165,6 +165,7 @@ inline T *wxCheckCast(const void *ptr)
 // set up memory debugging macros
 // ----------------------------------------------------------------------------
 
+/*
     Which new/delete operator variants do we want?
 
     _WX_WANT_NEW_SIZET_WXCHAR_INT             = void *operator new (size_t size, wxChar *fileName = 0, int lineNum = 0)
@@ -173,6 +174,7 @@ inline T *wxCheckCast(const void *ptr)
     _WX_WANT_ARRAY_NEW_SIZET_WXCHAR_INT       = void *operator new[] (size_t size, wxChar *fileName , int lineNum = 0)
     _WX_WANT_ARRAY_DELETE_VOID                = void operator delete[] (void *buf)
     _WX_WANT_ARRAY_DELETE_VOID_WXCHAR_INT     = void operator delete[] (void* buf, wxChar*, int )
+*/
 
 #if wxUSE_MEMORY_TRACING
 

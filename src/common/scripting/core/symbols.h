@@ -61,7 +61,7 @@ public:
 
 class PSymbol : public DObject
 {
-	DECLARE_ABSTRACT_CLASS(PSymbol, DObject);
+	DECL_ABSTRACT_CLASS(PSymbol, DObject);
 public:
 	FName SymbolName;
 	VersionInfo mVersion = { 0,0,0 };

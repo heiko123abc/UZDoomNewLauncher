@@ -28,7 +28,7 @@ struct FLevelLocals;
 
 class DAutomapBase : public DObject
 {
-	DECLARE_ABSTRACT_CLASS(DAutomapBase, DObject);
+	DECL_ABSTRACT_CLASS(DAutomapBase, DObject);
 public:
 	FLevelLocals *Level;	// temporary location so that it can be set from the outside.
 

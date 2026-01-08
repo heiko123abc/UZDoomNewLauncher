@@ -31,7 +31,7 @@
 
 class DThinkerIterator : public DObject, public FThinkerIterator
 {
-	DECLARE_ABSTRACT_CLASS(DThinkerIterator, DObject)
+	DECL_ABSTRACT_CLASS(DThinkerIterator, DObject)
 
 public:
 	DThinkerIterator(FLevelLocals *Level, PClass *cls, int statnum = MAX_STATNUM + 1, bool clientside = false)
@@ -88,7 +88,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(DThinkerIterator, Reinit, ReinitThinker)
 
 class DBlockLinesIterator : public DObject
 {
-	DECLARE_ABSTRACT_CLASS(DBlockLinesIterator, DObject);
+	DECL_ABSTRACT_CLASS(DBlockLinesIterator, DObject);
 	FPortalGroupArray check;
 
 public:
@@ -164,7 +164,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(DBlockLinesIterator, Next, BLINext)
 
 class DBlockThingsIterator : public DObject
 {
-	DECLARE_ABSTRACT_CLASS(DBlockThingsIterator, DObject);
+	DECL_ABSTRACT_CLASS(DBlockThingsIterator, DObject);
 	FPortalGroupArray check;
 public:
 	FMultiBlockThingsIterator iterator;
@@ -237,7 +237,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(DBlockThingsIterator, Next, NextBTI)
 
 class DSectorTagIterator : public DObject, public FSectorTagIterator
 {
-	DECLARE_ABSTRACT_CLASS(DSectorTagIterator, DObject);
+	DECL_ABSTRACT_CLASS(DSectorTagIterator, DObject);
 public:
 	DSectorTagIterator(FTagManager &tm, int tag, line_t *line) : FSectorTagIterator(tm)
 	{
@@ -293,7 +293,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(DSectorTagIterator, NextCompat, NextCompatSTI)
 
 class DLineIdIterator : public DObject, public FLineIdIterator
 {
-	DECLARE_ABSTRACT_CLASS(DLineIdIterator, DObject);
+	DECL_ABSTRACT_CLASS(DLineIdIterator, DObject);
 public:
 	DLineIdIterator(FTagManager &tm, int tag)
 		: FLineIdIterator(tm, tag)
@@ -335,7 +335,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(DLineIdIterator, Next, NextLTI)
 
 class DActorIterator : public DObject, public NActorIterator
 {
-	DECLARE_ABSTRACT_CLASS(DActorIterator, DObject)
+	DECL_ABSTRACT_CLASS(DActorIterator, DObject)
 
 public:
 	DActorIterator(AActor **hash, PClassActor *cls = nullptr, int tid = 0)
@@ -393,7 +393,7 @@ DEFINE_ACTION_FUNCTION_NATIVE(DActorIterator, Reinit, ReinitActI)
 
 class DBehaviorIterator : public DObject
 {
-	DECLARE_ABSTRACT_CLASS(DBehaviorIterator, DObject)
+	DECL_ABSTRACT_CLASS(DBehaviorIterator, DObject)
 	size_t _index;
 	TArray<TObjPtr<DBehavior*>> _behaviors;
 

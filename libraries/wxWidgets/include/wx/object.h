@@ -207,7 +207,6 @@ inline T *wxCheckCast(const void *ptr)
 // (note that also some wx-prefixed macro do _not_ require a semicolon because
 // it's not always possible to force the compiler to require it)
 
-/*
 #define DECLARE_CLASS_INFO_ITERATORS()                              wxDECLARE_CLASS_INFO_ITERATORS();
 #define DECLARE_ABSTRACT_CLASS(n)                                   wxDECLARE_ABSTRACT_CLASS(n);
 #define DECLARE_DYNAMIC_CLASS_NO_ASSIGN(n)                          wxDECLARE_DYNAMIC_CLASS_NO_ASSIGN(n);
@@ -219,7 +218,6 @@ inline T *wxCheckCast(const void *ptr)
 #define DECLARE_ABSTRACT_PLUGGABLE_CLASS(n)                         wxDECLARE_ABSTRACT_PLUGGABLE_CLASS(n);
 #define DECLARE_USER_EXPORTED_PLUGGABLE_CLASS(n,u)                  wxDECLARE_USER_EXPORTED_PLUGGABLE_CLASS(n,u);
 #define DECLARE_USER_EXPORTED_ABSTRACT_PLUGGABLE_CLASS(n,u)         wxDECLARE_USER_EXPORTED_ABSTRACT_PLUGGABLE_CLASS(n,u);
-*/
 
 // ----------------------------------------------------------------------------
 // wxRefCounter: ref counted data "manager"

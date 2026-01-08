@@ -209,6 +209,20 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	if (!prependAdditionalParameters.empty())
 		cmd << prependAdditionalParameters << " ";
 
+	// block launch if no WADs are specified correctly
+
+	if (this->iwadFilePath.empty() && this->isIWAD)
+	{
+		wxMessageBox(GStrings.GetString("LAUNCHER_PROF_EMPTYWAD"), "UZDoom", wxOK | wxICON_ERROR);
+		return "error";
+	}
+
+	if ((this->iwadFilePath.empty() || this->pwadFilePath.empty()) && !this->isIWAD)
+	{
+		wxMessageBox(GStrings.GetString("LAUNCHER_PROF_EMPTYWAD"), "UZDoom", wxOK | wxICON_ERROR);
+		return "error";
+	}
+
 	// load the IWad file and erase . at start of ./ path to make an absolute path
 	cmd << "-iwad " << this->iwadFilePath << " ";
 
@@ -357,6 +371,6 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 		cmd << appendAdditionalParameters;
 
 	// command strung together, give it to info
-	execResult       = true;
+	execResult = true;
 	return cmd.str();
 }

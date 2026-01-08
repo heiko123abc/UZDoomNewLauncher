@@ -3079,3 +3079,6 @@ msgstr "Crash Report Zip Files (*.zip)|*.zip|All Files (*.*)|*.*"
 
 msgid "CRASHREPORT_SAVEDIAG"
 msgstr "Save Crash Report"
+
+msgid "LAUNCHER_PROF_EMPTYWAD"
+msgstr "The IWAD or PWAD field is empty. Provide the correct path."

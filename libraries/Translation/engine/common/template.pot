@@ -3084,3 +3084,6 @@ msgstr ""
 
 msgid "CRASHREPORT_SAVEDIAG"
 msgstr ""
+
+msgid "LAUNCHER_PROF_EMPTYWAD"
+msgstr ""

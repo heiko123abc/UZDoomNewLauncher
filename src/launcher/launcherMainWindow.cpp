@@ -30,8 +30,8 @@
 #include <wx/filedlg.h>
 #include <wx/menu.h>
 #include <wx/process.h>
-#include <wx/stdpaths.h>
 #include <wx/spinctrl.h>
+#include <wx/stdpaths.h>
 #include <wx/utils.h>
 
 #include "about.h"
@@ -339,9 +339,8 @@ LauncherMainWindow::LauncherMainWindow(const wxString &title) : wxFrame(nullptr,
 	moveEntryDownButton->Disable();
 
 	// the description box
-	descriptionBox =
-		new wxTextCtrl(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_SELECT")),
-	                   wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+	descriptionBox = new wxTextCtrl(panel, wxID_ANY, wxString::FromUTF8(GStrings.GetString("LAUNCHER_NO_DSC_SELECT")),
+	                                wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 
 	// Menu Bindings
 	Bind(wxEVT_MENU, &LauncherMainWindow::OnButtonClicked, this, ID_ADD_WAD);
@@ -475,8 +474,6 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 				return;
 			}
 
-			isAlreadyLaunched = true; // set flag
-
 			Profile     tp;
 			std::string dispatchedCmd;
 			std::string selectedRowPath = profilePaths[profileList->GetSelectedRow()];
@@ -492,7 +489,11 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			if (event.GetId() == ID_HOST_GAME)
 				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host");
 
-			
+			if (dispatchedCmd == "error")
+				return; // error in giveLaunchCommand
+
+			isAlreadyLaunched = true; // set flag
+
 			// below bind a listener that monitors if uzdoom closes/ends
 			this->Iconize(true); // Minimize immediately
 
@@ -501,34 +502,34 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 
 			// Capture process end
 			this->Bind(wxEVT_END_PROCESS, [this, selectedRowPath, startingPoint, process](wxProcessEvent &event) {
-			    TimePoint doneTime = std::chrono::system_clock::now();
-			    long long secondsPlayed =
-			        std::chrono::duration_cast<std::chrono::seconds>(doneTime - startingPoint).count();
+				TimePoint doneTime = std::chrono::system_clock::now();
+				long long secondsPlayed =
+					std::chrono::duration_cast<std::chrono::seconds>(doneTime - startingPoint).count();
 
-			    Profile p;
-			    p.loadFromFile(selectedRowPath);
+				Profile p;
+				p.loadFromFile(selectedRowPath);
 
-			    // update last played to now
-			    p.lastPlayedDate = std::format("{:%d-%m-%Y}", std::chrono::system_clock::now());
-			    p.playedTime += secondsPlayed;
+				// update last played to now
+				p.lastPlayedDate = std::format("{:%d-%m-%Y}", std::chrono::system_clock::now());
+				p.playedTime += secondsPlayed;
 
-			    // Save back to actual file
-			    p.saveToFile(selectedRowPath);
+				// Save back to actual file
+				p.saveToFile(selectedRowPath);
 
-			    // make ui visible again
-			    this->Iconize(false);
-			    this->Raise();
-			    this->Show(true);
+				// make ui visible again
+				this->Iconize(false);
+				this->Raise();
+				this->Show(true);
 
-			    // refresh at once for time update
-			    refreshList(profileList, this);
+				// refresh at once for time update
+				refreshList(profileList, this);
 
-			    isAlreadyLaunched = false; // reset flag
+				isAlreadyLaunched = false; // reset flag
 
-			    delete process;
+				delete process;
 			});
 
-			//what is currently being run
+			// what is currently being run
 			wxString exePath = wxStandardPaths::Get().GetExecutablePath();
 
 			dispatchedCmd = exePath.ToStdString() + " " + dispatchedCmd;

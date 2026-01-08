@@ -30,7 +30,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows" OR (NOT CMAKE_SYSTEM_NAME AND CMAKE_HOS
 endif()
 
 project(UZDoom)
-enable_language(OBJC)
 
 if (WIN32 AND VCPKG_TOOLCHAIN)
 	option(LIBVPX_VCPKG "Use libvpx from vcpkg" OFF)

@@ -963,7 +963,7 @@ void CreateGeneralTab(Profile *currEdit, wxPanel *panel)
 	rightSizer->AddGrowableCol(1);
 	rightSizer->Add(
 		new wxStaticText(panel, wxID_ANY,
-	                     wxString::Format("%s:", wxString::FromUTF8(GStrings.GetString("PROFSET_GENERAL_TYPE")))),
+	                     wxString::Format("%s", wxString::FromUTF8(GStrings.GetString("PROFSET_GENERAL_TYPE")))),
 		0, wxALIGN_CENTER_VERTICAL | wxALIGN_RIGHT);
 
 	wxComboBox *typeCombo = new wxComboBox(panel, wxID_ANY, currEdit->isIWAD == 1 ? "IWAD" : "PWAD", wxDefaultPosition,

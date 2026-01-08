@@ -15,61 +15,88 @@
 **
 */
 
-#include <zwidget/core/timer.h>
-#include <zwidget/widgets/listview/listview.h>
-#include <zwidget/widgets/pushbutton/pushbutton.h>
-#include <zwidget/widgets/textlabel/textlabel.h>
-
 #include "netstartwindow.h"
+#include "gstrings.h"
 #include "version.h"
 
-NetStartWindow* NetStartWindow::Instance = nullptr;
+NetStartWindow *NetStartWindow::Instance = nullptr;
 
-void NetStartWindow::NetInit(const char* message, bool host)
+class NetMenu : public wxApp
 {
-	Size screenSize = GetScreenSize();
-	double windowWidth = 450.0;
-	double windowHeight = 600.0;
+  public:
+	virtual bool OnInit()
+	{
+		return true;
+	}
+};
+
+void NetStartWindow::NetInit(const char *message, bool host)
+{
+	// since this is called seperate from the main laucher, init wxWidgets on its own is needed
+
+	if (!wxTheApp)
+	{
+		wxApp::SetInstance(new NetMenu());
+
+		static int   argc   = 0;
+		static char *argv[] = {nullptr};
+
+		wxEntryStart(argc, argv);
+		wxTheApp->OnInit();
+	}
 
 	if (!Instance)
 	{
-		Instance = new NetStartWindow(host);
-		Instance->SetFrameGeometry((screenSize.width - windowWidth) * 0.5, (screenSize.height - windowHeight) * 0.5, windowWidth, windowHeight);
-		Instance->Show();
+		// passing nullptr as parent since this is the top-level here
+		Instance = new NetStartWindow(nullptr, host);
 	}
 
-	Instance->SetMessage(message);
+	if (message)
+	{
+		Instance->SetMessage(message);
+	}
 }
 
-void NetStartWindow::NetMessage(const char* message)
+void NetStartWindow::NetMessage(const char *message)
 {
 	if (Instance)
 		Instance->SetMessage(message);
 }
 
-void NetStartWindow::NetConnect(int client, const char* name, unsigned flags, int status)
+void NetStartWindow::NetConnect(int client, const char *name, unsigned flags, int status)
 {
 	if (!Instance)
 		return;
 
-	std::string value = "";
+	// Parse Flags
+	wxString flagStr = "";
 	if (flags & 1)
-		value.append("*");
+		flagStr += "*";
 	if (flags & 2)
-		value.append("H");
+		flagStr += "H";
 
-	Instance->LobbyWindow->UpdateItem(value, client, 1);
-	Instance->LobbyWindow->UpdateItem(name, client, 2);
-	
-	value = "";
+	// Parse Status
+	wxString statusStr = "";
 	if (status == 1)
-		value = "CONNECTING";
+		statusStr = wxString::FromUTF8(GStrings.GetString("NETMENU_STATUS_CONN"));
 	else if (status == 2)
-		value = "WAITING";
+		statusStr = wxString::FromUTF8(GStrings.GetString("NETMENU_STATUS_WAIT"));
 	else if (status == 3)
-		value = "READY";
+		statusStr = wxString::FromUTF8(GStrings.GetString("NETMENU_STATUS_READY"));
 
-	Instance->LobbyWindow->UpdateItem(value, client, 3);
+	long index = Instance->FindItemByClient(client);
+
+	if (index == -1)
+	{
+		// Add new player
+		index = Instance->playerList->InsertItem(Instance->playerList->GetItemCount(), wxString::Format("%d", client));
+		Instance->playerList->SetItemData(index, client); // Store client ID
+	}
+
+	// Update columns accordingly
+	Instance->playerList->SetItem(index, 1, flagStr);
+	Instance->playerList->SetItem(index, 2, wxString::FromUTF8(name));
+	Instance->playerList->SetItem(index, 3, statusStr);
 }
 
 void NetStartWindow::NetUpdate(int client, int status)
@@ -77,23 +104,31 @@ void NetStartWindow::NetUpdate(int client, int status)
 	if (!Instance)
 		return;
 
-	std::string value = "";
+	wxString statusStr = "";
 	if (status == 1)
-		value = "CONNECTING";
+		statusStr = wxString::FromUTF8(GStrings.GetString("NETMENU_STATUS_CONN"));
 	else if (status == 2)
-		value = "WAITING";
+		statusStr = wxString::FromUTF8(GStrings.GetString("NETMENU_STATUS_WAIT"));
 	else if (status == 3)
-		value = "READY";
+		statusStr = wxString::FromUTF8(GStrings.GetString("NETMENU_STATUS_READY"));
 
-	Instance->LobbyWindow->UpdateItem(value, client, 3);
+	long index = Instance->FindItemByClient(client);
+	if (index != -1)
+	{
+		Instance->playerList->SetItem(index, 3, statusStr);
+	}
 }
 
 void NetStartWindow::NetDisconnect(int client)
 {
-	if (Instance)
+	if (!Instance)
+		return;
+
+	long index = Instance->FindItemByClient(client);
+	if (index != -1)
 	{
-		for (size_t i = 1u; i < Instance->LobbyWindow->GetColumnAmount(); ++i)
-			Instance->LobbyWindow->UpdateItem("", client, int(i));
+		// Remove the row entirely upon disconnect
+		Instance->playerList->DeleteItem(index);
 	}
 }
 
@@ -104,33 +139,45 @@ void NetStartWindow::NetProgress(int cur, int limit)
 
 	Instance->maxpos = limit;
 	Instance->SetProgress(cur);
-	for (size_t start = Instance->LobbyWindow->GetItemAmount(); start < Instance->maxpos; ++start)
-		Instance->LobbyWindow->AddItem(std::to_string(start));
+
+	// Ensure list has enough free slots if players haven't connected yet
+	int currentCount = Instance->playerList->GetItemCount();
+	for (int i = currentCount; i < limit; ++i)
+	{
+		long idx = Instance->playerList->InsertItem(i, wxString::Format("%d", i));
+		Instance->playerList->SetItemData(idx, i);
+	}
 }
 
 void NetStartWindow::NetDone()
 {
-	delete Instance;
-	Instance = nullptr;
+	if (Instance)
+	{
+		Instance->Destroy();
+		Instance = nullptr;
+	}
+
+	wxEntryCleanup(); // cleanup
 }
 
 void NetStartWindow::NetClose()
 {
-	if (Instance != nullptr)
-		Instance->OnClose();
+	if (Instance)
+	{
+		Instance->EndModal(wxID_CANCEL);
+	}
 }
 
 bool NetStartWindow::ShouldStartNet()
 {
-	if (Instance != nullptr)
+	if (Instance)
 		return Instance->shouldstart;
-
 	return false;
 }
 
 int NetStartWindow::GetNetKickClient()
 {
-	if (!Instance || !Instance->kickclients.size())
+	if (!Instance || Instance->kickclients.empty())
 		return -1;
 
 	int next = Instance->kickclients.back();
@@ -140,7 +187,7 @@ int NetStartWindow::GetNetKickClient()
 
 int NetStartWindow::GetNetBanClient()
 {
-	if (!Instance || !Instance->banclients.size())
+	if (!Instance || Instance->banclients.empty())
 		return -1;
 
 	int next = Instance->banclients.back();
@@ -148,19 +195,24 @@ int NetStartWindow::GetNetBanClient()
 	return next;
 }
 
-bool NetStartWindow::NetLoop(bool (*loopCallback)(void*), void* data)
+bool NetStartWindow::NetLoop(bool (*loopCallback)(void *), void *data)
 {
 	if (!Instance)
 		return false;
 
-	Instance->timer_callback = loopCallback;
-	Instance->userdata = data;
+	Instance->timer_callback    = loopCallback;
+	Instance->userdata          = data;
 	Instance->CallbackException = {};
 
-	DisplayWindow::RunLoop();
+	// 10ms interval gives responsive network updates
+	Instance->updateTimer.Start(10);
 
+	// ShowModal blocks execution here until EndModal is called (we wait)
+	Instance->ShowModal();
+
+	Instance->updateTimer.Stop();
 	Instance->timer_callback = nullptr;
-	Instance->userdata = nullptr;
+	Instance->userdata       = nullptr;
 
 	if (Instance->CallbackException)
 		std::rethrow_exception(Instance->CallbackException);
@@ -168,49 +220,102 @@ bool NetStartWindow::NetLoop(bool (*loopCallback)(void*), void* data)
 	return Instance->exitreason;
 }
 
-NetStartWindow::NetStartWindow(bool host) : Widget(nullptr, WidgetType::Window)
+NetStartWindow::NetStartWindow(wxWindow *parent, bool host)
+	: wxDialog(parent, wxID_ANY, wxString::FromUTF8(GAMENAME), wxDefaultPosition, wxSize(500, 600),
+               wxDEFAULT_DIALOG_STYLE),
+	  hosting(host)
 {
-	SetWindowTitle(GAMENAME);
 
-	MessageLabel = new TextLabel(this);
-	ProgressLabel = new TextLabel(this);
-	LobbyWindow = new ListView(this);
-	AbortButton = new PushButton(this);
+	// Cerate Layout Setup
+	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
 
-	MessageLabel->SetTextAlignment(TextLabelAlignment::Center);
-	ProgressLabel->SetTextAlignment(TextLabelAlignment::Center);
+	this->SetClientSize(this->FromDIP(wxSize(500, 600)));
 
-	AbortButton->OnClick = [=]() { OnClose(); };
-	AbortButton->SetText("Abort");
+	// Status Label
+	lblStatus         = new wxStaticText(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("NETMENU_WAIT")));
+	wxFont statusFont = lblStatus->GetFont();
+	statusFont.MakeBold();
+	lblStatus->SetFont(statusFont);
 
-	if (host)
+	// Count Label
+	lblCount = new wxStaticText(this, wxID_ANY, "0/0");
+
+	mainSizer->Add(lblStatus, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, 15);
+	mainSizer->Add(lblCount, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, 10);
+
+	// Player List
+	playerList = new wxListCtrl(this, wxID_ANY, wxDefaultPosition, wxDefaultSize,
+	                            wxLC_REPORT | wxLC_SINGLE_SEL | wxBORDER_SUNKEN);
+
+	// Columns: #, Info, Player, Status
+	playerList->InsertColumn(0, "#", wxLIST_FORMAT_LEFT, FromDIP(40));
+	playerList->InsertColumn(1, wxString::FromUTF8(GStrings.GetString("NETMENU_LIST_INFO")), wxLIST_FORMAT_CENTER,
+	                         FromDIP(40));
+	playerList->InsertColumn(2, wxString::FromUTF8(GStrings.GetString("NETMENU_LIST_PLAYER")), wxLIST_FORMAT_LEFT,
+	                         FromDIP(250));
+	playerList->InsertColumn(3, wxString::FromUTF8(GStrings.GetString("NETMENU_LIST_STATUS")), wxLIST_FORMAT_LEFT,
+	                         FromDIP(150));
+
+	mainSizer->Add(playerList, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+
+	// Buttons
+	wxBoxSizer *btnSizer = new wxBoxSizer(wxHORIZONTAL);
+	btnAbort             = new wxButton(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("NETMENU_BTN_ABORT")));
+
+	if (hosting)
 	{
-		hosting = true;
+		btnStart = new wxButton(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("NETMENU_BTN_START")));
+		btnKick  = new wxButton(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("NETMENU_BTN_KICK")));
+		btnBan   = new wxButton(this, wxID_ANY, wxString::FromUTF8(GStrings.GetString("NETMENU_BTN_BAN")));
 
-		ForceStartButton = new PushButton(this);
-		ForceStartButton->OnClick = [=]() { ForceStart(); };
-		ForceStartButton->SetText("Start Game");
+		// Add to sizer (Start, Kick, Ban, Abort)
+		btnSizer->Add(btnStart, 1, wxALL, FromDIP(5));
+		btnSizer->Add(btnKick, 1, wxALL, FromDIP(5));
+		btnSizer->Add(btnBan, 1, wxALL, FromDIP(5));
+		btnSizer->Add(btnAbort, 1, wxALL, FromDIP(5));
 
-		KickButton = new PushButton(this);
-		KickButton->OnClick = [=]() { OnKick(); };
-		KickButton->SetText("Kick");
-
-		BanButton = new PushButton(this);
-		BanButton->OnClick = [=]() { OnBan(); };
-		BanButton->SetText("Ban");
+		// Bind Host Events
+		btnStart->Bind(wxEVT_BUTTON, &NetStartWindow::OnForceStart, this);
+		btnKick->Bind(wxEVT_BUTTON, &NetStartWindow::OnKick, this);
+		btnBan->Bind(wxEVT_BUTTON, &NetStartWindow::OnBan, this);
+	}
+	else
+	{
+		// Client only sees Abort
+		btnSizer->AddStretchSpacer(FromDIP(1));
+		btnSizer->Add(btnAbort, 0, wxALL, FromDIP(5));
+		btnSizer->AddStretchSpacer(FromDIP(1));
 	}
 
-	// Client number, flags, name, status.
-	LobbyWindow->SetColumnWidths({ 30.0, 30.0, 200.0, 50.0 });
+	btnAbort->Bind(wxEVT_BUTTON, &NetStartWindow::OnAbort, this);
 
-	CallbackTimer = new Timer(this);
-	CallbackTimer->FuncExpired = [=]() { OnCallbackTimerExpired(); };
-	CallbackTimer->Start(500);
+	mainSizer->Add(btnSizer, 0, wxEXPAND | wxALL, FromDIP(10));
+
+	SetSizer(mainSizer);
+	Layout();
+	Centre();
+
+	// Bind Timer and Close events
+	Bind(wxEVT_TIMER, &NetStartWindow::OnTimer, this);
+	Bind(wxEVT_CLOSE_WINDOW, &NetStartWindow::OnCloseWindow, this);
+
+	updateTimer.SetOwner(this);
 }
 
-void NetStartWindow::SetMessage(const std::string& message)
+NetStartWindow::~NetStartWindow()
 {
-	MessageLabel->SetText(message);
+	// Clean up if destroyed manually
+	if (Instance == this)
+		Instance = nullptr;
+}
+
+void NetStartWindow::SetMessage(const std::string &message)
+{
+	if (lblStatus)
+	{
+		lblStatus->SetLabel(wxString::FromUTF8(message));
+		lblStatus->Refresh();
+	}
 }
 
 void NetStartWindow::SetProgress(int newpos)
@@ -218,85 +323,75 @@ void NetStartWindow::SetProgress(int newpos)
 	if (pos != newpos && maxpos > 1)
 	{
 		pos = newpos;
-		FString message;
-		message.Format("%d/%d", pos, maxpos);
-		ProgressLabel->SetText(message.GetChars());
+		lblCount->SetLabel(wxString::Format("%d/%d", pos, maxpos));
 	}
 }
 
-void NetStartWindow::OnClose()
+long NetStartWindow::FindItemByClient(int client)
 {
-	exitreason = false;
-	DisplayWindow::ExitLoop();
+	long itemIndex = -1;
+	while ((itemIndex = playerList->GetNextItem(itemIndex, wxLIST_NEXT_ALL, wxLIST_STATE_DONTCARE)) != wxNOT_FOUND)
+	{
+		if (playerList->GetItemData(itemIndex) == client)
+		{
+			return itemIndex;
+		}
+	}
+	return -1;
 }
 
-void NetStartWindow::ForceStart()
+void NetStartWindow::OnAbort(wxCommandEvent &event)
+{
+	exitreason = false;
+	EndModal(wxID_CANCEL);
+}
+
+void NetStartWindow::OnCloseWindow(wxCloseEvent &event)
+{
+	exitreason = false;
+	EndModal(wxID_CANCEL);
+}
+
+void NetStartWindow::OnForceStart(wxCommandEvent &event)
 {
 	shouldstart = true;
 }
 
-void NetStartWindow::OnKick()
+void NetStartWindow::OnKick(wxCommandEvent &event)
 {
-	int item = LobbyWindow->GetSelectedItem();
-
-	size_t i = 0u;
-	for (; i < kickclients.size(); ++i)
+	long item = playerList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	if (item != wxNOT_FOUND)
 	{
-		if (kickclients[i] == item)
-			break;
-	}
+		int clientID = (int)playerList->GetItemData(item);
 
-	if (i >= kickclients.size())
-		kickclients.push_back(item);
-}
+		bool exists = false;
+		for (int c : kickclients)
+			if (c == clientID)
+				exists = true;
 
-void NetStartWindow::OnBan()
-{
-	int item = LobbyWindow->GetSelectedItem();
-
-	size_t i = 0u;
-	for (; i < banclients.size(); ++i)
-	{
-		if (banclients[i] == item)
-			break;
-	}
-
-	if (i >= banclients.size())
-		banclients.push_back(item);
-}
-
-void NetStartWindow::OnGeometryChanged()
-{
-	double w = GetWidth();
-	double h = GetHeight();
-
-	double y = 15.0;
-	double labelheight = MessageLabel->GetPreferredHeight();
-	MessageLabel->SetFrameGeometry(Rect::xywh(5.0, y, w - 10.0, labelheight));
-	y += labelheight;
-
-	labelheight = ProgressLabel->GetPreferredHeight();
-	ProgressLabel->SetFrameGeometry(Rect::xywh(5.0, y, w - 10.0, labelheight));
-	y += labelheight + 5.0;
-
-	labelheight = (GetHeight() - 30.0 - AbortButton->GetPreferredHeight()) - y;
-	LobbyWindow->SetFrameGeometry(Rect::xywh(5.0, y, w - 10.0, labelheight));
-
-	y = GetHeight() - 15.0 - AbortButton->GetPreferredHeight();
-	if (hosting)
-	{
-		AbortButton->SetFrameGeometry((w + 215.0) * 0.5, y, 100.0, AbortButton->GetPreferredHeight());
-		BanButton->SetFrameGeometry((w + 5.0) * 0.5, y, 100.0, BanButton->GetPreferredHeight());
-		KickButton->SetFrameGeometry((w - 205.0) * 0.5, y, 100.0, KickButton->GetPreferredHeight());
-		ForceStartButton->SetFrameGeometry((w - 415.0) * 0.5, y, 100.0, ForceStartButton->GetPreferredHeight());
-	}
-	else
-	{
-		AbortButton->SetFrameGeometry((w - 100.0) * 0.5, y, 100.0, AbortButton->GetPreferredHeight());
+		if (!exists)
+			kickclients.push_back(clientID);
 	}
 }
 
-void NetStartWindow::OnCallbackTimerExpired()
+void NetStartWindow::OnBan(wxCommandEvent &event)
+{
+	long item = playerList->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+	if (item != wxNOT_FOUND)
+	{
+		int clientID = (int)playerList->GetItemData(item);
+
+		bool exists = false;
+		for (int c : banclients)
+			if (c == clientID)
+				exists = true;
+
+		if (!exists)
+			banclients.push_back(clientID);
+	}
+}
+
+void NetStartWindow::OnTimer(wxTimerEvent &event)
 {
 	if (timer_callback)
 	{
@@ -313,7 +408,7 @@ void NetStartWindow::OnCallbackTimerExpired()
 		if (result)
 		{
 			exitreason = true;
-			DisplayWindow::ExitLoop();
+			EndModal(wxID_OK);
 		}
 	}
 }

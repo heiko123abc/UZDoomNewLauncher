@@ -2428,6 +2428,15 @@ msgstr ""
 msgid "NETMENU_LIST_STATUS"
 msgstr ""
 
+msgid "NETMENU_STATUS_CONN"
+msgstr ""
+
+msgid "NETMENU_STATUS_WAIT"
+msgstr ""
+
+msgid "NETMENU_STATUS_READY"
+msgstr ""
+
 # Start the network game from lobby screen
 msgid "NETMENU_BTN_START"
 msgstr ""

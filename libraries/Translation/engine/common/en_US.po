@@ -2426,6 +2426,15 @@ msgstr "Player"
 msgid "NETMENU_LIST_STATUS"
 msgstr "Status"
 
+msgid "NETMENU_STATUS_CONN"
+msgstr "Connecting ..."
+
+msgid "NETMENU_STATUS_WAIT"
+msgstr "Waiting ..."
+
+msgid "NETMENU_STATUS_READY"
+msgstr "Ready."
+
 # Start the network game from lobby screen
 msgid "NETMENU_BTN_START"
 msgstr "Start Game"

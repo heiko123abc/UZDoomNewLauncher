@@ -37,7 +37,7 @@ class CrashReporter : public wxApp
 
 bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std::vector<uint8_t> minidump)
 {
-	// since this is called seperate from the main laucher, init wxWidgets on its own if needed
+	// since this is called seperate from the main laucher, init wxWidgets on its own is needed
 
 	bool isWxInit = (wxTheApp != nullptr);
 
@@ -236,7 +236,7 @@ void ErrorWindow::OnSaveReport(wxCommandEvent &event)
 		mz_zip_writer_finalize_heap_archive(&zip, &buffer, &buffersize);
 		mz_zip_writer_end(&zip);
 
-		// Write to disk using wxFile (or standard fstream)
+		// Write to disk using wxFile
 		wxFile file(filename, wxFile::write);
 		if (file.IsOpened())
 		{

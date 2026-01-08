@@ -1,4 +1,5 @@
 cmake_minimum_required( VERSION 3.16 )
+enable_language(OBJC)
 
 if( COMMAND cmake_policy )
 	if( POLICY CMP0011 )

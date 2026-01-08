@@ -95,5 +95,5 @@ class Profile
 	void loadFromFile(const std::string &filepath);
 
 	// build launch command
-	void giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info);
+	std::string giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info);
 };

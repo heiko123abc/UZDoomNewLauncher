@@ -484,11 +484,11 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			Starter *app = dynamic_cast<Starter *>(wxTheApp);
 
 			if (event.GetId() == ID_START_GAME)
-				tp.giveLaunchCommand(selectedRowPath, "", app->GetStartInfo());
+				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "", app->GetStartInfo());
 			if (event.GetId() == ID_JOIN_GAME)
-				tp.giveLaunchCommand(selectedRowPath, "join", app->GetStartInfo());
+				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "join", app->GetStartInfo());
 			if (event.GetId() == ID_HOST_GAME)
-				tp.giveLaunchCommand(selectedRowPath, "host", app->GetStartInfo());
+				dispatchedCmd = tp.giveLaunchCommand(selectedRowPath, "host", app->GetStartInfo());
 
 			
 			// below bind a listener that monitors if uzdoom closes/ends
@@ -529,7 +529,7 @@ void LauncherMainWindow::OnButtonClicked(wxCommandEvent &event)
 			//what is currently being run
 			wxString exePath = wxStandardPaths::Get().GetExecutablePath();
 
-			dispatchedCmd = exePath.ToStdString() + " " + app->GetStartInfo().DefaultArgs.GetChars();
+			dispatchedCmd = exePath.ToStdString() + " " + dispatchedCmd;
 
 			wxExecute(dispatchedCmd, wxEXEC_ASYNC | wxEXEC_HIDE_CONSOLE, process);
 		}

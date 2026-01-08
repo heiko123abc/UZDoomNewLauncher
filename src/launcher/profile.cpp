@@ -198,7 +198,7 @@ void Profile::loadFromFile(const std::string &filepath)
 }
 
 // Put it all together into a launch command for info
-void Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info)
+std::string Profile::giveLaunchCommand(const std::string &filepath, const std::string &mode, FStartupSelectionInfo &info)
 {
 	// init the profile
 	this->loadFromFile(filepath);
@@ -359,7 +359,6 @@ void Profile::giveLaunchCommand(const std::string &filepath, const std::string &
 		cmd << appendAdditionalParameters;
 
 	// command strung together, give it to info
-	info.DefaultArgs = cmd.str();
-	info.bSaveArgs = false;
 	execResult       = true;
+	return cmd.str();
 }

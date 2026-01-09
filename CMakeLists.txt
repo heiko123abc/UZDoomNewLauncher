@@ -356,7 +356,7 @@ else()
 	if( APPLE )
 		list(PREPEND CMAKE_PREFIX_PATH "/opt/local")    # port
 		list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew") # brew
-		set(CMAKE_OSX_DEPLOYMENT_TARGET "10.13")
+		set(CMAKE_OSX_DEPLOYMENT_TARGET "13.3")
 		if( CMAKE_CXX_COMPILER_ID STREQUAL "GNU" )
 			# If we're compiling with a custom GCC on the Mac (which we know since g++-4.2 doesn't support C++11) statically link libgcc.
 			set( ALL_C_FLAGS "-static-libgcc" )
@@ -403,9 +403,6 @@ set( wxBUILD_INSTALL OFF CACHE BOOL "" FORCE )
 set( wxBUILD_SHARED OFF CACHE BOOL "" FORCE )
 set( wxBUILD_MONOLITHIC ON CACHE BOOL "" FORCE )
 add_subdirectory( libraries/wxWidgets )
-
-set(ZWIDGET_BUILD_EXAMPLE OFF CACHE INTERNAL "" FORCE)
-add_subdirectory( libraries/ZWidget )
 
 add_subdirectory( libraries/discordrpc EXCLUDE_FROM_ALL )
 set( DRPC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/discordrpc/include" )

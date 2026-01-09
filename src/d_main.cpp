@@ -23,6 +23,7 @@
 
 // HEADER FILES ------------------------------------------------------------
 
+#include "common/widgets/errorwindow.h"
 #include "c_cvars.h"
 #include "i_net.h"
 #include "i_soundinternal.h"
@@ -48,7 +49,6 @@
 #include "c_dispatch.h"
 #include "cmdlib.h"
 #include "common/scripting/dap/DebugServer.h"
-#include "common/widgets/errorwindow.h"
 #include "d_buttons.h"
 #include "d_dehacked.h"
 #include "d_event.h"
@@ -117,7 +117,6 @@
 #include "vm.h"
 #include "wi_stuff.h"
 #include "wipe.h"
-#include "zwidget/window/window.h"
 #include "starter.h"
 
 #ifdef __unix__
@@ -353,8 +352,6 @@ void I_UpdateDiscordPresence(bool SendPresence, const char* curstatus, const cha
 bool M_SetSpecialMenu(FName& menu, int param);	// game specific checks
 
 const FIWADInfo *D_FindIWAD(TArray<FString> &wadfiles, const char *iwad, const char *basewad);
-void InitWidgetResources(const char* basewad);
-void CloseWidgetResources();
 
 // PUBLIC FUNCTION PROTOTYPES ----------------------------------------------
 
@@ -3969,7 +3966,6 @@ static int D_DoomMain_Internal (void)
 		I_FatalError("Cannot find " BASEWAD);
 	}
 	LoadHexFont(wad);	// load hex font early so we have it during startup.
-	InitWidgetResources(wad);
 
 	C_InitConsole(80*8, 25*8, false);
 
@@ -4168,17 +4164,6 @@ void SignalHandler(int signal)
 
 int GameMain()
 {
-	// On Windows, prefer the native win32 backend.
-	// On other platforms, use SDL until the other backends are more mature.
-	auto zwidget = DisplayBackend::TryCreateWin32();
-	if (!zwidget)
-		zwidget = DisplayBackend::TryCreateSDL2();
-	if (!zwidget)
-    {
-		fprintf(stderr, "Unable to create init zwidget\n");
-		return -1;
-    }
-	DisplayBackend::Set(std::move(zwidget));
 	
 	int ret = 0;
 	GameTicRate = TICRATE;
@@ -4223,10 +4208,7 @@ int GameMain()
 	M_SaveDefaultsFinal();
 	DeleteStartupScreen();
 	C_UninitCVars(); // must come last so that nothing will access the CVARs anymore after deletion.
-	if(ret != 1337)
-	{
-		CloseWidgetResources();
-	}
+	
 	delete Args;
 	Args = nullptr;
 	return ret;

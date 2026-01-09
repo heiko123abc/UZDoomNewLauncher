@@ -24,7 +24,7 @@ if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 endif()
 
 if( APPLE )
-    option( OSX_COCOA_BACKEND "Use native Cocoa backend instead of SDL" ON )
+    option( OSX_COCOA_BACKEND "Use native Cocoa backend instead of SDL" OFF )
 endif()
 
 option( ZDOOM_ENABLE_SWR "Enable software renderer" ON )
@@ -330,7 +330,6 @@ if (HAVE_VULKAN)
 	list( APPEND PROJECT_LIBRARIES "zvulkan" )
 endif()
 
-list( APPEND PROJECT_LIBRARIES "zwidget" )
 list( APPEND PROJECT_LIBRARIES "webp" )
 
 message("Building for target architecture: ${TARGET_ARCHITECTURE}")
@@ -451,22 +450,6 @@ if( WIN32 )
 	set( OTHER_SYSTEM_SOURCES ${PLAT_POSIX_SOURCES} ${PLAT_SDL_SOURCES} ${PLAT_OSX_SOURCES} ${PLAT_COCOA_SOURCES} ${PLAT_UNIX_SOURCES} )
 
 	set( SYSTEM_SOURCES ${SYSTEM_SOURCES} win32/zdoom.rc )
-elseif( APPLE )
-	if( OSX_COCOA_BACKEND )
-		set( SYSTEM_SOURCES_DIR common/platform/posix common/platform/posix/cocoa )
-		set( SYSTEM_SOURCES ${PLAT_COCOA_SOURCES} )
-		set( OTHER_SYSTEM_SOURCES ${PLAT_WIN32_SOURCES} ${PLAT_SDL_SOURCES} ${PLAT_UNIX_SOURCES} )
-	else()
-		set( SYSTEM_SOURCES_DIR common/platform/posix common/platform/posix/sdl )
-		set( SYSTEM_SOURCES ${PLAT_SDL_SOURCES} )
-		set( PLAT_OSX_SOURCES ${PLAT_OSX_SOURCES} common/platform/posix/sdl/i_system.mm )
-		set( OTHER_SYSTEM_SOURCES ${PLAT_WIN32_SOURCES} ${PLAT_COCOA_SOURCES} ${PLAT_UNIX_SOURCES} )
-	endif()
-
-	set( SYSTEM_SOURCES ${SYSTEM_SOURCES} ${PLAT_POSIX_SOURCES} ${PLAT_OSX_SOURCES} )
-
-	set_source_files_properties( posix/osx/zdoom.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-	set_source_files_properties( common/platform/posix/osx/iwadpicker_cocoa.mm PROPERTIES COMPILE_FLAGS -fobjc-exceptions )
 else()
 	option (SYSTEMINSTALL "Set global progdir based on CMake Install Dir" OFF)
 
@@ -969,7 +952,6 @@ set (PCH_SOURCES
 	launcher/about.cpp
 	launcher/launcherMainWindow.cpp
 	launcher/loader.cpp
-	launcher/netmenu.cpp
 	launcher/profile.cpp
 	launcher/profileSettings.cpp
 	launcher/starter.cpp
@@ -999,7 +981,6 @@ set (PCH_SOURCES
 	common/startscreen/endoom.cpp
 	common/widgets/errorwindow.cpp
 	common/widgets/netstartwindow.cpp
-	common/widgets/widgetresourcedata.cpp
 	common/fonts/singlelumpfont.cpp
 	common/fonts/singlepicfont.cpp
 	common/fonts/specialfont.cpp
@@ -1364,7 +1345,6 @@ include_directories(
 	rendering
 	launcher
 	../libraries/ZVulkan/include
-	../libraries/ZWidget/include
 	../libraries/webp/include
 	../libraries/cppdap/third_party/json/include
 	../libraries/range_map/include

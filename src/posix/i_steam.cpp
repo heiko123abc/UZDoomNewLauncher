@@ -26,6 +26,7 @@
 
 #ifdef __APPLE__
 #include "m_misc.h"
+#include "i_specialpaths.h"
 #endif // __APPLE__
 
 #include "d_main.h"

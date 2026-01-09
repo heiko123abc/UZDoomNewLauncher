@@ -63,8 +63,7 @@ bool isThisAnIWAD(const std::string filepath)
 		return false;
 	}
 
-	// do a check on the file to see if it's a valid IWAD
-	// and trust no mess up in the files internally (for now?)
+	// do a innocent check on the file to see if it's a valid IWAD
 
 	char magicHeader[4];
 	file.read(magicHeader, 4);
@@ -120,9 +119,8 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		wxString zipp = wxString(path) + wxFileName::GetPathSeparator() + wxString(archiveName);
 
 		Loader loaderInstance;
-		bool   success = loaderInstance.wxExtractZipFiles(
-            zipp, wxString(path), wxTheApp->GetTopWindow()); // let wxWidget handle the extraction (dont even try to do
-		                                                       // it ourselves) - it should work on Win/Mac/Linux
+		bool   success = loaderInstance.wxExtractZipFiles(zipp, wxString(path),
+		                                                  wxTheApp->GetTopWindow()); // let wxWidget handle the extraction
 
 		// Did user stop?
 		if (!success)
@@ -150,7 +148,7 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		// WAIT, the user might drop a arbitary archive here, we simply stop if there isnt even a .wad file
 		if (wasArchive)
 		{
-			// was the archive nested
+			// was the archive nested once?
 			auto        nestCheck  = std::filesystem::directory_iterator(path);
 			const auto &firstEntry = *nestCheck;
 			if (nestCheck != std::filesystem::directory_iterator())
@@ -187,7 +185,8 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 			{
 				// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
 				path.pop_back(); // drop the / at the end
-				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")), "UZDoom", wxICON_ERROR);
+				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")), "UZDoom",
+				             wxICON_ERROR);
 				std::filesystem::remove_all(path); // delete dir since we aborted
 				return;
 			}
@@ -229,10 +228,31 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 
 	attributeFromFilename(&newProfile, readableDigest.str());
 
-	// pull remaining data for PWAD (only for idgames archived wads)
+	// pull remaining data for PWAD (only for idgames archived wads that contain a txt file)
 	if (wasArchive)
 	{
-		// maybe
+		// grab the first .txt file we can find in the extracted folder and just put in description
+		for (const auto &entry : std::filesystem::directory_iterator(path))
+		{
+			if (entry.is_regular_file())
+			{
+				std::string extension = entry.path().extension().string();
+
+				// Convert to lowercase for case-insensitive comparison (TXT vs txt)
+				std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+				if (extension == ".txt")
+				{
+					// read the file content
+					std::ifstream     txtFile(entry.path()); 
+					std::stringstream txtBuffer;
+					txtBuffer << txtFile.rdbuf();
+					newProfile.description = txtBuffer.str().c_str();
+
+					break; // Stop looking after finding the first txt file
+				}
+			}
+		}
 	}
 
 	// create the required folders
@@ -264,8 +284,9 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		catch (const json::parse_error &)
 		{
 			// Throw and error about Json being corrupted
-			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_CORRUPT")) + wxString(CONFIG_FILE.data()), "UZDoom",
-			             wxOK | wxICON_ERROR);
+			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_CORRUPT")) +
+			                 wxString(CONFIG_FILE.data()),
+			             "UZDoom", wxOK | wxICON_ERROR);
 		}
 		inFile.close();
 	}
@@ -279,16 +300,18 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		outFile.close();
 	}
 
-	// WE ARE DONE! Tell the user what is was detected at the very end as and tell them that they can change it in the
-	// profile settings later
+	// WE ARE DONE! Tell the user what is was detected at the very end as and tell them that they can change it in
+	// the profile settings later
 	if (newProfile.isIWAD)
 	{
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_IWAD")), "UZDoom", wxOK | wxICON_INFORMATION);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_IWAD")), "UZDoom",
+		             wxOK | wxICON_INFORMATION);
 		return;
 	}
 	else
 	{
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_PWAD")), "UZDoom", wxOK | wxICON_INFORMATION);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_PWAD")), "UZDoom",
+		             wxOK | wxICON_INFORMATION);
 		return;
 	}
 }
@@ -297,8 +320,9 @@ void Loader::archiveOpener(wxWindow *window)
 {
 	// This one is from the New Picker Button that opens the file dialog to add a new profile
 
-	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_ARCHPICK_DIALOG_TITLE")), "", "",
-	                            wxString::FromUTF8(GStrings.GetString("FILETYPE_ARCH")), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_ARCHPICK_DIALOG_TITLE")), "",
+	                            "", wxString::FromUTF8(GStrings.GetString("FILETYPE_ARCH")),
+	                            wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	// Wait for user input
 	if (openFileDialog.ShowModal() == wxID_CANCEL)
@@ -319,7 +343,8 @@ void Loader::archiveOpener(wxWindow *window)
 	else
 	{
 		// No? Return.
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_NOTARCHIVE")), "UZDoom", wxOK | wxICON_ERROR);
+		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_NOTARCHIVE")), "UZDoom",
+		             wxOK | wxICON_ERROR);
 		return;
 	}
 }
@@ -329,7 +354,8 @@ void Loader::fileOpener(wxWindow *window)
 	// This one is from the New Picker Button that opens the file dialog to add a new profile
 
 	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_WADPICK_DIALOG_TITLE")), "", "",
-	                            wxString::FromUTF8(GStrings.GetString("FILETYPE_WAD")), wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	                            wxString::FromUTF8(GStrings.GetString("FILETYPE_WAD")),
+	                            wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	// Wait for user input
 	if (openFileDialog.ShowModal() == wxID_CANCEL)
@@ -343,8 +369,8 @@ void Loader::fileOpener(wxWindow *window)
 
 	// Is User trying to cheat and add somthing that isn't a even a WAD? (we assume the user doesnt mess file
 	// internally)
-	if (filePath.EndsWith(wxString(".wad")) || filePath.EndsWith(wxString(".WAD")) ||
-	    filePath.EndsWith(wxString(".iwad")) || filePath.EndsWith(wxString(".IWAD")))
+
+	if (filePath.EndsWith(wxString(".wad")) || filePath.EndsWith(wxString(".WAD")))
 	{
 		// At this point we have a valid WAD file, now we need to check if it's an IWAD or PWAD
 		if (isThisAnIWAD(std::string(filePath.ToUTF8())))

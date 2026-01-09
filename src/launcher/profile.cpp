@@ -205,12 +205,8 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 
 	std::stringstream cmd;
 
-	// is there something to prepend?
-	if (!prependAdditionalParameters.empty())
-		cmd << prependAdditionalParameters << " ";
 
-	// block launch if no WADs are specified correctly
-
+	// block launch if WAD combos are specified incorrectly
 	if (this->iwadFilePath.empty() && this->isIWAD)
 	{
 		wxMessageBox(GStrings.GetString("LAUNCHER_PROF_EMPTYWAD"), "UZDoom", wxOK | wxICON_ERROR);
@@ -326,7 +322,7 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	cmd << "-shotdir " << this->screenshotDirPath << " ";
 	// demo does nothing right now
 
-	// append mod files (e.g wads/pk3)
+	// append mod files (e.g more wads/pk3)
 	if (!this->modFiles.empty())
 	{
 		cmd << "-file ";

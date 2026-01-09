@@ -21,6 +21,7 @@
 **
 */
 
+#include "m_alloc.h"
 #include "cmdlib.h"
 #include "version.h"
 #include "c_cvars.h"

@@ -63,6 +63,7 @@ void LinkComboData(wxComboBox *combo, wxString *targetVar)
 	});
 }
 
+// Show the flag editor based on the given mode/flags
 void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, std::vector<FlagInfo> &flags,
                     int *definedVars, int varCount, bool showForceCheck = false)
 {
@@ -76,7 +77,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 	scrollWin->SetScrollRate(0, 10);
 	wxBoxSizer *scrollSizer = new wxBoxSizer(wxVERTICAL);
 
-	// Create Checkboxes
+	// Create Checkboxes for Flags
 	for (auto &f : flags)
 	{
 		f.ctrl = new wxCheckBox(scrollWin, wxID_ANY, f.label);
@@ -124,6 +125,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 	mainSizer->Add(new wxButton(&dlg, wxID_OK, wxString::FromUTF8(GStrings.GetString("LAUNCHER_BUTTON_CLOSE"))), 0,
 	               wxALIGN_CENTER | wxBOTTOM, 15);
 
+	// when checkboxes change, update flag values at the bottom
 	auto UpdateUI = [&]() {
 		std::vector<int> currentVals(varCount, 0);
 		for (const auto &f : flags)
@@ -134,9 +136,10 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 			}
 		}
 		for (int i = 0; i < varCount; i++)
-			textCtrls[i]->ChangeValue(wxString::Format("%d", currentVals[i])); // Use ChangeValue to avoid loop
+			textCtrls[i]->ChangeValue(wxString::Format("%d", currentVals[i]));
 	};
 
+	// vice versa, when flag vlaues change, update checkboxes
 	auto UpdateBoxes = [&]() {
 		std::vector<int> vals;
 		for (auto *tc : textCtrls)
@@ -184,7 +187,7 @@ void ShowFlagEditor(Profile *currEdit, wxWindow *parent, const wxString &title, 
 void advGameplay(Profile *currEdit, wxWindow *parent)
 {
 
-	// Pass the 3 variables by reference in an array
+	// Pass the 3 flags by reference in an array
 	int vars[] = {currEdit->DMFlags, currEdit->DMFlags2, currEdit->DMFlags3};
 
 	std::vector<FlagInfo> flags = getDMFlagsList();
@@ -200,12 +203,14 @@ void advGameplay(Profile *currEdit, wxWindow *parent)
 void advCompat(Profile *currEdit, wxWindow *parent)
 {
 
+	// Pass the 2 flags by reference in an array
 	int vars[] = {currEdit->compatflags, currEdit->compatflags2};
 
 	std::vector<FlagInfo> flags = getCompatFlagsList();
 	ShowFlagEditor(currEdit, parent, wxString::FromUTF8(GStrings.GetString("PROFSET_COMP_TITLE")), flags, vars, 2,
 	               false);
 
+	// Save back results
 	currEdit->compatflags  = vars[0];
 	currEdit->compatflags2 = vars[1];
 }
@@ -306,18 +311,6 @@ void RefreshModList(wxWindow *parent, Profile *currEdit, wxScrolledWindow *listW
 void CreateAdvancedTab(Profile *currEdit, wxPanel *panel)
 {
 	wxBoxSizer *mainSizer = new wxBoxSizer(wxVERTICAL);
-
-	/*
-	// prepend parameters field
-	wxStaticBoxSizer *pparamGroup =
-	    new wxStaticBoxSizer(wxVERTICAL, panel, wxString::FromUTF8(GStrings.GetString("PROFSET_ADVANCED_PREPEND")));
-	wxTextCtrl *pparams =
-	    new wxTextCtrl(panel, wxID_ANY, "", wxDefaultPosition, panel->FromDIP(wxSize(-1, 100)), wxTE_MULTILINE,
-	                   wxTextValidator(wxFILTER_NONE, &currEdit->prependAdditionalParameters));
-	pparamGroup->Add(pparams, 1, wxEXPAND);
-
-	//mainSizer->Add(pparamGroup, 1, wxEXPAND | wxALL, 10);
-	*/
 
 	// append parameters field
 	wxStaticBoxSizer *aparamGroup =

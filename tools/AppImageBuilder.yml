@@ -55,6 +55,11 @@ AppDir:
       - /lib/x86_64-linux-gnu/libzstd.so.1
       - /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-16.1.so
     exclude:
+	  - .*/libglib-2\.0\.so.*
+      - .*/libgobject-2\.0\.so.*
+      - .*/libgio-2\.0\.so.*
+      - .*/libgmodule-2\.0\.so.*
+      - .*/libgthread-2\.0\.so.*
       - lib/x86_64-linux-gnu/libc.so.6
       - lib/x86_64-linux-gnu/libm.so.6
       - lib64/ld-linux-x86-64.so.2

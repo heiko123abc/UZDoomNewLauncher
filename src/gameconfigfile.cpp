@@ -46,10 +46,6 @@
 #include "i_system.h"  // for SHARE_DIR
 #endif // !_MSC_VER && !__APPLE__
 
-#if defined __APPLE__
-#include "i_specialpaths.h"
-#endif
-
 EXTERN_CVAR (Bool, con_centernotify)
 EXTERN_CVAR (Int, msg0color)
 EXTERN_CVAR (Color, color)

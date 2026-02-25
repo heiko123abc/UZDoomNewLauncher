@@ -14,14 +14,10 @@
 */
 
 #pragma once
-#include <wx/html/htmlwin.h> // Required for displaying rich text for the patch notes
-#include <wx/wx.h>
 
-// wxDialog because is a dialog window that blocks interaction with other windows until closed
-class About : public wxDialog
+namespace About
 {
-
-  public:
-	void ReleaseNotesDialog(wxWindow *parent, std::string lang);
-	void CreditsDialog(wxWindow *parent, std::string lang);
+// will be called from ImGui 
+void DrawReleaseNotesDialog(bool *p_open, const std::string &lang);
+void DrawCreditsDialog(bool *p_open, const std::string &lang);
 };

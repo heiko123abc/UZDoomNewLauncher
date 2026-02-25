@@ -27,24 +27,6 @@
 
 using json = nlohmann::json;
 
-// see https://json.nlohmann.me/api/adl_serializer/ and Credit to Ziv Shahaf
-// (https://github.com/nlohmann/json/issues/1592#issuecomment-488120753)
-namespace nlohmann
-{
-template <> struct adl_serializer<wxString>
-{
-	static void to_json(json &j, const wxString &value)
-	{
-		j = std::string(value.ToUTF8()); // Convert wxString -> std::string for JSON
-	}
-	static void from_json(const json &j, wxString &value)
-	{
-		std::string str = j.get<std::string>();
-		value = wxString::FromUTF8(str.c_str()); // Convert std::string -> wxString
-	}
-};
-} // namespace nlohmann
-
 // profile file format is JSON
 
 void Profile::saveToFile(const std::string &filepath)
@@ -133,39 +115,39 @@ void Profile::loadFromFile(const std::string &filepath)
 		file >> j;
 		//.vaule(A,B) has a secondary fallback B if it is unable to read
 
-		this->title          = wxString::FromUTF8(j["general"].value("title", "#ERROR").c_str());
-		this->author         = wxString::FromUTF8(j["general"].value("author", "").c_str());
-		this->releaseDate    = wxString::FromUTF8(j["general"].value("releaseDate", "").c_str());
-		this->lastPlayedDate = wxString::FromUTF8(j["general"].value("lastPlayedDate", "").c_str());
+		this->title          = j["general"].value("title", "#ERROR")();
+		this->author         = j["general"].value("author", "")();
+		this->releaseDate    = j["general"].value("releaseDate", "")();
+		this->lastPlayedDate = j["general"].value("lastPlayedDate", "")();
 		this->playedTime     = j["general"].value("playedTime", 0);
-		this->description    = wxString::FromUTF8(j["general"].value("description", "").c_str());
+		this->description    = j["general"].value("description", "")();
 		this->isIWAD         = j["general"].value("isIWAD", 0);
-		this->iwadFilePath   = wxString::FromUTF8(j["general"].value("iwadFilePath", "").c_str());
-		this->pwadFilePath   = wxString::FromUTF8(j["general"].value("pwadFilePath", "").c_str());
+		this->iwadFilePath   = j["general"].value("iwadFilePath", "")();
+		this->pwadFilePath   = j["general"].value("pwadFilePath", "")();
 
 		// Launch Parameters
 		this->launchParameters           = j["launch"].value("launchParameters", 0);
 		this->selectedLaunchMap          = j["launch"].value("selectedLaunchMap", 1);
-		this->selectedLaunchSave         = wxString::FromUTF8(j["launch"].value("selectedLaunchSave", "").c_str());
-		this->selectedLaunchDemoPlayback = wxString::FromUTF8(j["launch"].value("selectedLaunchDemoPlayback", "").c_str());
-		this->selectedLaunchDemoRecord   = wxString::FromUTF8(j["launch"].value("selectedLaunchDemoRecord", "").c_str());
+		this->selectedLaunchSave         = j["launch"].value("selectedLaunchSave", "")();
+		this->selectedLaunchDemoPlayback = j["launch"].value("selectedLaunchDemoPlayback", "")();
+		this->selectedLaunchDemoRecord   = j["launch"].value("selectedLaunchDemoRecord", "")();
 		this->difficultySkillRating      = j["launch"].value("difficultySkillRating", 3);
 		this->difficultyFastMonsters     = j["launch"].value("difficultyFastMonsters", false);
 		this->difficultyRespawnMonsters  = j["launch"].value("difficultyRespawnMonsters", false);
 		this->difficultyNoMonsters       = j["launch"].value("difficultyNoMonsters", false);
 		this->compatLevel                = j["launch"].value("compatLevel", 0);
-		this->playerName                 = wxString::FromUTF8(j["launch"].value("playerName", "Player").c_str());
-		this->playerClass                = wxString::FromUTF8(j["launch"].value("playerClass", "Fighter").c_str());
-		this->playerGender               = wxString::FromUTF8(j["launch"].value("playerGender", "male").c_str());
-		this->wadLanguage                = wxString::FromUTF8(j["launch"].value("wadLanguage", "default").c_str());
-		this->hostPort                   = wxString::FromUTF8(j["launch"].value("hostPort", "").c_str());
+		this->playerName                 = j["launch"].value("playerName", "Player")();
+		this->playerClass                = j["launch"].value("playerClass", "Fighter")();
+		this->playerGender               = j["launch"].value("playerGender", "male")();
+		this->wadLanguage                = j["launch"].value("wadLanguage", "default")();
+		this->hostPort                   = j["launch"].value("hostPort", "")();
 		this->hostMaxPlayers             = j["launch"].value("hostMaxPlayers", 8);
-		this->hostTickRate               = wxString::FromUTF8(j["launch"].value("hostTickRate", "").c_str());
-		this->hostGamemode               = wxString::FromUTF8(j["launch"].value("hostGamemode", "").c_str());
-		this->hostNetworkMode            = wxString::FromUTF8(j["launch"].value("hostNetworkMode", "").c_str());
-		this->joinAddress                = wxString::FromUTF8(j["launch"].value("joinAddress", "").c_str());
-		this->joinPort                   = wxString::FromUTF8(j["launch"].value("joinPort", "").c_str());
-		this->joinTeamNo                 = wxString::FromUTF8(j["launch"].value("joinTeamNo", "").c_str());
+		this->hostTickRate               = j["launch"].value("hostTickRate", "")();
+		this->hostGamemode               = j["launch"].value("hostGamemode", "")();
+		this->hostNetworkMode            = j["launch"].value("hostNetworkMode", "")();
+		this->joinAddress                = j["launch"].value("joinAddress", "")();
+		this->joinPort                   = j["launch"].value("joinPort", "")();
+		this->joinTeamNo                 = j["launch"].value("joinTeamNo", "")();
 
 		// Flags
 		this->DMFlags            = j["launch"].value("DMFlags", 0);
@@ -176,11 +158,11 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->compatflags2       = j["launch"].value("compatflags2", 0);
 
 		// File Paths
-		this->configFilePath    = wxString::FromUTF8(j["files"].value("configFilePath", "").c_str());
-		this->saveDirPath       = wxString::FromUTF8(j["files"].value("saveDirPath", "").c_str());
-		this->screenshotDirPath = wxString::FromUTF8(j["files"].value("screenshotDirPath", "").c_str());
-		this->demoDirPath       = wxString::FromUTF8(j["files"].value("demoDirPath", "").c_str());
-		this->modsDirPath       = wxString::FromUTF8(j["files"].value("modsDirPath", "").c_str());
+		this->configFilePath    = j["files"].value("configFilePath", "")();
+		this->saveDirPath       = j["files"].value("saveDirPath", "")();
+		this->screenshotDirPath = j["files"].value("screenshotDirPath", "")();
+		this->demoDirPath       = j["files"].value("demoDirPath", "")();
+		this->modsDirPath       = j["files"].value("modsDirPath", "")();
 		this->modFiles          = j["files"].value("modFiles", std::vector<std::string>{});
 
 		// Output Settings
@@ -193,8 +175,8 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->enableWidescreen = j["output"].value("enableWidescreen", false);
 
 		// Advanced Parameters
-		this->prependAdditionalParameters = wxString::FromUTF8(j["advanced"].value("prependAdditionalParameters", "").c_str());
-		this->appendAdditionalParameters  = wxString::FromUTF8(j["advanced"].value("appendAdditionalParameters", "").c_str());
+		this->prependAdditionalParameters = j["advanced"].value("prependAdditionalParameters", "")();
+		this->appendAdditionalParameters  = j["advanced"].value("appendAdditionalParameters", "");
 	}
 	else
 	{
@@ -215,14 +197,12 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	// block launch if WAD combos are specified incorrectly
 	if (this->iwadFilePath.empty() && this->isIWAD)
 	{
-		wxMessageBox(GStrings.GetString("LAUNCHER_PROF_EMPTYWAD"), "UZDoom", wxOK | wxICON_ERROR);
-		return "error";
+		return GStrings.GetString("LAUNCHER_PROF_EMPTYWAD");
 	}
 
 	if ((this->iwadFilePath.empty() || this->pwadFilePath.empty()) && !this->isIWAD)
 	{
-		wxMessageBox(GStrings.GetString("LAUNCHER_PROF_EMPTYWAD"), "UZDoom", wxOK | wxICON_ERROR);
-		return "error";
+		return GStrings.GetString("LAUNCHER_PROF_EMPTYWAD");
 	}
 
 	// load the IWad file and erase . at start of ./ path to make an absolute path
@@ -264,8 +244,7 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	// are we JOINING a multiplayer game?
 	if (mode == "join")
 	{
-		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress.ToStdString(), this->joinPort.ToStdString(),
-		                   this->joinTeamNo.ToStdString());
+		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress, this->joinPort, this->joinTeamNo);
 	}
 
 	//... or are we HOSTING a multiplayer game.
@@ -332,7 +311,7 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	if (!this->modFiles.empty())
 	{
 		cmd << "-file ";
-		for (wxString item : this->modFiles)
+		for (const std::string &item : this->modFiles)
 		{
 			cmd << "\"" << item << "\" ";
 		}

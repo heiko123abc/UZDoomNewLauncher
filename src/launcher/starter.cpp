@@ -19,8 +19,6 @@
 #include <filesystem>
 #include <fstream>
 #include <nlohmann/json.hpp>
-#include <wx/debugrpt.h>
-#include <wx/wx.h>
 
 using json = nlohmann::json;
 bool execResult = false;

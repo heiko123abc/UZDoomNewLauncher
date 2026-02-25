@@ -609,6 +609,7 @@ file( GLOB HEADER_FILES
 	common/scripting/frontend/*.h
 
 	utility/*.h
+	launcher/*.h
 	widgets/*.h
 	scripting/*.h
 	scripting/backend/*.h
@@ -970,6 +971,15 @@ set (PCH_SOURCES
 	rendering/swrenderer/textures/warptexture.cpp
 	rendering/swrenderer/textures/swcanvastexture.cpp
 	events.cpp
+	launcher/about.cpp
+	launcher/errorwindow.cpp
+	launcher/launcherMainWindow.cpp
+	launcher/loader.cpp
+	launcher/netstartwindow.cpp
+	launcher/profile.cpp
+	launcher/profileSettings.cpp
+	launcher/starter.cpp
+	launcher/widgetresourcedata.cpp
 	widgets/aboutpage.cpp
 	widgets/errorwindow.cpp
 	widgets/launcherbanner.cpp
@@ -1212,6 +1222,16 @@ set (PCH_SOURCES
 	utility/nodebuilder/nodebuild_utility.cpp
 )
 
+
+# dearImGui core and backend
+set ( IMGUI_SOURCES
+    ../libraries/imgui/*.h
+    ../libraries/imgui/*.cpp
+
+    ../libraries/imgui/backends/imgui_impl_sdl2.h
+    ../libraries/imgui/backends/imgui_impl_sdl2.cpp
+)
+
 if( ZMUSIC_SYSTEM_INSTALL OR NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
 	set ( PCH_SOURCES ${PCH_SOURCES} common/utility/i_module.cpp )
 endif()
@@ -1322,7 +1342,7 @@ if( UNIX )
 	endif()
 endif()
 
-target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash)
+target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash ${IMGUI_SOURCES})
 include_directories(
 	BEFORE
 	.
@@ -1383,6 +1403,8 @@ include_directories(
 	scripting/zscript
 	rendering
 	launcher
+	../libraries/imgui
+	../libraries/imgui/backends
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
 	../libraries/webp/include
@@ -1658,6 +1680,7 @@ source_group("Utility\\Smackerdec" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_D
 source_group("Utility\\Smackerdec\\Headers" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/libsmackerdec/include/.+")
 source_group("Utility\\Smackerdec\\Sources" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/libsmackerdec/src/.+")
 source_group("Statusbar" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/g_statusbar/.+")
+source_group("Launcher" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/launcher/.+")
 source_group("Widgets" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/widgets/.+")
 source_group("Versioning" FILES version.h win32/zdoom.rc)
 source_group("Xlat" REGULAR_EXPRESSION "^${CMAKE_CURRENT_SOURCE_DIR}/xlat/.+" FILES ${CMAKE_CURRENT_BINARY_DIR}/xlat_parser.c ${CMAKE_CURRENT_BINARY_DIR}/xlat_parser.h)

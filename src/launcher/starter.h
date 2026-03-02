@@ -16,6 +16,7 @@
 #pragma once
 
 #include "const.h"
+#include <string>
 
 struct FStartupSelectionInfo;
 extern bool execResult;
@@ -23,16 +24,13 @@ extern bool execResult;
 class Starter
 {
   public:
-	
 	static bool Init();
 
-	static void RunLoop(); // Runs the main ImGui rendering loop
+	// Runs the main ImGui rendering loop
+	static void RunLoop();
 
 	static void Shutdown();
-
-	static void CrashHandler();
 };
-
 
 // entry point from outside
 bool ImGuiKickStarter();

@@ -47,7 +47,7 @@ struct WadInfo
 };
 
 // list 99% of versions is enough
-static const std::unordered_map<std::string, WadInfo> wadDatabase = {
+inline const std::unordered_map<std::string, WadInfo> wadDatabase = {
 	// DOOM Shareware
 	{"90facab21eede7981be10790e3f82da2",{"Doom (Shareware 1.0)", "id Software", "10-12-1993", true}                                        },
 	{"cea4989df52b65f4d481b706234a3dca",

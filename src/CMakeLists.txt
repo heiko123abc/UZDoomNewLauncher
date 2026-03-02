@@ -56,27 +56,22 @@ if( WIN32 )
 	add_definitions( -D_WIN32 )
 
 	set( PROJECT_LIBRARIES
+		psapi
+		wsock32
+		winmm
+		dinput8
 		Xinput
+		ole32
+		user32
+		gdi32
 		comctl32
 		comdlg32
-		dbghelp
-		dinput8
-		dwmapi
-		dxguid
-		gdi32
-		ole32
-		oleaut32
-		psapi
-		setupapi
-		user32
-		winmm
 		ws2_32
-		wsock32
-	)
-
-	if(MSVC)
-		list(APPEND PROJECT_LIBRARIES legacy_stdio_definitions)
-	endif()
+		setupapi
+		oleaut32
+		dbghelp
+		opengl32
+		legacy_stdio_definitions )
 
 	if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 		if( DX_dxguid_LIBRARY )
@@ -971,15 +966,11 @@ set (PCH_SOURCES
 	rendering/swrenderer/textures/warptexture.cpp
 	rendering/swrenderer/textures/swcanvastexture.cpp
 	events.cpp
-	launcher/about.cpp
-	launcher/errorwindow.cpp
-	launcher/launcherMainWindow.cpp
 	launcher/loader.cpp
-	launcher/netstartwindow.cpp
 	launcher/profile.cpp
-	launcher/profileSettings.cpp
 	launcher/starter.cpp
-	launcher/widgetresourcedata.cpp
+	launcher/launcherMainWindow.cpp
+	launcher/tinyfiledialogs.cpp
 	widgets/aboutpage.cpp
 	widgets/errorwindow.cpp
 	widgets/launcherbanner.cpp
@@ -1224,12 +1215,21 @@ set (PCH_SOURCES
 
 
 # dearImGui core and backend
-set ( IMGUI_SOURCES
-    ../libraries/imgui/*.h
-    ../libraries/imgui/*.cpp
+# the core files, always needed
+file(GLOB IMGUI_CORE_SOURCES
+    "../libraries/imgui/*.h"
+    "../libraries/imgui/*.cpp"
+)
 
-    ../libraries/imgui/backends/imgui_impl_sdl2.h
-    ../libraries/imgui/backends/imgui_impl_sdl2.cpp
+# this is the backend and needs to be set accordingly (e.g SDL2 + OPENGL3)
+set(IMGUI_SOURCES
+    ${IMGUI_CORE_SOURCES}
+    "../libraries/imgui/backends/imgui_impl_sdl2.h"
+    "../libraries/imgui/backends/imgui_impl_sdl2.cpp"
+	
+	"../libraries/imgui/backends/imgui_impl_opengl3.h"
+	"../libraries/imgui/backends/imgui_impl_opengl3.cpp"
+	"../libraries/imgui/backends/imgui_impl_opengl3_loader.h"
 )
 
 if( ZMUSIC_SYSTEM_INSTALL OR NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
@@ -1302,6 +1302,8 @@ list( REMOVE_ITEM GAME_NONPCH_SOURCES ${PCH_SOURCES} )
 
 add_executable( zdoom WIN32 MACOSX_BUNDLE ${GAME_SOURCES} )
 
+target_sources( zdoom PRIVATE ${IMGUI_SOURCES} )
+
 target_include_directories( zdoom PRIVATE ${CMAKE_BINARY_DIR} )
 
 target_precompile_headers( zdoom PRIVATE g_pch.h )
@@ -1342,7 +1344,7 @@ if( UNIX )
 	endif()
 endif()
 
-target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash ${IMGUI_SOURCES})
+target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash)
 include_directories(
 	BEFORE
 	.
@@ -1405,6 +1407,7 @@ include_directories(
 	launcher
 	../libraries/imgui
 	../libraries/imgui/backends
+	../libraries/cppdap/third_party/json/include
 	../libraries/ZVulkan/include
 	../libraries/ZWidget/include
 	../libraries/webp/include
@@ -1417,7 +1420,7 @@ add_dependencies( zdoom revision_check )
 set_target_properties( zdoom PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ZDOOM_OUTPUT_DIR} )
 set_target_properties( zdoom PROPERTIES OUTPUT_NAME ${ZDOOM_EXE_NAME} )
 
-if(NOT MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set_target_properties(zdoom PROPERTIES LINK_FLAGS "-z nostart-stop-gc")
 endif()
 
@@ -1537,15 +1540,6 @@ if( APPLE )
 		MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/posix/osx/zdoom-info.plist"
 		XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "org.zdoom.UZDoom"
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "" )
-
-	# Update plist bundle version from gitinfo.h at build time
-	add_custom_command(TARGET zdoom POST_BUILD
-		COMMAND "${CMAKE_COMMAND}"
-			-DGITINFO_H="${CMAKE_BINARY_DIR}/gitinfo.h"
-			-DPLIST_FILE="$<TARGET_BUNDLE_DIR:zdoom>/Contents/Info.plist"
-			-P "${CMAKE_CURRENT_SOURCE_DIR}/posix/osx/UpdatePlistVersion.cmake"
-		COMMENT "Updating bundle version in Info.plist"
-	)
 
 	# Dymanic libraries like libvulkan.dylib or libMoltenVK.dylib will be loaded by dlopen()
 	# if placed in the directory with the main executable

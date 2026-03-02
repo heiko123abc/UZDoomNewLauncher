@@ -115,54 +115,54 @@ void Profile::loadFromFile(const std::string &filepath)
 		file >> j;
 		//.vaule(A,B) has a secondary fallback B if it is unable to read
 
-		this->title          = j["general"].value("title", "#ERROR")();
-		this->author         = j["general"].value("author", "")();
-		this->releaseDate    = j["general"].value("releaseDate", "")();
-		this->lastPlayedDate = j["general"].value("lastPlayedDate", "")();
+		this->title          = j["general"].value("title", "#ERROR");
+		this->author         = j["general"].value("author", "");
+		this->releaseDate    = j["general"].value("releaseDate", "");
+		this->lastPlayedDate = j["general"].value("lastPlayedDate", "");
 		this->playedTime     = j["general"].value("playedTime", 0);
-		this->description    = j["general"].value("description", "")();
+		this->description    = j["general"].value("description", "");
 		this->isIWAD         = j["general"].value("isIWAD", 0);
-		this->iwadFilePath   = j["general"].value("iwadFilePath", "")();
-		this->pwadFilePath   = j["general"].value("pwadFilePath", "")();
+		this->iwadFilePath   = j["general"].value("iwadFilePath", "");
+		this->pwadFilePath   = j["general"].value("pwadFilePath", "");
 
 		// Launch Parameters
 		this->launchParameters           = j["launch"].value("launchParameters", 0);
 		this->selectedLaunchMap          = j["launch"].value("selectedLaunchMap", 1);
-		this->selectedLaunchSave         = j["launch"].value("selectedLaunchSave", "")();
-		this->selectedLaunchDemoPlayback = j["launch"].value("selectedLaunchDemoPlayback", "")();
-		this->selectedLaunchDemoRecord   = j["launch"].value("selectedLaunchDemoRecord", "")();
+		this->selectedLaunchSave         = j["launch"].value("selectedLaunchSave", "");
+		this->selectedLaunchDemoPlayback = j["launch"].value("selectedLaunchDemoPlayback", "");
+		this->selectedLaunchDemoRecord   = j["launch"].value("selectedLaunchDemoRecord", "");
 		this->difficultySkillRating      = j["launch"].value("difficultySkillRating", 3);
 		this->difficultyFastMonsters     = j["launch"].value("difficultyFastMonsters", false);
 		this->difficultyRespawnMonsters  = j["launch"].value("difficultyRespawnMonsters", false);
 		this->difficultyNoMonsters       = j["launch"].value("difficultyNoMonsters", false);
 		this->compatLevel                = j["launch"].value("compatLevel", 0);
-		this->playerName                 = j["launch"].value("playerName", "Player")();
-		this->playerClass                = j["launch"].value("playerClass", "Fighter")();
-		this->playerGender               = j["launch"].value("playerGender", "male")();
-		this->wadLanguage                = j["launch"].value("wadLanguage", "default")();
-		this->hostPort                   = j["launch"].value("hostPort", "")();
+		this->playerName                 = j["launch"].value("playerName", "Player");
+		this->playerClass                = j["launch"].value("playerClass", "Fighter");
+		this->playerGender               = j["launch"].value("playerGender", "male");
+		this->wadLanguage                = j["launch"].value("wadLanguage", "default");
+		this->hostPort                   = j["launch"].value("hostPort", "");
 		this->hostMaxPlayers             = j["launch"].value("hostMaxPlayers", 8);
-		this->hostTickRate               = j["launch"].value("hostTickRate", "")();
-		this->hostGamemode               = j["launch"].value("hostGamemode", "")();
-		this->hostNetworkMode            = j["launch"].value("hostNetworkMode", "")();
-		this->joinAddress                = j["launch"].value("joinAddress", "")();
-		this->joinPort                   = j["launch"].value("joinPort", "")();
-		this->joinTeamNo                 = j["launch"].value("joinTeamNo", "")();
+		this->hostTickRate               = j["launch"].value("hostTickRate", "");
+		this->hostGamemode               = j["launch"].value("hostGamemode", "");
+		this->hostNetworkMode            = j["launch"].value("hostNetworkMode", "");
+		this->joinAddress                = j["launch"].value("joinAddress", "");
+		this->joinPort                   = j["launch"].value("joinPort", "");
+		this->joinTeamNo                 = j["launch"].value("joinTeamNo", "");
 
 		// Flags
 		this->DMFlags            = j["launch"].value("DMFlags", 0);
 		this->DMFlags2           = j["launch"].value("DMFlags2", 0);
 		this->DMFlags3           = j["launch"].value("DMFlags3", 0);
-		this->alwaysapplydmflags = j["launch"].value("alwaysapplydmflags", 0);
+		this->alwaysapplydmflags = j["launch"].value("alwaysapplydmflags", false);
 		this->compatflags        = j["launch"].value("compatflags", 0);
 		this->compatflags2       = j["launch"].value("compatflags2", 0);
 
 		// File Paths
-		this->configFilePath    = j["files"].value("configFilePath", "")();
-		this->saveDirPath       = j["files"].value("saveDirPath", "")();
-		this->screenshotDirPath = j["files"].value("screenshotDirPath", "")();
-		this->demoDirPath       = j["files"].value("demoDirPath", "")();
-		this->modsDirPath       = j["files"].value("modsDirPath", "")();
+		this->configFilePath    = j["files"].value("configFilePath", "");
+		this->saveDirPath       = j["files"].value("saveDirPath", "");
+		this->screenshotDirPath = j["files"].value("screenshotDirPath", "");
+		this->demoDirPath       = j["files"].value("demoDirPath", "");
+		this->modsDirPath       = j["files"].value("modsDirPath", "");
 		this->modFiles          = j["files"].value("modFiles", std::vector<std::string>{});
 
 		// Output Settings
@@ -175,7 +175,7 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->enableWidescreen = j["output"].value("enableWidescreen", false);
 
 		// Advanced Parameters
-		this->prependAdditionalParameters = j["advanced"].value("prependAdditionalParameters", "")();
+		this->prependAdditionalParameters = j["advanced"].value("prependAdditionalParameters", "");
 		this->appendAdditionalParameters  = j["advanced"].value("appendAdditionalParameters", "");
 	}
 	else
@@ -206,30 +206,30 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	}
 
 	// load the IWad file and erase . at start of ./ path to make an absolute path
-	cmd << "-iwad " << this->iwadFilePath << " ";
+	cmd << "-iwad \"" << this->iwadFilePath << "\" ";
 
 	if (!this->isIWAD)
 	{
 		// load the PWad file
-		cmd << "-file " << this->pwadFilePath << " ";
+		cmd << "-file \"" << this->pwadFilePath << "\" ";
 	}
 
 	// determine launch mode if it isnt normal
 	if (launchParameters == 1)
 	{
-		cmd << "-warp " << this->selectedLaunchMap << " ";
+		cmd << "-warp \"" << this->selectedLaunchMap << "\" ";
 	}
 	else if (launchParameters == 2)
 	{
-		cmd << "-loadgame " << this->selectedLaunchSave << " ";
+		cmd << "-loadgame \"" << this->selectedLaunchSave << "\" ";
 	}
 	else if (launchParameters == 3)
 	{
-		cmd << "-playdemo " << this->selectedLaunchDemoPlayback << " ";
+		cmd << "-playdemo \"" << this->selectedLaunchDemoPlayback << "\" ";
 	}
 	else if (launchParameters == 4)
 	{
-		cmd << "-record " << this->selectedLaunchDemoPlayback << " ";
+		cmd << "-record \"" << this->selectedLaunchDemoRecord << "\" ";
 	}
 
 	// difficulty

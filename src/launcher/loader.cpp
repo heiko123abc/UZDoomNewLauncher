@@ -16,6 +16,7 @@
 #include "loader.h"
 #include "gstrings.h"
 #include "md5.h"
+#include "miniz.h"
 #include "profile.h"
 
 #include <chrono>
@@ -26,28 +27,24 @@
 #include <nlohmann/json.hpp>
 #include <regex>
 #include <string>
-#include <wx/busyinfo.h>
+#include <vector>
 
 using json = nlohmann::json;
 
 enum fileType
 {
-
 	TYPE_IWAD,
 	TYPE_IPK3,
 	TYPE_IPK7,
-
 	TYPE_PWAD,
 	TYPE_PK3,
 	TYPE_PK7, // i never seen this one myself but it seems to exist https://forum.zdoom.org/viewtopic.php?t=34552
-
 	TYPE_UNKNOWN
 };
 
 // Adds the attributes to the profile based on hash (not good but 90% good enough)
 void attributeFromFilename(Profile *p, std::string hash)
 {
-
 	// found a match? copy over
 	if (wadDatabase.contains(hash))
 	{
@@ -65,7 +62,6 @@ void attributeFromFilename(Profile *p, std::string hash)
 
 fileType getFiletype(const std::string filepath)
 {
-
 	fileType status = TYPE_UNKNOWN;
 
 	// we fetch the extension
@@ -75,7 +71,6 @@ fileType getFiletype(const std::string filepath)
 	std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
 
 	// do a innocent check on the file to see if it's a valid IWAD
-
 	if (ext == ".wad")
 	{
 		std::ifstream file(filepath, std::ios_base::in | std::ios_base::binary);
@@ -87,18 +82,19 @@ fileType getFiletype(const std::string filepath)
 			return TYPE_UNKNOWN;
 		}
 
-		char magicHeader[4];
+		char magicHeader[4] = {0};
 		file.read(magicHeader, 4);
-
-		// wad can be either iwad or pwad, need to be checked
-
-		if (memcmp(magicHeader, "IWAD", 4) == 0)
+		if (file.gcount() == 4)
 		{
-			return TYPE_IWAD;
-		}
-		else if (memcmp(magicHeader, "PWAD", 4) == 0)
-		{
-			return TYPE_PWAD;
+			// wad can be either iwad or pwad, need to be checked
+			if (memcmp(magicHeader, "IWAD", 4) == 0)
+			{
+				return TYPE_IWAD;
+			}
+			else if (memcmp(magicHeader, "PWAD", 4) == 0)
+			{
+				return TYPE_PWAD;
+			}
 		}
 	}
 
@@ -120,25 +116,118 @@ fileType getFiletype(const std::string filepath)
 	return status;
 }
 
-// After file is selected and determined to be IWAD or PWAD, create a initial profile for it
-void createInitialProfile(const std::string filepath, const bool wasIWAD, const bool wasArchive)
+// Extracts zip using build-in miniz.
+bool ExtractArchive(const std::string &archivePath, const std::string &targetDir)
 {
+	mz_zip_archive zip_archive;
 
+	// Clear the struct to 0
+	memset(&zip_archive, 0, sizeof(zip_archive));
+
+	// Read file into memory
+	std::ifstream file(archivePath, std::ios::binary | std::ios::ate);
+	if (!file.is_open())
+	{
+		std::cerr << "miniz error: Failed to open archive " << archivePath << std::endl;
+		return false;
+	}
+
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+	std::vector<uint8_t> buffer(size);
+
+	if (!file.read(reinterpret_cast<char *>(buffer.data()), size))
+	{
+		std::cerr << "miniz error: Failed to read archive " << archivePath << std::endl;
+		return false;
+	}
+
+	// Try to open the zip file from memory
+	if (!mz_zip_reader_init_mem(&zip_archive, buffer.data(), size, 0))
+	{
+		std::cerr << "miniz error: Failed to init zip from memory" << std::endl;
+		return false;
+	}
+
+	int num_files = (int)mz_zip_reader_get_num_files(&zip_archive);
+
+	for (int i = 0; i < num_files; i++)
+	{
+		mz_zip_archive_file_stat file_stat;
+		if (!mz_zip_reader_file_stat(&zip_archive, i, &file_stat))
+		{
+			std::cerr << "miniz error: Failed to get file stat at index " << i << std::endl;
+			mz_zip_reader_end(&zip_archive);
+			return false;
+		}
+
+		// Safely combine the target directory with the zip's internal filename
+		std::filesystem::path relativePath(file_stat.m_filename);
+		if (relativePath.is_absolute())
+		{
+			relativePath = relativePath.relative_path(); // Strip root/drive letters
+		}
+		std::filesystem::path outPath = std::filesystem::path(targetDir) / relativePath;
+
+		// Ban Zip Slip (just in case)
+		std::string fname = file_stat.m_filename;
+		if (fname.find("..") != std::string::npos)
+		{
+			continue; // Reject dangerous relative paths
+		}
+
+		if (mz_zip_reader_is_file_a_directory(&zip_archive, i))
+		{
+			// It's a directory, so just ensure it exists
+			std::filesystem::create_directories(outPath);
+		}
+		else
+		{
+			// It's a file. Ensure its parent folder exists (in case the zip didn't explicitly list the directory first)
+			std::filesystem::create_directories(outPath.parent_path());
+
+			// Extract the actual file using heap allocation
+			size_t uncomp_size = 0;
+			void  *p           = mz_zip_reader_extract_to_heap(&zip_archive, i, &uncomp_size, 0);
+			if (!p)
+			{
+				std::cerr << "miniz error: Failed to extract " << file_stat.m_filename << std::endl;
+				mz_zip_reader_end(&zip_archive);
+				return false;
+			}
+
+			std::ofstream outFile(outPath, std::ios::binary);
+			if (outFile.is_open())
+			{
+				outFile.write(reinterpret_cast<const char *>(p), uncomp_size);
+				outFile.close();
+			}
+
+			mz_free(p);
+		}
+	}
+
+	// Cleanup and close
+	mz_zip_reader_end(&zip_archive);
+	return true;
+}
+
+// After file is selected and determined to be IWAD or PWAD, create a initial profile for it
+importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWAD, const bool wasArchive)
+{
 	Profile     newProfile;
 	std::string path;
 
-	if (wasIWAD)
-		newProfile.isIWAD = 1;
-	else
-		newProfile.isIWAD = 0;
+	newProfile.isIWAD = wasIWAD ? 1 : 0;
 
 	// create a new profile container file using timestamps and create the respective folder for the profile
 	std::string profileFilename = "pf_" + std::filesystem::path(filepath).stem().string() + "_" +
 	                              std::format("{:%Y%m%d-%H%M%S}", std::chrono::system_clock::now());
 
-	// we have a name for the profile, now
-	std::filesystem::create_directories(std::string(PROFILE_DIR.ToUTF8()) + profileFilename);
-	path = std::string(PROFILE_DIR.ToUTF8()) + profileFilename + "/";
+	std::string baseProfileDir = std::string(PROFILE_DIR);
+
+	std::filesystem::create_directories(baseProfileDir + profileFilename);
+	path = baseProfileDir + profileFilename + "/";
 
 	// copy the file(s) to the respective folder
 	if (!wasArchive)
@@ -149,27 +238,22 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	else
 	{
 		// copy the entire archive to the folder
-
 		std::string archiveName = std::filesystem::path(filepath).filename().string();
+		std::string targetZip   = path + archiveName;
 
 		std::filesystem::copy(filepath, path);
 
-		wxString zipp = wxString(path) + wxFileName::GetPathSeparator() + wxString(archiveName);
+		bool success = ExtractArchive(targetZip, path);
 
-		Loader loaderInstance;
-		bool   success = loaderInstance.wxExtractZipFiles(zipp, wxString(path),
-		                                                  wxTheApp->GetTopWindow()); // let wxWidget handle the extraction
-
-		// Did user stop?
+		// Did user stop or extraction fail?
 		if (!success)
 		{
-			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_EXTRACTION")), "UZDoom", wxICON_ERROR);
 			std::filesystem::remove_all(path); // Cleanup the remains
 			return;
 		}
 
 		// delete the archive after extraction
-		std::filesystem::remove(std::filesystem::absolute(path).string() + archiveName);
+		std::filesystem::remove(targetZip);
 	}
 
 	std::string foundWadPath;
@@ -182,69 +266,70 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	}
 	else
 	{
-
 		// WAIT, the user might drop a arbitary archive here, we simply stop if there isnt even a .wad file
-		if (wasArchive)
+		// was the archive nested once?
+		auto nestCheck = std::filesystem::directory_iterator(path);
+		if (nestCheck != std::filesystem::directory_iterator())
 		{
-			// was the archive nested once?
-			auto nestCheck = std::filesystem::directory_iterator(path);
-			if (nestCheck != std::filesystem::directory_iterator())
-			{
-				std::filesystem::path firstPath = nestCheck->path();
-				bool                  isDir     = nestCheck->is_directory();
+			std::filesystem::path firstPath = nestCheck->path();
+			bool                  isDir     = nestCheck->is_directory();
 
-				auto nextEntry = nestCheck;
-				if (isDir && ++nextEntry == std::filesystem::directory_iterator())
-				{
-					path = firstPath.string();
-				}
+			int                   item_count = 0;
+			std::filesystem::path singleDir;
+			for (const auto &entry : std::filesystem::directory_iterator(path))
+			{
+				item_count++;
+				singleDir = entry.path();
 			}
-
-			bool            wadFound = false;
-			std::error_code ec;
-			auto            it  = std::filesystem::directory_iterator(path, ec);
-			const auto      end = std::filesystem::directory_iterator();
-
-			if (!ec) // Check if opening the dir failed
+			if (item_count == 1 && std::filesystem::is_directory(singleDir))
 			{
-				while (it != end)
+				path = singleDir.string() + "/";
+			}
+		}
+
+		bool            wadFound = false;
+		std::error_code ec;
+		auto            it  = std::filesystem::directory_iterator(path, ec);
+		const auto      end = std::filesystem::directory_iterator();
+
+		if (!ec) // Check if opening the dir failed
+		{
+			while (it != end)
+			{
+				const auto &entry = *it;
+
+				if (entry.is_regular_file(ec) && !ec) // check if file causes error
 				{
-					const auto &entry = *it;
+					std::string extension = entry.path().extension().string();
+					std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 
-					if (entry.is_regular_file(ec) && !ec) // check if file causes error
+					if (extension == ".wad" || extension == ".iwad" || extension == ".pwad" || extension == ".pwd" ||
+					    extension == ".ipk3" || extension == ".ipk7" || extension == ".pk3" || extension == ".pk7")
 					{
-						std::string extension = entry.path().extension().string();
-						std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
-
-						if (extension == ".wad" || extension == ".iwad" || extension == ".pwad" ||
-						    extension == ".pwd" || extension == ".ipk3" || extension == ".ipk7" ||
-						    extension == ".pk3" || extension == ".pk7")
-						{
-							foundWadPath = entry.path().string();
-							wadFound     = true;
-							break;
-						}
-					}
-					it.increment(ec);
-					if (ec)
-					{
-						// Error moving to next file (permission denied, etc.)
+						foundWadPath = entry.path().string();
+						wadFound     = true;
 						break;
 					}
 				}
-			}
-
-			if (!wadFound)
-			{
-				// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
-				if (!path.empty())
-					path.pop_back(); // drop the / at the end
-				wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")), "UZDoom",
-				             wxICON_ERROR);
-				std::filesystem::remove_all(path); // delete dir since we aborted
-				return;
+				it.increment(ec);
+				if (ec)
+				{
+					// Error moving to next file (permission denied, etc.)
+					break;
+				}
 			}
 		}
+
+		if (!wadFound)
+		{
+			// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
+			if (!path.empty() && path.back() == '/')
+				path.pop_back(); // drop the / at the end
+
+			std::filesystem::remove_all(path); // delete dir since we aborted
+			return IMPORT_FAIL;
+		}
+
 		// check again if its iwad
 		fileType type = getFiletype(foundWadPath);
 
@@ -271,16 +356,19 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	newProfile.title[0] = std::toupper(newProfile.title[0]);            // capitlize the first letter for beautify
 
 	// buffer entire WAD
-	std::ifstream     file(foundWadPath, std::ios_base::in | std::ios_base::binary);
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	std::string fileContent = buffer.str();
+	std::ifstream file(foundWadPath, std::ios_base::in | std::ios_base::binary);
 
 	// populate the IWAD basic profile data based on the md5 file hash
 	uint8_t    digest[16];
 	MD5Context md5;
 
-	md5.Update((const uint8_t *)fileContent.data(), fileContent.length());
+	char chunk[8192];
+	while (file.read(chunk, sizeof(chunk)))
+	{
+		md5.Update((const uint8_t *)chunk, file.gcount());
+	}
+	md5.Update((const uint8_t *)chunk, file.gcount()); // Hash any what remains
+
 	md5.Final(digest);
 
 	std::stringstream readableDigest;
@@ -302,19 +390,19 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 
 			if (entry.is_regular_file(ec) && !ec)
 			{
-				auto        path      = entry.path();
-				std::string extension = path.extension().string();
+				auto        txt_path  = entry.path();
+				std::string extension = txt_path.extension().string();
 				std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 
 				if (extension == ".txt")
 				{
-					long        fsize = std::filesystem::file_size(path);
+					long        fsize = std::filesystem::file_size(txt_path);
 					std::string content(fsize, '\0');
 
-					std::ifstream txtFile(path, std::ios::binary);
+					std::ifstream txtFile(txt_path, std::ios::binary);
 					txtFile.read(content.data(), fsize);
 
-					newProfile.description = wxString::FromUTF8(content.c_str());
+					newProfile.description = content;
 					break;
 				}
 			}
@@ -334,13 +422,14 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 	newProfile.demoDirPath       = path + "demos";
 	newProfile.modsDirPath       = path + "mods";
 
-	// save the profile in the respective foler
+	// save the profile in the respective folder
 	newProfile.saveToFile(path + profileFilename + ".json");
 
 	// add the final product to the list of profiles by adding the config file path to the launcher.cfg file
-
 	json          j;
-	std::ifstream inFile(CONFIG_FILE.ToUTF8());
+	std::string   configFileStr = std::string(CONFIG_FILE);
+	std::ifstream inFile(configFileStr);
+
 	if (inFile.is_open())
 	{
 		try
@@ -350,107 +439,69 @@ void createInitialProfile(const std::string filepath, const bool wasIWAD, const 
 		catch (const json::parse_error &)
 		{
 			// Throw and error about Json being corrupted
-			wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_ERROR_CORRUPT")) +
-			                 wxString(CONFIG_FILE.data()),
-			             "UZDoom", wxOK | wxICON_ERROR);
+			inFile.close();
+			return;
 		}
 		inFile.close();
 	}
 
 	j["profiles"].push_back(path + profileFilename + ".json");
 
-	std::ofstream outFile(CONFIG_FILE.ToUTF8());
+	std::ofstream outFile(configFileStr);
 	if (outFile.is_open())
 	{
 		outFile << j.dump(4);
 		outFile.close();
 	}
 
-	// WE ARE DONE! Tell the user what is was detected at the very end as and tell them that they can change it in
-	// the profile settings later
+	// WE ARE DONE! Tell the user what is was detected at the very end
 	if (newProfile.isIWAD)
 	{
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_IWAD")), "UZDoom",
-		             wxOK | wxICON_INFORMATION);
-		return;
+		return IMPORT_IWAD_SUCCESS;
 	}
 	else
 	{
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_PWAD")), "UZDoom",
-		             wxOK | wxICON_INFORMATION);
-		return;
+		return IMPORT_PWAD_SUCCESS;
 	}
 }
 
-void Loader::archiveOpener(wxWindow *window)
+// Process Archive
+importStatus Loader::ProcessArchive(const std::string &filePath)
 {
-	// This one is from the New Picker Button that opens the file dialog to add a new profile
+	std::string ext = std::filesystem::path(filePath).extension().string();
+	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_ARCHPICK_DIALOG_TITLE")), "",
-	                            "", wxString::FromUTF8(GStrings.GetString("FILETYPE_ARCH")),
-	                            wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-
-	// Wait for user input
-	if (openFileDialog.ShowModal() == wxID_CANCEL)
+	// Is User trying to cheat and add something that isn't even an archive?
+	if (ext == ".zip")
 	{
-		// User clicked Cancel? Doesnt matter, just close
-		return;
-	}
-
-	// User clicked Open? Get the full path
-	wxString filePath = openFileDialog.GetPath();
-
-	// Is User trying to cheat and add somthing that isn't a even an archive?
-	if (filePath.EndsWith(wxString(".zip")) || filePath.EndsWith(wxString(".ZIP")))
-	{
-		// prentend its an iwad for now, it will be checked once unzipped in that method
-		createInitialProfile(std::string(filePath.ToUTF8()), true, true);
+		// pretend it's an iwad for now, it will be checked once unzipped in that method
+		return CreateInitialProfile(filePath, true, true);
 	}
 	else
 	{
-		// No? Return.
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_NOTARCHIVE")), "UZDoom",
-		             wxOK | wxICON_ERROR);
-		return;
+		return IMPORT_FAIL;
 	}
 }
 
-void Loader::fileOpener(wxWindow *window)
+// Process WAD
+importStatus Loader::ProcessWad(const std::string &filePath)
 {
-	// This one is from the New Picker Button that opens the file dialog to add a new profile
-
-	wxFileDialog openFileDialog(window, wxString::FromUTF8(GStrings.GetString("LAUNCHER_WADPICK_DIALOG_TITLE")), "", "",
-	                            wxString::FromUTF8(GStrings.GetString("FILETYPE_WAD")),
-	                            wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-
-	// Wait for user input
-	if (openFileDialog.ShowModal() == wxID_CANCEL)
-	{
-		// User clicked Cancel? Doesnt matter, just close
-		return;
-	}
-
-	// User clicked Open? Get the full path
-	wxString filePath = openFileDialog.GetPath();
-
-	// At this point we have a valid WAD file, now we need to check if it's an IWAD or PWAD
-
-	fileType type = getFiletype(std::string(filePath.ToUTF8()));
+	// At this point we have a path, check if it's an IWAD or PWAD
+	fileType type = getFiletype(filePath);
 
 	if (type == TYPE_IWAD || type == TYPE_IPK3 || type == TYPE_IPK7)
 	{
-		// an IWAD type
-		createInitialProfile(std::string(filePath.ToUTF8()), true, false);
+		// an IWAD
+		return CreateInitialProfile(filePath, true, false);
 	}
 	else if (type == TYPE_PWAD || type == TYPE_PK3 || type == TYPE_PK7)
 	{
-		// an PWAD type
-		createInitialProfile(std::string(filePath.ToUTF8()), false, false);
+		// an PWAD
+		return CreateInitialProfile(filePath, false, false);
 	}
 	else
 	{
-		// Still No? Return.
-		wxMessageBox(wxString::FromUTF8(GStrings.GetString("LAUNCHER_DETECT_NOWAD")), "UZDoom", wxOK | wxICON_ERROR);
-		return;
+		// Not a recognized WAD
+		return IMPORT_FAIL;
 	}
 }

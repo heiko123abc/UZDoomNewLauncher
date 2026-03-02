@@ -55,6 +55,8 @@
 #include "vm.h"
 #include "widgets/errorwindow.h"
 #include "widgets/launcherwindow.h"
+#include "launcher/starter.h"
+
 
 #if defined(__APPLE__)
 int I_PickIWad_Cocoa (WadStuff *wads, int numwads, bool showwin, int defaultiwad);
@@ -350,7 +352,7 @@ bool I_PickIWad (bool showwin, FStartupSelectionInfo& info)
 	}
 	return false;
 #else
-	return LauncherWindow::ExecModal(info);
+	return ImGuiKickStarter();
 #endif
 }
 

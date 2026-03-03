@@ -189,7 +189,7 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 	// Grid-like layout for labels and inputs
 	if (ImGui::BeginTable("GeneralTable", 2, ImGuiTableFlags_SizingStretchProp))
 	{
-		ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+		ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 		ImGui::TableSetupColumn("Inputs", ImGuiTableColumnFlags_WidthStretch);
 
 		auto DrawRow = [](const char *label, std::string *targetStr) {
@@ -222,7 +222,7 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("IWAD:");
 		ImGui::TableNextColumn();
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 40);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 		ImGui::InputText("##IWADPath", &currEdit->iwadFilePath);
 		ImGui::SameLine();
 		if (ImGui::Button("...##iwadbtn", ImVec2(35, 0)))
@@ -239,7 +239,7 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("PWAD:");
 			ImGui::TableNextColumn();
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 40);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 			ImGui::InputText("##PWADPath", &currEdit->pwadFilePath);
 			ImGui::SameLine();
 			if (ImGui::Button("...##pwadbtn", ImVec2(35, 0)))
@@ -314,7 +314,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 	// Path Pickers Table
 	if (ImGui::BeginTable("FilesTable", 2, ImGuiTableFlags_SizingStretchProp))
 	{
-		ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed, 150.0f);
+		ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 		ImGui::TableSetupColumn("Inputs", ImGuiTableColumnFlags_WidthStretch);
 
 		auto DrawPathPickerRow = [&](const char *label, std::string *targetVar, const char *diagTitle, bool isFolder,
@@ -324,7 +324,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("%s", label);
 			ImGui::TableNextColumn();
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 40);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 			ImGui::InputText(std::string("##txt" + std::string(label)).c_str(), targetVar);
 			ImGui::SameLine();
 			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(), ImVec2(35, 0)))
@@ -364,17 +364,30 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 		if (result != nullptr)
 		{
 			// tinyfiledialogs returns multiple paths separated by '|'
-			std::string paths = result;
-			size_t      start = 0;
-			size_t      end   = paths.find('|');
+			std::string              paths = result;
+			size_t                   start = 0;
+			size_t                   end   = paths.find('|');
+			std::vector<std::string> selectedFiles;
 
 			while (end != std::string::npos)
 			{
-				currEdit->modFiles.push_back(paths.substr(start, end - start));
+				selectedFiles.push_back(paths.substr(start, end - start));
 				start = end + 1;
 				end   = paths.find('|', start);
 			}
-			currEdit->modFiles.push_back(paths.substr(start)); // Push the last one
+			selectedFiles.push_back(paths.substr(start));
+
+			// Copy files into the profile directory
+			for (const auto &originalPath : selectedFiles)
+			{
+				std::filesystem::path src(originalPath);
+				std::filesystem::path dest = std::filesystem::path(currEdit->modsDirPath) / src.filename();
+
+				// Copy the file, overwriting if the user is replacing an existing mod of the same name
+				std::filesystem::copy_file(src, dest, std::filesystem::copy_options::overwrite_existing);
+
+				currEdit->modFiles.push_back(dest.string());
+			}
 		}
 	}
 
@@ -426,10 +439,6 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 		// Label
 		ImGui::AlignTextToFramePadding();
 		ImGui::TextUnformatted(fname.c_str());
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-		{
-			ImGui::SetTooltip("%s", currEdit->modFiles[i].c_str());
-		}
 
 		ImGui::EndGroup();
 		ImGui::PopID();
@@ -458,7 +467,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 
 		if (ImGui::BeginTable("LaunchModeInner", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 
 			ImGui::TableNextRow();
@@ -470,7 +479,8 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			ImGui::RadioButton(GStrings.GetString("PROFSET_LAUNCH_MAP"), &currEdit->launchParameters, 1);
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth(-FLT_MIN);
-			ImGui::DragInt("##MapSpinner", &currEdit->selectedLaunchMap, 1.0f, 1, 100000);
+			ImGui::DragInt("##MapSpinner", &currEdit->selectedLaunchMap, 1.0f, 1, 100000, "%d",
+			               ImGuiSliderFlags_AlwaysClamp);
 
 			auto DrawModePath = [&](int modeVal, const char *label, std::string *targetVar, const char *diagStr,
 			                        const char *filterDesc, const std::vector<const char *> &filters) {
@@ -478,7 +488,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 				ImGui::TableNextColumn();
 				ImGui::RadioButton(label, &currEdit->launchParameters, modeVal);
 				ImGui::TableNextColumn();
-				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 40);
+				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 				ImGui::InputText(std::string("##T" + std::to_string(modeVal)).c_str(), targetVar);
 				ImGui::SameLine();
 				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(), ImVec2(35, 0)))
@@ -500,7 +510,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 
 		if (ImGui::BeginTable("GameplayInner", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 
 			ImGui::TableNextRow();
@@ -518,7 +528,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			ImGui::EndTable();
 		}
 
-		if (ImGui::BeginTable("MonstersInner", 3))
+		if (ImGui::BeginTable("MonstersInner", 3, ImGuiTableFlags_SizingStretchProp))
 		{
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
@@ -547,7 +557,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 
 		if (ImGui::BeginTable("MiscInner", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 
 			auto DrawTextRow = [](const char *label, std::string *targetVar) {
@@ -653,7 +663,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 
 		if (ImGui::BeginTable("RemoteInner", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_REMADDR"), &currEdit->joinAddress);
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_REMPORT"), &currEdit->joinPort);
@@ -666,7 +676,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 
 		if (ImGui::BeginTable("HostInner", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_HOPORT"), &currEdit->hostPort);
@@ -677,7 +687,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_HOMAXP"));
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth(-FLT_MIN);
-			ImGui::DragInt("##MaxP", &currEdit->hostMaxPlayers, 1.0f, 1, 64);
+			ImGui::DragInt("##MaxP", &currEdit->hostMaxPlayers, 1.0f, 1, 64, "%d", ImGuiSliderFlags_AlwaysClamp);
 
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
@@ -739,7 +749,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 
 		if (ImGui::BeginTable("CompInner", 2, ImGuiTableFlags_SizingStretchProp))
 		{
-			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+			ImGui::TableSetupColumn("L", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 			ImGui::TableSetupColumn("V", ImGuiTableColumnFlags_WidthStretch);
 
 			ImGui::TableNextRow();
@@ -778,9 +788,8 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 	// Need a unified ID string to open and check
 	ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiCond_FirstUseEver);
 
-	if (ImGui::BeginPopupModal("Flag Editor", NULL, ImGuiWindowFlags_NoSavedSettings))
+	if (ImGui::BeginPopupModal("Flag Editor", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar))
 	{
-		ImGui::Separator();
 
 		// 1. List of checkboxes inside a scrolling region
 		float reservedBottomSpace = ImGui::GetFrameHeightWithSpacing() * (tempFlagsCount + 2.5f);
@@ -813,7 +822,14 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 			}
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
 			{
-				ImGui::SetTooltip("%s", f.tooltip.c_str());
+				ImGui::BeginTooltip();
+
+				// squish text into a neat box
+				ImGui::PushTextWrapPos(400.0f);
+				ImGui::TextUnformatted(f.tooltip.c_str());
+
+				ImGui::PopTextWrapPos();
+				ImGui::EndTooltip();
 			}
 		}
 		ImGui::EndChild();
@@ -821,11 +837,33 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 		// 2. Options below the list
 		if (isGameplayFlags)
 		{
-			ImGui::Checkbox(GStrings.GetString("PROFSET_GAMEPLAY_FORCE"), &forceDmFlags);
+			const char *forceText = GStrings.GetString("PROFSET_GAMEPLAY_FORCE");
+
+			// Calculate total width of the checkbox (box height + spacing + text width)
+			float checkboxWidth =
+				ImGui::GetFrameHeight() + ImGui::GetStyle().ItemInnerSpacing.x + ImGui::CalcTextSize(forceText).x;
+
+			// Center the cursor
+			ImGui::SetCursorPosX((ImGui::GetWindowSize().x - checkboxWidth) * 0.5f);
+			ImGui::Checkbox(forceText, &forceDmFlags);
 		}
 		else
 		{
-			ImGui::TextWrapped("%s", GStrings.GetString("PROFSET_COMP_INFO"));
+			const char *compInfoText = GStrings.GetString("PROFSET_COMP_INFO");
+			float       textWidth    = ImGui::CalcTextSize(compInfoText).x;
+			float       windowWidth  = ImGui::GetWindowSize().x;
+
+			// If the text is shorter than the window, center it cleanly.
+			if (textWidth < windowWidth)
+			{
+				ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+				ImGui::Text("%s", compInfoText);
+			}
+			else
+			{
+				// Fallback to wrapping if the string is too long to fit on a single centered line (maybe for some translations?)
+				ImGui::TextWrapped("%s", compInfoText);
+			}
 		}
 
 		ImGui::Spacing();

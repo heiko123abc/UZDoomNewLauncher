@@ -73,7 +73,8 @@ FString _ParseReleaseNotes(rapidxml::xml_node<char> *release)
 
 				reconstructText(child); // Recursively process children
 
-				if (tagName == "p" || tagName == "ul" || tagName == "h1" || tagName == "h2" || tagName == "h3")
+				if (tagName == "p" || tagName == "ul" || tagName == "h1" || tagName == "h2" || tagName == "h3" ||
+				    tagName == "li")
 					descText += "\n";
 			}
 		}
@@ -221,14 +222,24 @@ void About::DrawReleaseNotesDialog(bool *p_open, const std::string &lang)
 		static std::string patchNotes      = GetReleaseNotes().GetChars();
 		static bool        showOnUpdateReq = true;
 
-		ImGui::Checkbox(GStrings.GetString("LAUNCHER_SHOW_ONUPDATED"), &showOnUpdateReq);
-		ImGui::Separator();
+		// Reserve space for the checkbox AND the close button at the bottom
+		float reservedBottomSpace = (ImGui::GetFrameHeightWithSpacing() * 2.0f) + 10.0f;
 
 		// scrollable child region for the text
-		ImGui::BeginChild("NotesScrollRegion", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() - 10), true);
+		ImGui::BeginChild("NotesScrollRegion", ImVec2(0, -reservedBottomSpace), true);
 		ImGui::TextWrapped("%s", patchNotes.c_str());
 		ImGui::EndChild();
 
+		// 1. Center and draw the checkbox
+		const char *checkboxLabel = GStrings.GetString("LAUNCHER_SHOW_ONUPDATED");
+		// Calculate total width of the checkbox (square box + spacing + text width)
+		float checkboxWidth =
+			ImGui::GetFrameHeight() + ImGui::GetStyle().ItemInnerSpacing.x + ImGui::CalcTextSize(checkboxLabel).x;
+
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - checkboxWidth) * 0.5f);
+		ImGui::Checkbox(checkboxLabel, &showOnUpdateReq);
+
+		// 2. Center and draw the close button
 		float buttonWidth = 120.0f;
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - buttonWidth) * 0.5f);
 

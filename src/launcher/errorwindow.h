@@ -23,5 +23,5 @@ class ErrorWindow
 {
   public:
 	// Initializes a standalone SDL+ImGui window to display the crash reporter
-	bool ExecModal(const std::string &text, const std::string &log, std::vector<uint8_t> minidump);
+	static bool ExecModal(const std::string &text, const std::string &log, std::vector<uint8_t> minidump);
 };

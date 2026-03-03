@@ -969,6 +969,10 @@ set (PCH_SOURCES
 	launcher/loader.cpp
 	launcher/profile.cpp
 	launcher/starter.cpp
+	launcher/about.cpp
+	launcher/profileSettings.cpp
+	launcher/errorwindow.cpp
+	launcher/netstartwindow.cpp
 	launcher/launcherMainWindow.cpp
 	launcher/tinyfiledialogs.cpp
 	widgets/aboutpage.cpp

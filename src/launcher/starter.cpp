@@ -1,7 +1,7 @@
 /*
 ** starter.cpp
 **
-** The launcher is STARTED here. Create required files and folder on first launch.
+** The launcher/netui/errorwindow is STARTED here. Create required files and folder on first launch.
 ** Includes SDL2 + OpenGL3 backend initialization.
 **
 **---------------------------------------------------------------------------
@@ -23,34 +23,17 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 
-// ImGui & SDL Backends
-#include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include "imgui_impl_sdl2.h"
-#include <SDL.h>
-#include <stdio.h>
-#if defined(IMGUI_IMPL_OPENGL_ES2)
-#include <SDL_opengles2.h>
-#else
-#include <SDL_opengl.h>
-#endif
-#ifdef _WIN32
-#include <windows.h> // SetProcessDPIAware()
-#endif
-
 using json      = nlohmann::json;
 bool execResult = false;
 
 // Global instance of the main UI state
 static LauncherMainWindow *MainWindow = nullptr;
 
-// SDL State
-static SDL_Window   *Window      = nullptr;
-static SDL_GLContext GLContext   = nullptr;
-static const char   *GlslVersion = "";
+// Encapsulated SDL State for the Launcher Window
+static Starter::ImGuiContextState LauncherContext;
 
 // This is called from outside to kickstart the launcher ui and logics
-bool ImGuiKickStarter()
+bool ImGuiKickStarter(const FStartupSelectionInfo &info)
 {
 	if (!Starter::Init())
 	{
@@ -65,43 +48,39 @@ bool ImGuiKickStarter()
 	return execResult;
 }
 
-// This function is called on application startup and sets up
-bool Starter::Init()
+// use this to establish the SDL and ImGui context for the launcher, error and netstart windows
+Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, int height, Uint32 sdl_init_flags)
 {
-	// 1. SETUP SDL & OPENGL
+	ImGuiContextState state;
+
 #ifdef _WIN32
 	::SetProcessDPIAware();
 #endif
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER) != 0)
 	{
-		std::cerr << "Error: " << SDL_GetError() << std::endl;
-		return false;
+		printf("Error: %s\n", SDL_GetError());
+		return state;
 	}
 
-	// Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
-	// GL ES 2.0 + GLSL 100 (WebGL 1.0)
 	const char *glsl_version = "#version 100";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #elif defined(IMGUI_IMPL_OPENGL_ES3)
-	// GL ES 3.0 + GLSL 300 es (WebGL 2.0)
 	const char *glsl_version = "#version 300 es";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #elif defined(__APPLE__)
-	// GL 3.2 Core + GLSL 150
 	const char *glsl_version = "#version 150";
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // Always required on Mac
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 #else
-	// GL 3.0 + GLSL 130
 	const char *glsl_version = "#version 130";
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, 0);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -109,56 +88,97 @@ bool Starter::Init()
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 #endif
 
-	// From 2.0.18: Enable native IME.
 #ifdef SDL_HINT_IME_SHOW_UI
 	SDL_SetHint(SDL_HINT_IME_SHOW_UI, "1");
 #endif
 
-	// Create window with graphics context
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-	float main_scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
+
+	state.scale = ImGui_ImplSDL2_GetContentScaleForDisplay(0);
+	if (state.scale <= 0.0f)
+		state.scale = 1.0f;
 
 	SDL_WindowFlags window_flags =
 		(SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-	SDL_Window *window =
-		SDL_CreateWindow("UZDoom Launcher", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-	                     (int)(1280 * main_scale), (int)(800 * main_scale), window_flags);
-	if (window == nullptr)
+	state.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, (int)(width * state.scale),
+	                                (int)(height * state.scale), window_flags);
+	if (!state.window)
 	{
-		printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
-		return 1;
+		std::cerr << "Error: SDL_CreateWindow(): " << SDL_GetError() << std::endl;
+		return state;
 	}
 
-	SDL_GLContext gl_context = SDL_GL_CreateContext(window);
-	if (gl_context == nullptr)
+	state.gl_context = SDL_GL_CreateContext(state.window);
+	if (!state.gl_context)
 	{
-		printf("Error: SDL_GL_CreateContext(): %s\n", SDL_GetError());
-		return 1;
+		std::cerr << "Error: SDL_GL_CreateContext(): " << SDL_GetError() << std::endl;
+		return state;
 	}
 
-	SDL_GL_MakeCurrent(window, gl_context);
+	SDL_GL_MakeCurrent(state.window, state.gl_context);
 	SDL_GL_SetSwapInterval(1); // Enable vsync
 
-	// 2. SETUP DEAR IMGUI
+	// Setup Dear ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
-	(void)io;
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
-	// setup scaling options
+	// Setup scaling options automatically
 	ImGuiStyle &style = ImGui::GetStyle();
-	style.ScaleAllSizes(main_scale); // Bake a fixed style scale. (until we have a solution for dynamic style scaling,
-	                                 // changing this requires resetting Style + calling this again)
-	style.FontScaleDpi = main_scale; // Set initial font scale. (in docking branch: using io.ConfigDpiScaleFonts=true
-	                                 // automatically overrides this for every window depending on the current monitor)
+	style.ScaleAllSizes(state.scale);
+	style.FontScaleDpi = state.scale;
 
-	// Setup Platform/Renderer backends
-	ImGui_ImplSDL2_InitForOpenGL(Window, GLContext);
-	ImGui_ImplOpenGL3_Init(GlslVersion);
+	// Setup UTF-8 font using noto
+	ImFontConfig config;
+	float        fontSize = 16.0f;
+	config.PixelSnapH     = true;
+
+	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans.ttf", fontSize, &config);
+	config.MergeMode = true;
+
+	// Add additional fonts for CJK characters, merging them with the default font
+	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-jp.ttf", fontSize, &config);
+	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-kr.ttf", fontSize, &config);
+
+	ImGui::StyleColorsDark();
+
+	ImGui_ImplSDL2_InitForOpenGL(state.window, state.gl_context);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	return state;
+}
+
+void Starter::TeardownContext(ImGuiContextState &state)
+{
+	if (state.gl_context)
+	{
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplSDL2_Shutdown();
+		ImGui::DestroyContext();
+		SDL_GL_DeleteContext(state.gl_context);
+		state.gl_context = nullptr;
+	}
+
+	if (state.window)
+	{
+		SDL_DestroyWindow(state.window);
+		state.window = nullptr;
+	}
+
+	SDL_Quit();
+}
+
+// This function is called on application startup and sets up
+bool Starter::Init()
+{
+	LauncherContext =
+		SetupContext("UZDoom Launcher", 1280, 800, SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER);
+	if (!LauncherContext.window)
+		return false;
 
 	// 3. DEFINE THE PATHS AND FILES WE NEED
 	exePath     = "./"; // we just need the folder where the executable is located
@@ -193,7 +213,6 @@ bool Starter::Init()
 	return true;
 }
 
-
 // the core of dearImgui: the main loop where we poll events and render the UI
 void Starter::RunLoop()
 {
@@ -210,11 +229,11 @@ void Starter::RunLoop()
 			if (event.type == SDL_QUIT)
 				done = true;
 			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-			    event.window.windowID == SDL_GetWindowID(Window))
+			    event.window.windowID == SDL_GetWindowID(LauncherContext.window))
 				done = true;
 		}
 
-		if (SDL_GetWindowFlags(Window) & SDL_WINDOW_MINIMIZED)
+		if (SDL_GetWindowFlags(LauncherContext.window) & SDL_WINDOW_MINIMIZED)
 		{
 			SDL_Delay(10);
 			continue;
@@ -225,7 +244,7 @@ void Starter::RunLoop()
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
-		// --- DRAW UZDOOM LAUNCHER UI --- (THAT IS WHAT THIS starter.cpp FILE IS INITIALIZING)
+		// --- DRAW UZDOOM LAUNCHER UI ---
 		if (MainWindow)
 		{
 			MainWindow->Draw();
@@ -239,7 +258,7 @@ void Starter::RunLoop()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(Window);
+		SDL_GL_SwapWindow(LauncherContext.window);
 	}
 }
 
@@ -252,16 +271,5 @@ void Starter::Shutdown()
 		MainWindow = nullptr;
 	}
 
-	// Shutdown ImGui
-	if (GLContext)
-	{
-		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplSDL2_Shutdown();
-		ImGui::DestroyContext();
-	}
-
-	// Shutdown SDL
-	SDL_GL_DeleteContext(GLContext);
-	SDL_DestroyWindow(Window);
-	SDL_Quit();
+	TeardownContext(LauncherContext);
 }

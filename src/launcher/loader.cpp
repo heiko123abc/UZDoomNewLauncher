@@ -221,8 +221,15 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 	newProfile.isIWAD = wasIWAD ? 1 : 0;
 
 	// create a new profile container file using timestamps and create the respective folder for the profile
-	std::string profileFilename = "pf_" + std::filesystem::path(filepath).stem().string() + "_" +
-	                              std::format("{:%Y%m%d-%H%M%S}", std::chrono::system_clock::now());
+
+	auto               now  = std::chrono::system_clock::now();
+	auto               time = std::chrono::system_clock::to_time_t(now);
+	std::tm            tm   = *std::localtime(&time);
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
+	std::string timestamp = oss.str();
+
+	std::string profileFilename = "pf_" + std::filesystem::path(filepath).stem().string() + "_" + timestamp;
 
 	std::string baseProfileDir = std::string(PROFILE_DIR);
 

@@ -355,7 +355,7 @@ bool I_PickIWad(bool showwin, FStartupSelectionInfo& info)
 {
 	if (showwin)
 	{
-		return ImGuiKickStarter();
+		return ImGuiKickStarter(info);
 	}
 	return true;
 }

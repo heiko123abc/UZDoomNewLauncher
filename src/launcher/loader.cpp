@@ -249,7 +249,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 		if (!success)
 		{
 			std::filesystem::remove_all(path); // Cleanup the remains
-			return;
+			return IMPORT_FAIL;
 		}
 
 		// delete the archive after extraction
@@ -440,7 +440,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 		{
 			// Throw and error about Json being corrupted
 			inFile.close();
-			return;
+			return IMPORT_FAIL;
 		}
 		inFile.close();
 	}

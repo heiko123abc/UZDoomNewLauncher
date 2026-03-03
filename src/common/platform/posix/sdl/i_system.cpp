@@ -126,7 +126,7 @@ void Unix_I_FatalError(const char* errortext)
 		for (const FString& line : g_AllPrintOutput)
 			alltext.append(line.GetChars(), line.Len());
 
-		g_QueueRestart = ErrorWindow::ExecModal(errortext, alltext);
+		g_QueueRestart = ErrorWindow::ExecModal(errortext, alltext, {});
 	}
 	else
 	{

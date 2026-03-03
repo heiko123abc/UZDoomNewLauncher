@@ -60,6 +60,7 @@ jobs:
             build_opts_extra: -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
             deps_cmdline: &linux_deps |
               sudo apt-get update && sudo apt-get install \
+                libgl-dev \
                 libopenal-dev \
                 waylandpp-dev \
                 libsdl2-dev   \
@@ -123,7 +124,8 @@ jobs:
                 mingw-w64-x86_64-ninja  \
                 mingw-w64-x86_64-bzip2  \
                 mingw-w64-x86_64-clang  \
-                mingw-w64-x86_64-gcc
+                mingw-w64-x86_64-gcc    \
+                mingw-w64-x86_64-SDL2
             build_type: RelWithDebInfo
 
           - name: Windows MinGW Clang

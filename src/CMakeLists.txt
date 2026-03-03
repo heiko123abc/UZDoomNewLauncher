@@ -136,16 +136,18 @@ else()
 	else()
 		add_definitions( -DDYN_GTK=0 )
 	endif()
-
-	# Non-Windows version also needs SDL except native OS X backend
-	if( NOT APPLE OR NOT OSX_COCOA_BACKEND )
-		find_package( SDL2 REQUIRED )
-		include_directories( SYSTEM "${SDL2_INCLUDE_DIR}" )
-		link_directories(${SDL2_LINK_DIR})
-		set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${SDL2_LIBRARY}" )
-	endif()
-
 endif()
+
+# SDL2 and OpenGL is always needed for launcher
+find_package( SDL2 REQUIRED )
+include_directories( SYSTEM 
+    "${SDL2_INCLUDE_DIR}" 
+    "${SDL2_INCLUDE_DIR}/SDL2"
+)
+link_directories(${SDL2_LINK_DIR})
+set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${SDL2_LIBRARY}" )
+find_package(OpenGL REQUIRED)
+
 
 if( NOT NO_OPENAL )
 	if ( "vcpkg-openal-soft" IN_LIST VCPKG_MANIFEST_FEATURES )
@@ -1344,7 +1346,7 @@ if( UNIX )
 	endif()
 endif()
 
-target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash)
+target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash OpenGL::GL)
 include_directories(
 	BEFORE
 	.
@@ -1420,7 +1422,7 @@ add_dependencies( zdoom revision_check )
 set_target_properties( zdoom PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${ZDOOM_OUTPUT_DIR} )
 set_target_properties( zdoom PROPERTIES OUTPUT_NAME ${ZDOOM_EXE_NAME} )
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(NOT MINGW AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set_target_properties(zdoom PROPERTIES LINK_FLAGS "-z nostart-stop-gc")
 endif()
 
@@ -1541,7 +1543,7 @@ if( APPLE )
 		XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "org.zdoom.UZDoom"
 		XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "" )
 
-# Update plist bundle version from gitinfo.h at build time
+	# Update plist bundle version from gitinfo.h at build time
 	add_custom_command(TARGET zdoom POST_BUILD
 		COMMAND "${CMAKE_COMMAND}"
 			-DGITINFO_H="${CMAKE_BINARY_DIR}/gitinfo.h"

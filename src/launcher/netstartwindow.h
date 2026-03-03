@@ -21,7 +21,7 @@
 
 class NetStartWindow
 {
-
+  public:
 	void NetInit(const char *message, bool host);
 	void NetMessage(const char *message);
 	void NetConnect(int client, const char *name, unsigned flags, int status);

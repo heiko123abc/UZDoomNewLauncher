@@ -205,7 +205,7 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 		return GStrings.GetString("LAUNCHER_PROF_EMPTYWAD");
 	}
 
-	// load the IWad file and erase . at start of ./ path to make an absolute path
+	// load the IWad file
 	cmd << "-iwad \"" << this->iwadFilePath << "\" ";
 
 	if (!this->isIWAD)
@@ -352,6 +352,5 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 		cmd << appendAdditionalParameters;
 
 	// command strung together, give it to info
-	execResult = true;
 	return cmd.str();
 }

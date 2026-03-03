@@ -33,19 +33,19 @@ static LauncherMainWindow *MainWindow = nullptr;
 static Starter::ImGuiContextState LauncherContext;
 
 // This is called from outside to kickstart the launcher ui and logics
-bool ImGuiKickStarter(const FStartupSelectionInfo &info)
+void ImGuiKickStarter(const FStartupSelectionInfo &info)
 {
 	if (!Starter::Init())
 	{
 		std::cerr << "Failed to initialize the launcher." << std::endl;
 		Starter::Shutdown();
-		return false;
+		return;
 	}
 
 	Starter::RunLoop();
 	Starter::Shutdown();
 
-	return execResult;
+	return;
 }
 
 // use this to establish the SDL and ImGui context for the launcher, error and netstart windows
@@ -213,8 +213,21 @@ bool Starter::Init()
 	return true;
 }
 
-// the core of dearImgui: the main loop where we poll events and render the UI
+// run main launcher loop
 void Starter::RunLoop()
+{
+	// The lambda provides the specific rendering logic for the main window
+	Starter::RunImGuiLoop(LauncherContext, [&](bool &done) {
+		// --- DRAW UZDOOM LAUNCHER UI ---
+		if (MainWindow)
+		{
+			MainWindow->Draw();
+		}
+	});
+}
+
+// the core of dearImgui: the main loop where we poll events and render the UI
+void Starter::RunImGuiLoop(ImGuiContextState &context, const RenderCallback &renderCallback)
 {
 	ImGuiIO &io          = ImGui::GetIO();
 	bool     done        = false;
@@ -229,36 +242,33 @@ void Starter::RunLoop()
 			if (event.type == SDL_QUIT)
 				done = true;
 			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-			    event.window.windowID == SDL_GetWindowID(LauncherContext.window))
+			    event.window.windowID == SDL_GetWindowID(context.window))
+			{
 				done = true;
+			}
 		}
 
-		if (SDL_GetWindowFlags(LauncherContext.window) & SDL_WINDOW_MINIMIZED)
+		if (SDL_GetWindowFlags(context.window) & SDL_WINDOW_MINIMIZED)
 		{
 			SDL_Delay(10);
 			continue;
 		}
 
-		// Start the Dear ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplSDL2_NewFrame();
 		ImGui::NewFrame();
 
-		// --- DRAW UZDOOM LAUNCHER UI ---
-		if (MainWindow)
-		{
-			MainWindow->Draw();
-		}
+		// Execute the specific window's logic
+		renderCallback(done);
 
-		// Rendering
 		ImGui::Render();
+
 		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w,
-		             clear_color.w);
+		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(LauncherContext.window);
+		SDL_GL_SwapWindow(context.window);
 	}
 }
 

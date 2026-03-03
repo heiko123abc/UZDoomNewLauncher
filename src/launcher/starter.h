@@ -36,7 +36,6 @@
 #endif
 
 struct FStartupSelectionInfo;
-extern bool execResult;
 
 class Starter
 {
@@ -52,11 +51,15 @@ class Starter
 	};
 
 	static ImGuiContextState SetupContext(const char *title, int width, int height, Uint32 sdl_init_flags);
-	static void       TeardownContext(ImGuiContextState &state);
+	static void TeardownContext(ImGuiContextState &state);
 
 	static bool Init();
 	static void RunLoop();
 	static void Shutdown();
+
+	// callback for other UIs to piggyback off the main loop, e.g. error and netstart windows
+	using RenderCallback = std::function<void(bool &done)>;
+	static void RunImGuiLoop(ImGuiContextState &context, const RenderCallback &renderCallback);
 };
 
-bool ImGuiKickStarter(const FStartupSelectionInfo &info);
+void ImGuiKickStarter(const FStartupSelectionInfo &info);

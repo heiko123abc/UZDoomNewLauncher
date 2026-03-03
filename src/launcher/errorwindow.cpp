@@ -107,24 +107,8 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 	ImGuiIO    &io                 = ImGui::GetIO();
 	std::string cleanClipboardText = ParseAndCleanLog(log, text);
 
-	bool done = false;
-	while (!done)
-	{
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
-		{
-			ImGui_ImplSDL2_ProcessEvent(&event);
-			if (event.type == SDL_QUIT)
-				done = true;
-			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-			    event.window.windowID == SDL_GetWindowID(context.window))
-				done = true;
-		}
-
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
-
+	// Run the abstracted loop
+	Starter::RunImGuiLoop(context, [&](bool &done) {
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::SetNextWindowSize(ImVec2(800, 600));
 
@@ -133,7 +117,7 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));       // Dark red
 		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.8f, 0.1f, 0.1f, 1.0f)); // Bright red when active
 
-		ImGuiWindowFlags flags =  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
 
 		ImGui::Begin("Fatal Error Panel", nullptr, flags);
 
@@ -190,21 +174,11 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 		ImGui::SameLine(windowWidth - 200.0f - ImGui::GetStyle().WindowPadding.x);
 		if (ImGui::Button(GStrings.GetString("CRASHREPORT_QUIT"), ImVec2(200, 0)))
 		{
-			done = true;
+			done = true; // Setting this exits the loop gracefully
 		}
 
 		ImGui::End();
-		ImGui::PopStyleColor(3); // Pop
-
-		// Render
-		ImGui::Render();
-
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(context.window);
-	}
+	});
 
 	Starter::TeardownContext(context);
 

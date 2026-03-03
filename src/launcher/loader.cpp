@@ -363,11 +363,10 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 	MD5Context md5;
 
 	char chunk[8192];
-	while (file.read(chunk, sizeof(chunk)))
+	while (file.read(chunk, sizeof(chunk)) || file.gcount() > 0)
 	{
-		md5.Update((const uint8_t *)chunk, file.gcount());
+		md5.Update(reinterpret_cast<const uint8_t *>(chunk), file.gcount());
 	}
-	md5.Update((const uint8_t *)chunk, file.gcount()); // Hash any what remains
 
 	md5.Final(digest);
 

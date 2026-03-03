@@ -193,7 +193,6 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 
 	std::stringstream cmd;
 
-
 	// block launch if WAD combos are specified incorrectly
 	if (this->iwadFilePath.empty() && this->isIWAD)
 	{
@@ -244,7 +243,7 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	// are we JOINING a multiplayer game?
 	if (mode == "join")
 	{
-		cmd << std::format("-join {}:{} +set team {} ", this->joinAddress, this->joinPort, this->joinTeamNo);
+		cmd << "-join " << this->joinAddress << ":" << this->joinPort << " +set team " << this->joinTeamNo << " ";
 	}
 
 	//... or are we HOSTING a multiplayer game.

@@ -62,4 +62,4 @@ class Starter
 	static void RunImGuiLoop(ImGuiContextState &context, const RenderCallback &renderCallback);
 };
 
-void ImGuiKickStarter(const FStartupSelectionInfo &info);
+bool ImGuiKickStarter(const FStartupSelectionInfo &info);

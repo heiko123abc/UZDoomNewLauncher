@@ -2118,24 +2118,6 @@ msgstr "Looking speed"
 msgid "JOYMNU_ANALOGSTRAFERUN"
 msgstr "Analog strafe run"
 
-msgid "NOTES_FAIL"
-msgstr "Unable to parse release notes"
-
-msgid "NOTES_VERSION"
-msgstr "version"
-
-msgid "NOTES_UNKNOWN"
-msgstr "Unknown"
-
-msgid "NOTES_RELEASED"
-msgstr "released"
-
-msgid "NOTES_EMPTY"
-msgstr "No description provided."
-
-msgid "NOTES_DETAILS"
-msgstr "For more details see:"
-
 msgid "PICKER_SHOWTHIS"
 msgstr "Show this page after updates"
 

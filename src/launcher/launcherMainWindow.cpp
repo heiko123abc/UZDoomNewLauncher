@@ -568,7 +568,13 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 		// Update profile disk storage
 		Profile p;
 		p.loadFromFile(selectedRowPath);
-		p.lastPlayedDate = std::format("{:%d-%m-%Y}", std::chrono::system_clock::now());
+
+		auto              now       = std::chrono::system_clock::now();
+		auto              in_time_t = std::chrono::system_clock::to_time_t(now);
+		std::stringstream ss;
+		ss << std::put_time(std::localtime(&in_time_t), "%d-%m-%Y");
+		p.lastPlayedDate = ss.str();
+
 		p.playedTime += secondsPlayed;
 		p.saveToFile(selectedRowPath);
 

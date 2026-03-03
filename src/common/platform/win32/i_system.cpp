@@ -66,7 +66,7 @@
 #include "i_interface.h"
 #include "i_mainwindow.h"
 
-#include "widgets/launcherwindow.h"
+//#include "launcher/launcherwindow.h"
 #include "launcher/starter.h"
 
 // MACROS ------------------------------------------------------------------

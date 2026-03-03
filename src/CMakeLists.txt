@@ -72,6 +72,7 @@ set( PROJECT_LIBRARIES
 		winmm
 		ws2_32
 		wsock32
+		opengl32
 	)
 	
 	if(MSVC)
@@ -980,19 +981,9 @@ set (PCH_SOURCES
 	launcher/netstartwindow.cpp
 	launcher/launcherMainWindow.cpp
 	launcher/tinyfiledialogs.cpp
-	widgets/aboutpage.cpp
-	widgets/errorwindow.cpp
-	widgets/launcherbanner.cpp
-	widgets/launcherbuttonbar.cpp
-	widgets/launcherwindow.cpp
-	widgets/netstartwindow.cpp
-	widgets/networkpage.cpp
-	widgets/playgamepage.cpp
-	widgets/releasepage.cpp
-	widgets/settingspage.cpp
 	widgets/themedata.cpp
 	widgets/widgetresourcedata.cpp
-
+	
 	common/audio/sound/i_sound.cpp
 	common/audio/sound/oalsound.cpp
 	common/audio/sound/s_environment.cpp

@@ -33,19 +33,19 @@ static LauncherMainWindow *MainWindow = nullptr;
 static Starter::ImGuiContextState LauncherContext;
 
 // This is called from outside to kickstart the launcher ui and logics
-void ImGuiKickStarter(const FStartupSelectionInfo &info)
+bool ImGuiKickStarter(const FStartupSelectionInfo &info)
 {
 	if (!Starter::Init())
 	{
 		std::cerr << "Failed to initialize the launcher." << std::endl;
 		Starter::Shutdown();
-		return;
+		return false;
 	}
 
 	Starter::RunLoop();
 	Starter::Shutdown();
 
-	return;
+	return true;
 }
 
 // use this to establish the SDL and ImGui context for the launcher, error and netstart windows
@@ -181,10 +181,10 @@ bool Starter::Init()
 		return false;
 
 	// 3. DEFINE THE PATHS AND FILES WE NEED
-	exePath     = "./"; // we just need the folder where the executable is located
-	ROOT_DIR    = exePath + "launcher/";
-	PROFILE_DIR = ROOT_DIR + "profiles/";
-	CONFIG_FILE = ROOT_DIR + "config.json";
+	std::string exePath = "./"; // we just need the folder where the executable is located
+	ROOT_DIR            = exePath + "launcher/";
+	PROFILE_DIR         = ROOT_DIR + "profiles/";
+	CONFIG_FILE         = ROOT_DIR + "config.json";
 
 	// hang on, lets see if folder for launchers profiles exists
 	// if not, create them

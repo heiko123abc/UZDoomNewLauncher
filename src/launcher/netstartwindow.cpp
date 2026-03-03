@@ -23,7 +23,7 @@
 
 struct PlayerData
 {
-	int clientID;
+	int         clientID;
 	std::string flags;
 	std::string name;
 	std::string status;
@@ -31,13 +31,13 @@ struct PlayerData
 
 // Internal State
 std::vector<PlayerData> Players;
-std::vector<int> KickClients;
-std::vector<int> BanClients;
+std::vector<int>        KickClients;
+std::vector<int>        BanClients;
 
 std::string Message           = "";
-int Pos               = 0;
-int MaxPos            = 1;
-int SelectedClientIdx = -1; // For ImGui selection
+int         Pos               = 0;
+int         MaxPos            = 1;
+int         SelectedClientIdx = -1; // For ImGui selection
 
 bool Host        = false;
 bool ShouldStart = false;
@@ -140,7 +140,7 @@ void NetDisconnect(int client)
 void NetProgress(int cur, int limit)
 {
 	MaxPos = limit;
-	Pos = cur;
+	Pos    = cur;
 
 	// Ensure list has enough free slots if players haven't connected yet
 	for (int i = (int)Players.size(); i < limit; ++i)
@@ -157,7 +157,7 @@ void NetDone()
 void NetClose()
 {
 	ExitReason = false;
-	Done = true;
+	Done       = true;
 }
 
 bool ShouldStartNet()
@@ -190,25 +190,14 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 		return false;
 
 	ImGuiIO &io        = ImGui::GetIO();
-	Uint32 last_tick = SDL_GetTicks();
+	Uint32   last_tick = SDL_GetTicks();
 
-	while (!Done)
-	{
-		SDL_Event event;
-		while (SDL_PollEvent(&event))
+	Starter::RunImGuiLoop(context, [&](bool &done_loop) {
+		// If another thread or callback marked Done, immediately exit loop
+		if (Done)
 		{
-			ImGui_ImplSDL2_ProcessEvent(&event);
-			if (event.type == SDL_QUIT)
-			{
-				ExitReason = false;
-				Done = true;
-			}
-			if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-			    event.window.windowID == SDL_GetWindowID(context.window))
-			{
-				ExitReason = false;
-				Done = true;
-			}
+			done_loop = true;
+			return;
 		}
 
 		// 10ms Timer Callback Logic
@@ -225,7 +214,7 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 				catch (...)
 				{
 					CallbackException = std::current_exception();
-					Done = true; // Break loop on exception
+					Done              = true;
 				}
 
 				if (result)
@@ -237,10 +226,14 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 			last_tick = current_tick;
 		}
 
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
+		// Check again just in case the timer callback set Done to true
+		if (Done)
+		{
+			done_loop = true;
+			return;
+		}
 
+		// --- DRAW NET START WINDOW UI ---
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
 		ImGui::SetNextWindowSize(io.DisplaySize);
 
@@ -251,12 +244,10 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 		ImGui::SetCursorPosY(15.0f);
 		float windowWidth = ImGui::GetWindowSize().x;
 
-		// Center Status
 		float textWidth = ImGui::CalcTextSize(Message.c_str()).x;
 		ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
 		ImGui::Text("%s", Message.c_str());
 
-		// Center Progress
 		std::string countStr   = std::to_string(Pos) + "/" + std::to_string(MaxPos);
 		float       countWidth = ImGui::CalcTextSize(countStr.c_str()).x;
 		ImGui::SetCursorPosX((windowWidth - countWidth) * 0.5f);
@@ -312,6 +303,7 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 
 			if (ImGui::Button(GStrings.GetString("NETMENU_BTN_START"), ImVec2(btnWidth, 0)))
 				ShouldStart = true;
+
 			ImGui::SameLine();
 
 			ImGui::BeginDisabled(SelectedClientIdx == -1);
@@ -335,6 +327,7 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 			{
 				ExitReason = false;
 				Done       = true;
+				done_loop  = true;
 			}
 		}
 		else
@@ -345,19 +338,12 @@ bool NetLoop(bool (*timer_callback)(void *), void *userdata)
 			{
 				ExitReason = false;
 				Done       = true;
+				done_loop  = true;
 			}
 		}
 
 		ImGui::End();
-
-		// Render
-		ImGui::Render();
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-		glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		SDL_GL_SwapWindow(context.window);
-	}
+	});
 
 	Starter::TeardownContext(context);
 

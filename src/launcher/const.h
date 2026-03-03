@@ -22,9 +22,6 @@
 #include <unordered_map>
 #include <vector>
 
-// a precaution when shortcuts are used to get the actual launcher executable
-inline std::string exePath;
-
 // defined directories
 inline std::string ROOT_DIR;
 inline std::string PROFILE_DIR;

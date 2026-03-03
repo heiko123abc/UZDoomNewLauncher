@@ -831,16 +831,10 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 		ImGui::Spacing();
 
 		// 3. Raw Integer Textboxes updating the bits bidirectionally
-		std::vector<const char *> labels = {"flags1:", "flags2:", "flags3:"};
+		const char *const compatLabels[] = {"compatflags:", "compatflags2:", ""};
+		const char *const dmLabels[]     = {"dmflags:", "dmflags2:", "dmflags3:"};
 
-		if (isGameplayFlags)
-		{
-			labels = {"dmflags:", "dmflags2:", "dmflags3:"};
-		}
-		else
-		{
-			labels = {"compatflags:", "compatflags2:"};
-		}
+		const char *const *labels = isGameplayFlags ? dmLabels : compatLabels;
 
 		for (int i = 0; i < tempFlagsCount; ++i)
 		{

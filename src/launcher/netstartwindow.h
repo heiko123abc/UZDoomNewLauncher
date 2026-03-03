@@ -22,16 +22,16 @@
 class NetStartWindow
 {
   public:
-	void NetInit(const char *message, bool host);
-	void NetMessage(const char *message);
-	void NetConnect(int client, const char *name, unsigned flags, int status);
-	void NetUpdate(int client, int status);
-	void NetDisconnect(int client);
-	void NetProgress(int cur, int limit);
-	void NetDone();
-	void NetClose();
-	bool ShouldStartNet();
-	int  GetNetKickClient();
-	int  GetNetBanClient();
-	bool NetLoop(bool (*timer_callback)(void *), void *userdata);
+	static void NetInit(const char *message, bool host);
+	static void NetMessage(const char *message);
+	static void NetConnect(int client, const char *name, unsigned flags, int status);
+	static void NetUpdate(int client, int status);
+	static void NetDisconnect(int client);
+	static void NetProgress(int cur, int limit);
+	static void NetDone();
+	static void NetClose();
+	static bool ShouldStartNet();
+	static int  GetNetKickClient();
+	static int  GetNetBanClient();
+	static bool NetLoop(bool (*timer_callback)(void *), void *userdata);
 };

@@ -67,7 +67,7 @@ std::string GetStatusString(int status)
 	return "";
 }
 
-void NetInit(const char *message, bool host)
+void NetStartWindow::NetInit(const char *message, bool host)
 {
 	Host = host;
 	Players.clear();
@@ -87,13 +87,13 @@ void NetInit(const char *message, bool host)
 		Message = GStrings.GetString("NETMENU_WAIT");
 }
 
-void NetMessage(const char *message)
+void NetStartWindow::NetMessage(const char *message)
 {
 	if (message)
 		Message = message;
 }
 
-void NetConnect(int client, const char *name, unsigned flags, int status)
+void NetStartWindow::NetConnect(int client, const char *name, unsigned flags, int status)
 {
 	std::string flagStr = "";
 	if (flags & 1)
@@ -114,7 +114,7 @@ void NetConnect(int client, const char *name, unsigned flags, int status)
 	}
 }
 
-void NetUpdate(int client, int status)
+void NetStartWindow::NetUpdate(int client, int status)
 {
 	long index = FindItemByClient(client);
 	if (index != -1)
@@ -123,7 +123,7 @@ void NetUpdate(int client, int status)
 	}
 }
 
-void NetDisconnect(int client)
+void NetStartWindow::NetDisconnect(int client)
 {
 	auto it =
 		std::remove_if(Players.begin(), Players.end(), [client](const PlayerData &p) { return p.clientID == client; });
@@ -137,7 +137,7 @@ void NetDisconnect(int client)
 	}
 }
 
-void NetProgress(int cur, int limit)
+void NetStartWindow::NetProgress(int cur, int limit)
 {
 	MaxPos = limit;
 	Pos    = cur;
@@ -145,27 +145,27 @@ void NetProgress(int cur, int limit)
 	// Ensure list has enough free slots if players haven't connected yet
 	for (int i = (int)Players.size(); i < limit; ++i)
 	{
-		Players.push_back({i, "", std::to_string(i), ""});
+		Players.push_back({i, "", "", ""});
 	}
 }
 
-void NetDone()
+void NetStartWindow::NetDone()
 {
 	Done = true;
 }
 
-void NetClose()
+void NetStartWindow::NetClose()
 {
 	ExitReason = false;
 	Done       = true;
 }
 
-bool ShouldStartNet()
+bool NetStartWindow::ShouldStartNet()
 {
 	return ShouldStart;
 }
 
-int GetNetKickClient()
+int NetStartWindow::GetNetKickClient()
 {
 	if (KickClients.empty())
 		return -1;
@@ -174,7 +174,7 @@ int GetNetKickClient()
 	return next;
 }
 
-int GetNetBanClient()
+int NetStartWindow::GetNetBanClient()
 {
 	if (BanClients.empty())
 		return -1;
@@ -183,7 +183,7 @@ int GetNetBanClient()
 	return next;
 }
 
-bool NetLoop(bool (*timer_callback)(void *), void *userdata)
+bool NetStartWindow::NetLoop(bool (*timer_callback)(void *), void *userdata)
 {
 	Starter::ImGuiContextState context = Starter::SetupContext(GAMENAME, 600, 400, SDL_INIT_VIDEO | SDL_INIT_TIMER);
 	if (!context.window)

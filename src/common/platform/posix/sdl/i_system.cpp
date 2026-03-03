@@ -53,8 +53,8 @@
 #include "st_start.h"
 #include "v_font.h"
 #include "vm.h"
-#include "widgets/errorwindow.h"
-#include "widgets/launcherwindow.h"
+#include "launcher/errorwindow.h"
+#include "launcher/launcherMainWindow.h"
 #include "launcher/starter.h"
 
 

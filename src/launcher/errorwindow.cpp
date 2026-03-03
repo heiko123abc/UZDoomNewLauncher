@@ -54,7 +54,7 @@ std::string ParseAndCleanLog(const std::string &log, const std::string &errorTex
 		}
 	}
 
-	return processedLog + "\n\nExecution could not continue.\n" + errorText + "\n";
+	return processedLog;
 }
 
 void SaveReportToDisk(const std::vector<uint8_t> &minidump, const std::string &cleanClipboardText)
@@ -106,78 +106,74 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 
 	ImGuiIO    &io                 = ImGui::GetIO();
 	std::string cleanClipboardText = ParseAndCleanLog(log, text);
+	std::string fullClipboardText  = cleanClipboardText + "\n\nExecution could not continue.\n" + text + "\n";
 
-	// Run the abstracted loop
 	Starter::RunImGuiLoop(context, [&](bool &done) {
 		ImGui::SetNextWindowPos(ImVec2(0, 0));
-		ImGui::SetNextWindowSize(ImVec2(800, 600));
+		ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 
 		ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.15f, 0.15f, 0.15f, 1.0f));
 
-		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));       // Dark red
-		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.8f, 0.1f, 0.1f, 1.0f)); // Bright red when active
+		ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.6f, 0.1f, 0.1f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
 
-		ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings;
+		ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoSavedSettings |
+		                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+		                         ImGuiWindowFlags_NoScrollWithMouse;
 
 		ImGui::Begin("Fatal Error Panel", nullptr, flags);
 
-		// Log View (Takes up most of the space)
-		ImGui::BeginChild("LogView", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() - 20), true,
-		                  ImGuiWindowFlags_HorizontalScrollbar);
+		ImGuiStyle &style = ImGui::GetStyle();
 
-		ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]); // Teletype/monospace ideally
-		ImGui::TextUnformatted(cleanClipboardText.c_str());
+		ImGui::PushFont(ImGui::GetIO().Fonts->Fonts[0]);
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+
+		ImGui::InputTextMultiline("##Log", const_cast<char *>(fullClipboardText.c_str()), fullClipboardText.size() + 1,
+		                          ImVec2(-1.0f, -ImGui::GetFrameHeightWithSpacing() - style.WindowPadding.y),
+		                          ImGuiInputTextFlags_ReadOnly);
+
+		ImGui::PopStyleVar();
+		ImGui::PopStyleColor();
 		ImGui::PopFont();
 
 		ImGui::Spacing();
-		ImGui::Separator();
-		ImGui::Spacing();
 
-		// Error Header (Red)
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.66f, 0.66f, 1.0f));
-		ImGui::PopStyleColor();
-
-		// Body (Yellow)
-		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.66f, 1.0f));
-		ImGui::TextWrapped("%s", text.c_str());
-		ImGui::PopStyleColor();
-
-		// Auto-scroll to bottom if log is long
-		if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
-			ImGui::SetScrollHereY(1.0f);
-
-		ImGui::EndChild();
-
-		ImGui::Spacing();
-
-		// Buttons at the bottom
 		float windowWidth = ImGui::GetWindowWidth();
 
-		if (ImGui::Button(GStrings.GetString("CRASHREPORT_COPYCLIP"), ImVec2(200, 0)))
+		// Buttons at the bottom
+		const char *copyBtnTxt = GStrings.GetString("CRASHREPORT_COPYCLIP");
+		std::string saveBtnTxtStr =
+			minidump.empty() ? GStrings.GetString("CRASHREPORT_NOSAVE") : GStrings.GetString("CRASHREPORT_SAVE");
+		const char *saveBtnTxt = saveBtnTxtStr.c_str();
+		const char *quitBtnTxt = GStrings.GetString("CRASHREPORT_QUIT");
+
+		float saveBtnWidth = ImGui::CalcTextSize(saveBtnTxt).x + (style.FramePadding.x * 2.0f);
+		float quitBtnWidth = ImGui::CalcTextSize(quitBtnTxt).x + (style.FramePadding.x * 2.0f);
+
+		if (ImGui::Button(copyBtnTxt))
 		{
-			ImGui::SetClipboardText(cleanClipboardText.c_str());
+			ImGui::SetClipboardText(fullClipboardText.c_str());
 		}
 
-		// Centering logic for middle button
-		ImGui::SameLine((windowWidth / 2.0f) - 100.0f);
+		ImGui::SameLine((windowWidth / 2.0f) - (saveBtnWidth / 2.0f));
 
 		ImGui::BeginDisabled(minidump.empty());
-		std::string saveBtnTxt =
-			minidump.empty() ? GStrings.GetString("CRASHREPORT_NOSAVE") : GStrings.GetString("CRASHREPORT_SAVE");
-		if (ImGui::Button(saveBtnTxt.c_str(), ImVec2(200, 0)))
+		if (ImGui::Button(saveBtnTxt))
 		{
-			SaveReportToDisk(minidump, cleanClipboardText);
+			SaveReportToDisk(minidump, fullClipboardText);
 		}
 		ImGui::EndDisabled();
 
-		// Right alignment logic for last button
-		ImGui::SameLine(windowWidth - 200.0f - ImGui::GetStyle().WindowPadding.x);
-		if (ImGui::Button(GStrings.GetString("CRASHREPORT_QUIT"), ImVec2(200, 0)))
+		ImGui::SameLine(windowWidth - quitBtnWidth - style.WindowPadding.x);
+		if (ImGui::Button(quitBtnTxt))
 		{
 			done = true; // Setting this exits the loop gracefully
 		}
 
 		ImGui::End();
+
+		ImGui::PopStyleColor(3);
 	});
 
 	Starter::TeardownContext(context);

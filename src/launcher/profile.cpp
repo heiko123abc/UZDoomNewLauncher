@@ -67,6 +67,11 @@ void Profile::saveToFile(const std::string &filepath)
 	j["launch"]["joinAddress"]                = this->joinAddress;
 	j["launch"]["joinPort"]                   = this->joinPort;
 	j["launch"]["joinTeamNo"]                 = this->joinTeamNo;
+	j["launch"]["mpFragLimit"]                = this->mpFragLimit;
+	j["launch"]["mpTimeLimit"]                = this->mpTimeLimit;
+	j["launch"]["teamDamageFactor"]           = this->teamDamageFactor;
+
+
 
 	j["launch"]["DMFlags"]            = this->DMFlags;
 	j["launch"]["DMFlags2"]           = this->DMFlags2;
@@ -148,6 +153,9 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->joinAddress                = j["launch"].value("joinAddress", "");
 		this->joinPort                   = j["launch"].value("joinPort", "");
 		this->joinTeamNo                 = j["launch"].value("joinTeamNo", "");
+		this->mpFragLimit                = j["launch"].value("mpFragLimit", 0);
+		this->mpTimeLimit                = j["launch"].value("mpTimeLimit", 0.0f);
+		this->teamDamageFactor           = j["launch"].value("teamDamageFactor", 0.0f);
 
 		// Flags
 		this->DMFlags            = j["launch"].value("DMFlags", 0);
@@ -289,6 +297,11 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	cmd << "+set dmflags " << this->DMFlags << " ";
 	cmd << "+set dmflags2 " << this->DMFlags2 << " ";
 	cmd << "+set dmflags3 " << this->DMFlags3 << " ";
+
+	// set more multiplyer parameters
+	cmd << "+set fraglimit " << this->mpFragLimit << " ";
+	cmd << "+set timelimit " << this->mpTimeLimit << " ";
+	cmd << "+set teamdamage " << this->teamDamageFactor << " ";
 
 	// user wants dmflags elsewhere too
 	if (alwaysapplydmflags)

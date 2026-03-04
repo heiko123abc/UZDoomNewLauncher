@@ -668,6 +668,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_REMADDR"), &currEdit->joinAddress);
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_REMPORT"), &currEdit->joinPort);
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_TEAMNO"), &currEdit->joinTeamNo);
+
 			ImGui::EndTable();
 		}
 
@@ -740,6 +741,31 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 					nIdx = i;
 			if (ImGui::Combo("##NMode", &nIdx, nModeLabels, IM_ARRAYSIZE(nModeLabels)))
 				currEdit->hostNetworkMode = nModes[nIdx];
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_FRAGLIM"));
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::DragInt("##MPfrg", &currEdit->mpFragLimit, 1.0f, 0, 100000, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_TIMELIM"));
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::DragFloat("##MPtim", &currEdit->mpTimeLimit, 1.0f, 0.0f, 9999999.0f, "%.5f", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_TEAMDMG"));
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::DragFloat("##Tdmg", &currEdit->teamDamageFactor, 1.0f, 0.0f, 9999999.0f, "%.5f",
+			                 ImGuiSliderFlags_AlwaysClamp);
 
 			ImGui::EndTable();
 		}
@@ -861,7 +887,8 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 			}
 			else
 			{
-				// Fallback to wrapping if the string is too long to fit on a single centered line (maybe for some translations?)
+				// Fallback to wrapping if the string is too long to fit on a single centered line (maybe for some
+				// translations?)
 				ImGui::TextWrapped("%s", compInfoText);
 			}
 		}

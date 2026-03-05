@@ -294,7 +294,10 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 			}
 		}
 
-		bool            wadFound = false;
+		bool                     wadFound    = false;
+		uintmax_t                largestSize = 0;
+		std::vector<std::string> collectedMods; // Track all critical files found in the zip
+
 		std::error_code ec;
 		auto            it  = std::filesystem::directory_iterator(path, ec);
 		const auto      end = std::filesystem::directory_iterator();
@@ -313,17 +316,21 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 					if (extension == ".wad" || extension == ".iwad" || extension == ".pwad" || extension == ".pwd" ||
 					    extension == ".ipk3" || extension == ".ipk7" || extension == ".pk3" || extension == ".pk7")
 					{
-						foundWadPath = entry.path().string();
-						wadFound     = true;
-						break;
+						collectedMods.push_back(entry.path().string());
+						uintmax_t currentSize = std::filesystem::file_size(entry.path(), ec);
+
+						// The largest file is assumed to be the primary file
+						if (!ec && currentSize > largestSize)
+						{
+							largestSize  = currentSize;
+							foundWadPath = entry.path().string();
+							wadFound     = true;
+						}
 					}
 				}
 				it.increment(ec);
 				if (ec)
-				{
-					// Error moving to next file (permission denied, etc.)
 					break;
-				}
 			}
 		}
 
@@ -335,6 +342,15 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 
 			std::filesystem::remove_all(path); // delete dir since we aborted
 			return IMPORT_ARCHIVE_FAIL;
+		}
+
+		// Automatically add the smaller fragments of PK3s/WADs to the mod loading list
+		for (const auto &mod : collectedMods)
+		{
+			if (mod != foundWadPath)
+			{
+				newProfile.modFiles.push_back(mod);
+			}
 		}
 
 		// check again if its iwad

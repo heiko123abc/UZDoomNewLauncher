@@ -191,4 +191,5 @@ class LauncherMainWindow
 	void MoveSelectedEntry(int offset);
 	void UpdateLanguage();
 	void ApplyTheme();
+	void CloneSelectedProfile();
 };

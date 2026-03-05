@@ -3320,3 +3320,6 @@ msgstr "Time limit (0.00 = off)"
 
 msgid "PROFSET_LAUNCH_TEAMDMG"
 msgstr "Team Damage Factor (0.00 = off)"
+
+msgid "LAUNCHER_PROFBUTTON_CLONE"
+msgstr "Clone Profile"

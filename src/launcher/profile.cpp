@@ -102,7 +102,8 @@ void Profile::saveToFile(const std::string &filepath)
 	std::ofstream file(filepath);
 	if (file.is_open())
 	{
-		file << j.dump(5);
+		//handle bad characters safely
+		file << j.dump(5, ' ', false, json::error_handler_t::replace);
 		file.close();
 	}
 }

@@ -483,11 +483,6 @@ void LauncherMainWindow::DrawButtons()
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH"), btnSize))
-	{
-		RefreshList();
-	}
-
 	if (!hasSelection)
 		ImGui::BeginDisabled();
 
@@ -495,6 +490,18 @@ void LauncherMainWindow::DrawButtons()
 		MoveSelectedEntry(-1);
 	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN"), btnSize))
 		MoveSelectedEntry(1);
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_REFRESH"), btnSize))
+	{
+		RefreshList();
+	}
+
+	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_CLONE"), btnSize))
+		CloneSelectedProfile();
 
 	if (!hasSelection)
 		ImGui::EndDisabled();
@@ -515,6 +522,68 @@ void LauncherMainWindow::MoveSelectedEntry(int offset)
 		RefreshList();
 		selectedProfileIdx = newIdx; // keep focus
 	}
+}
+
+// clone the selected profile
+void LauncherMainWindow::CloneSelectedProfile()
+{
+	if (selectedProfileIdx < 0 || selectedProfileIdx >= profilePaths.size())
+		return;
+
+	std::string           originalJsonPath = profilePaths[selectedProfileIdx];
+	std::filesystem::path origDir          = std::filesystem::path(originalJsonPath).parent_path();
+
+	// Generate new directory name with correct timestamp
+	auto               now  = std::chrono::system_clock::now();
+	auto               time = std::chrono::system_clock::to_time_t(now);
+	std::tm            tm   = *std::localtime(&time);
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
+
+	std::string           newFolderName = origDir.filename().string() + "_clone_" + oss.str();
+	std::filesystem::path newDir        = origDir.parent_path() / newFolderName;
+
+	// copy the directory and its contents (WADs, mods, configs etc.)
+	std::filesystem::copy(origDir, newDir, std::filesystem::copy_options::recursive);
+
+	// in the copied JSON profile and update its internal paths
+	std::filesystem::path copiedJsonPath = newDir / std::filesystem::path(originalJsonPath).filename();
+	std::filesystem::path newJsonPath    = newDir / (newFolderName + ".json");
+
+	// Rename the JSON file to match the new folder name
+	std::filesystem::rename(copiedJsonPath, newJsonPath);
+
+	// Update the Profile data
+	Profile clonedProfile;
+	clonedProfile.loadFromFile(newJsonPath.string());
+
+	clonedProfile.title += " (Clone)";
+
+	// Update internal paths to point to the new directory
+	std::string newDirStr           = newDir.string() + "/";
+	clonedProfile.configFilePath    = newDirStr + "config.ini";
+	clonedProfile.saveDirPath       = newDirStr + "saves";
+	clonedProfile.screenshotDirPath = newDirStr + "screenshots";
+	clonedProfile.demoDirPath       = newDirStr + "demos";
+	clonedProfile.modsDirPath       = newDirStr + "mods";
+
+	// If IWAD/PWAD were inside the profile dir, update those paths too
+	if (clonedProfile.iwadFilePath.find(origDir.string()) != std::string::npos)
+	{
+		clonedProfile.iwadFilePath = newDirStr + std::filesystem::path(clonedProfile.iwadFilePath).filename().string();
+	}
+	if (clonedProfile.pwadFilePath.find(origDir.string()) != std::string::npos)
+	{
+		clonedProfile.pwadFilePath = newDirStr + std::filesystem::path(clonedProfile.pwadFilePath).filename().string();
+	}
+
+	// Save the updated JSON
+	clonedProfile.saveToFile(newJsonPath.string());
+
+	// add to Launcher
+	profilePaths.push_back(newJsonPath.string());
+	SaveConfig();
+	RefreshList();
 }
 
 // launch selected entry

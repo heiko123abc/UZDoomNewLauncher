@@ -172,24 +172,31 @@ void LauncherMainWindow::DrawPopUp()
 {
 	if (showImportPopup)
 	{
-		ImGui::OpenPopup("Import Status");
+		ImGui::OpenPopup("UZDoom");
 		showImportPopup = false; // Reset the trigger immediately so it only opens once
 	}
 
 	// ImGuiWindowFlags_AlwaysAutoResize makes the popup snap to the text size
-	if (ImGui::BeginPopupModal("Import Status", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("UZDoom", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		// Display a message based on the status enum
 		switch (lastImportStatus)
 		{
-		case IMPORT_ARCHIVE_SUCCESS:
 		case IMPORT_IWAD_SUCCESS:
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_DETECT_IWAD")); // Green text
+			break;
 		case IMPORT_PWAD_SUCCESS:
-			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Import Successful!"); // Green text
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_DETECT_PWAD")); // Green text
 			break;
 		case IMPORT_FAIL:
-			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Import Failed."); // Red text
-			ImGui::Text("There was no WAD in there lol ...");
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_DETECT_NOWAD")); // Red text
+			break;
+		case IMPORT_ARCHIVE_FAIL:
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")); // Red text
 			break;
 		case IMPORT_CANCELLED:
 			ImGui::Text("Import Cancelled.");

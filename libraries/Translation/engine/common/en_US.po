@@ -2253,7 +2253,7 @@ msgstr "Extraction was stopped."
 
 # No .wad file in archive
 msgid "LAUNCHER_ERROR_NOWADARCH"
-msgstr "Error: No .wad file found in the archive! (Or archive is too nested.)"
+msgstr "Error: No .wad file found in the archive! (Or archive is corrupt/too nested.)"
 
 # Launcher Configuration was corrupted
 msgid "LAUNCHER_ERROR_CORRUPT"
@@ -3311,3 +3311,12 @@ msgstr "Save Crash Report"
 
 msgid "LAUNCHER_PROF_EMPTYWAD"
 msgstr "The IWAD or PWAD field is empty. Provide the correct path."
+
+msgid "PROFSET_LAUNCH_FRAGLIM"
+msgstr "Frag limit (0 = off)"
+
+msgid "PROFSET_LAUNCH_TIMELIM"
+msgstr "Time limit (0.00 = off)"
+
+msgid "PROFSET_LAUNCH_TEAMDMG"
+msgstr "Team Damage Factor (0.00 = off)"

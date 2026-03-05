@@ -256,7 +256,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 		if (!success)
 		{
 			std::filesystem::remove_all(path); // Cleanup the remains
-			return IMPORT_FAIL;
+			return IMPORT_ARCHIVE_FAIL;
 		}
 
 		// delete the archive after extraction
@@ -334,7 +334,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 				path.pop_back(); // drop the / at the end
 
 			std::filesystem::remove_all(path); // delete dir since we aborted
-			return IMPORT_FAIL;
+			return IMPORT_ARCHIVE_FAIL;
 		}
 
 		// check again if its iwad
@@ -485,7 +485,7 @@ importStatus Loader::ProcessArchive(const std::string &filePath)
 	}
 	else
 	{
-		return IMPORT_FAIL;
+		return IMPORT_ARCHIVE_FAIL;
 	}
 }
 

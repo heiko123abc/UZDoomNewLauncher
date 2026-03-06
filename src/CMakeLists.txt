@@ -140,6 +140,14 @@ endif()
 
 # SDL2 and OpenGL is always needed for launcher
 find_package( SDL2 REQUIRED )
+
+# MSVC Zip of sdl does not have the include/sdl2/... folder strcture, workaround
+if( MSVC )
+    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/SDL2")
+    file(COPY "${SDL2_INCLUDE_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/SDL2" FILES_MATCHING PATTERN "*.h")
+    include_directories( SYSTEM "${CMAKE_BINARY_DIR}/SDL2" )
+endif()
+
 include_directories( SYSTEM 
     "${SDL2_INCLUDE_DIR}" 
     "${SDL2_INCLUDE_DIR}/SDL2"

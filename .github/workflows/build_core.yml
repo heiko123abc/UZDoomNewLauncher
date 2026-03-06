@@ -105,7 +105,6 @@ jobs:
       run: |
         cmake -B build -S . \
           -DPK3_QUIET_ZIPDIR=ON -G Ninja \
-          -DCMAKE_PREFIX_PATH="build/sdl2" \
           -DCMAKE_BUILD_TYPE=$BUILD_TYPE $BUILD_OPTS
 
     - name: Build

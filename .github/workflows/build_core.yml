@@ -139,7 +139,7 @@ jobs:
           unzip -j sndfile.zip libsndfile-1.2.2-win64/bin/sndfile.dll -d package
         fi
         if [[ -f sdl2.zip ]]; then
-          unzip -j sdl2.zip "*/x64/SDL2.dll" -d package
+          unzip -j sdl2.zip "SDL2-*/lib/x64/SDL2.dll" -d package
         fi
 
         mkdir package/soundfonts

@@ -35,7 +35,7 @@ jobs:
           - name: Windows
             os: windows-latest
             build_opts: &msvc_opts -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
-            build_opts_extra: "-DSDL2_LIBRARY=sdl2/lib/x64/SDL2.lib -DSDL2_INCLUDE_DIR=sdl2/include"
+            build_opts_extra: "-DSDL2_LIBRARY=sdl2/lib/x64/SDL2 -DSDL2_INCLUDE_DIR=build/sdl2/include"
             deps_cmdline: &msvc_deps >-
               choco install
                 tree
@@ -126,7 +126,7 @@ jobs:
           - name: Windows ARM (Testing)
             os: windows-11-arm
             build_opts: *msvc_opts
-            build_opts_extra: "-DSDL2_LIBRARY=sdl2/lib/x64/SDL2.lib -DSDL2_INCLUDE_DIR=sdl2/include"
+            build_opts_extra: "-DSDL2_LIBRARY=sdl2/lib/x64/SDL2 -DSDL2_INCLUDE_DIR=build/sdl2/include"
             deps_cmdline: *msvc_deps
             extra_files: ""
             build_type: RelWithDebInfo

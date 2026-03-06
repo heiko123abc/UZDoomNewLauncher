@@ -140,18 +140,15 @@ endif()
 
 # SDL2 and OpenGL is always needed for launcher
 find_package( SDL2 REQUIRED )
-
-# MSVC Zip of sdl does not have the include/sdl2/... folder strcture, workaround
-if( MSVC )
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/SDL2")
-    file(COPY "${SDL2_INCLUDE_DIR}/" DESTINATION "${CMAKE_BINARY_DIR}/SDL2" FILES_MATCHING PATTERN "*.h")
-    include_directories( SYSTEM "${CMAKE_BINARY_DIR}/SDL2" )
-endif()
-
+if ( MSVC )
 include_directories( SYSTEM 
-    "${SDL2_INCLUDE_DIR}" 
+    "${SDL2_INCLUDE_DIR}"
+)
+else()
+include_directories( SYSTEM 
     "${SDL2_INCLUDE_DIR}/SDL2"
 )
+endif()
 link_directories(${SDL2_LINK_DIR})
 set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${SDL2_LIBRARY}" )
 find_package(OpenGL REQUIRED)
@@ -282,7 +279,7 @@ if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 		set( CMAKE_CXX_FLAGS "-Wno-unknown-pragmas -Wno-comment -Wno-format ${CMAKE_CXX_FLAGS}" )
 		set( CMAKE_CXX_FLAGS "-D_UNICODE -DUNICODE ${CMAKE_CXX_FLAGS}" )
 		set( CMAKE_CXX_FLAGS "-D_WIN32_WINNT=0x0600 ${CMAKE_CXX_FLAGS}" )
-		set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -municode -static")
+		set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -municode")
 	endif()
 
 	# Detect FreeBSD and add flags

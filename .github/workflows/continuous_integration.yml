@@ -128,7 +128,7 @@ jobs:
             build_opts: *msvc_opts
             build_opts_extra: "-DSDL2_LIBRARY=sdl2/lib/x64/SDL2 -DSDL2_INCLUDE_DIR=build/sdl2/include"
             deps_cmdline: *msvc_deps
-            extra_files: ""
+            extra_files: *msvc_x86_files
             build_type: RelWithDebInfo
 
           - name: Windows MinGW GCC

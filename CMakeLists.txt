@@ -417,6 +417,9 @@ if( MSVC )
 endif()
 add_subdirectory( libraries/abseil )
 
+set(NFD_OVERRIDE_RECENT_WITH_DEFAULT ON)
+add_subdirectory( libraries/nativefiledialog-extended )
+
 set(ZWIDGET_BUILD_EXAMPLE OFF CACHE INTERNAL "" FORCE)
 add_subdirectory( libraries/ZWidget )
 

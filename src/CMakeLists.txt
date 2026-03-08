@@ -987,7 +987,6 @@ set (PCH_SOURCES
 	launcher/errorwindow.cpp
 	launcher/netstartwindow.cpp
 	launcher/launcherMainWindow.cpp
-	launcher/tinyfiledialogs.cpp
 	widgets/themedata.cpp
 	widgets/widgetresourcedata.cpp
 	
@@ -1351,7 +1350,7 @@ if( UNIX )
 	endif()
 endif()
 
-target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash OpenGL::GL)
+target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash OpenGL::GL nfd)
 include_directories(
 	BEFORE
 	.

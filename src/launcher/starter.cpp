@@ -18,6 +18,7 @@
 #include "i_interface.h"
 #include "launcherMainWindow.h"
 
+#include <nfd.h>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -35,6 +36,7 @@ static Starter::ImGuiContextState LauncherContext;
 // This is called from outside to kickstart the launcher ui and logics
 bool ImGuiKickStarter(const FStartupSelectionInfo &info)
 {
+
 	if (!Starter::Init())
 	{
 		std::cerr << "Failed to initialize the launcher." << std::endl;
@@ -120,6 +122,8 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 	SDL_GL_MakeCurrent(state.window, state.gl_context);
 	SDL_GL_SetSwapInterval(1); // Enable vsync
 
+	NFD_Init();
+
 	// Setup Dear ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -134,15 +138,14 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 
 	// Setup UTF-8 font using noto
 	ImFontConfig config;
-	float        fontSize = 16.0f;
 	config.PixelSnapH     = true;
 
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans.ttf", fontSize, &config);
+	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans.ttf", 0.0f, &config);
 	config.MergeMode = true;
 
 	// Add additional fonts for CJK characters, merging them with the default font
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-jp.ttf", fontSize, &config);
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-kr.ttf", fontSize, &config);
+	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-jp.ttf", 0.0f, &config);
+	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-kr.ttf", 0.0f, &config);
 
 	ImGui::StyleColorsDark();
 
@@ -169,6 +172,7 @@ void Starter::TeardownContext(ImGuiContextState &state)
 		state.window = nullptr;
 	}
 
+	NFD_Quit();
 	SDL_Quit();
 }
 

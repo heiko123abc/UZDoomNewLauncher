@@ -22,36 +22,51 @@
 
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.cpp" // Required to bind std::string directly to ImGui::InputText
-#include <tinyfiledialogs.h>
 
-// Helper Function - Integrated with tinyfiledialogs
-void ProfileSettings::OpenPathPicker(std::string *targetInput, const char *title, bool isFolder, const char *filterDesc,
-                                     const std::vector<const char *> &filters)
+// Helper Function with NFD-EX
+std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFolder,
+                                            const std::vector<nfdfilteritem_t> &filters = {})
 {
+
+	defaultPath = std::filesystem::absolute(defaultPath).make_preferred().string(); // NFD wants absolute paths
+	if (!isFolder)
+		defaultPath = std::filesystem::path(defaultPath).parent_path().string(); //cutofft the file itsself
+
+	// use last time starting point or IF not valid, start anew
+	const nfdchar_t *nfdDefaultPath = nullptr;
+	if (!defaultPath.empty() && std::filesystem::exists(defaultPath))
+		nfdDefaultPath = defaultPath.c_str();
+
+	nfdchar_t  *outPath = nullptr;
+	nfdresult_t result;
+
 	if (isFolder)
 	{
 		// Folder selection
-		const char *result = tinyfd_selectFolderDialog(title, targetInput->c_str());
-		if (result != nullptr)
-		{
-			*targetInput = result;
-		}
+		result = NFD_PickFolder(&outPath, nfdDefaultPath);
 	}
 	else
 	{
 		// File selection
-		const char *result =
-			tinyfd_openFileDialog(title,
-		                          targetInput->c_str(), // Default path (uses current value of input box)
-		                          (int)filters.size(), filters.empty() ? nullptr : filters.data(), filterDesc,
-		                          0 // 0 = single file, 1 = multiple files
-		    );
+		const nfdfilteritem_t *filterData  = filters.empty() ? nullptr : filters.data();
+		nfdfiltersize_t        filterCount = static_cast<nfdfiltersize_t>(filters.size());
 
-		if (result != nullptr)
-		{
-			*targetInput = result;
-		}
+		result = NFD_OpenDialog(&outPath, filterData, filterCount, nfdDefaultPath);
 	}
+
+	std::string selectedPath = ""; // Default to empty string (if user cancels)
+
+	if (result == NFD_OKAY)
+	{
+		selectedPath = outPath;
+		NFD_FreePath(outPath); // free path allocated by NFD
+	}
+	else if (result == NFD_ERROR)
+	{
+		std::cerr << "NFD Error: " << NFD_GetError() << std::endl;
+	}
+
+	return selectedPath;
 }
 
 // Main Window Rendering
@@ -227,12 +242,17 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 		ImGui::SameLine();
 		if (ImGui::Button("...##iwadbtn", ImVec2(35, 0)))
 		{
-			OpenPathPicker(&PROFILE_DIR, GStrings.GetString("PROFSET_GENERAL_IWADDIAG"), false, "WAD Files",
-			               {"*.wad", "*.pk3"});
+			std::string startPath = currEdit->iwadFilePath.empty() ? PROFILE_DIR : currEdit->iwadFilePath;
+			std::string newPath   = OpenPathPicker(startPath, false,
+			                                       {
+                                                     {"WAD Files", "iwad,wad,pk3"}
+            });
+			if (!newPath.empty())
+				currEdit->iwadFilePath = newPath;
 		}
 
 		// Conditionally show PWAD Path
-		if (currEdit->isIWAD == 0) // PWAD Selected
+		if (currEdit->isIWAD == 0)
 		{
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
@@ -244,8 +264,13 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 			ImGui::SameLine();
 			if (ImGui::Button("...##pwadbtn", ImVec2(35, 0)))
 			{
-				OpenPathPicker(&PROFILE_DIR, GStrings.GetString("PROFSET_GENERAL_PWADDIAG"), false, "WAD Files",
-				               {"*.wad", "*.pk3"});
+				std::string startPath = currEdit->pwadFilePath.empty() ? PROFILE_DIR : currEdit->pwadFilePath;
+				std::string newPath   = OpenPathPicker(startPath, false,
+				                                       {
+                                                         {"WAD Files", "pwad,wad,pk3"}
+                });
+				if (!newPath.empty())
+					currEdit->pwadFilePath = newPath;
 			}
 		}
 		ImGui::EndTable();
@@ -317,8 +342,8 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 		ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 		ImGui::TableSetupColumn("Inputs", ImGuiTableColumnFlags_WidthStretch);
 
-		auto DrawPathPickerRow = [&](const char *label, std::string *targetVar, const char *diagTitle, bool isFolder,
-		                             const char *filterDesc, const std::vector<const char *> &filters) {
+		auto DrawPathPickerRow = [&](const char *label, std::string *targetVar, bool isFolder,
+		                             const std::vector<nfdfilteritem_t> &filters) {
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 			ImGui::AlignTextToFramePadding();
@@ -329,18 +354,19 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			ImGui::SameLine();
 			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(), ImVec2(35, 0)))
 			{
-				OpenPathPicker(targetVar, diagTitle, isFolder, filterDesc, filters);
+				std::string newPath = OpenPathPicker(*targetVar, isFolder, filters);
+				if (!newPath.empty())
+					*targetVar = newPath;
 			}
 		};
 
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_CONFIG"), &currEdit->configFilePath,
-		                  GStrings.GetString("PROFSET_FILES_CONFIGDIAG"), false, "INI Files", {"*.ini"});
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SAVE"), &currEdit->saveDirPath,
-		                  GStrings.GetString("PROFSET_FILES_SAVEDIAG"), true, nullptr, {});
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SCREEN"), &currEdit->screenshotDirPath,
-		                  GStrings.GetString("PROFSET_FILES_SCREENDIAG"), true, nullptr, {});
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_DEMO"), &currEdit->demoDirPath,
-		                  GStrings.GetString("PROFSET_FILES_DEMODIAG"), true, nullptr, {});
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_CONFIG"), &currEdit->configFilePath, false,
+		                  {
+							  {"INI Files", "ini"}
+        });
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SAVE"), &currEdit->saveDirPath, true, {});
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SCREEN"), &currEdit->screenshotDirPath, true, {});
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_DEMO"), &currEdit->demoDirPath, true, {});
 
 		ImGui::EndTable();
 	}
@@ -351,35 +377,24 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 	ImGui::SeparatorText(GStrings.GetString("PROFSET_FILES_MODS"));
 	if (ImGui::Button(GStrings.GetString("PROFSET_FILES_ADDMOD")))
 	{
-		const char *filterPatterns[] = {"*.wad", "*.pk3", "*.pk7", "*.zip"};
+		const nfdpathset_t *pathSet       = nullptr;
+		nfdfilteritem_t     filterItem[1] = {
+            {"Mod Files (.wad,.pk3,.pk7,.zip)", "wad,pk3,pk7,zip"}
+        };
 
-		const char *result = tinyfd_openFileDialog("Select Mod Files",
-		                                           "",               // Default path
-		                                           4,                // Number of filter patterns
-		                                           filterPatterns,   // Array of patterns
-		                                           "Doom Mod Files", // Description
-		                                           1                 // 1 = Allow multiple select
-		);
+		// Allow user to select multiple files, then iterate to add them
+		nfdresult_t result = NFD_OpenDialogMultiple(&pathSet, filterItem, 1, nullptr);
 
-		if (result != nullptr)
+		if (result == NFD_OKAY)
 		{
-			// tinyfiledialogs returns multiple paths separated by '|'
-			std::string              paths = result;
-			size_t                   start = 0;
-			size_t                   end   = paths.find('|');
-			std::vector<std::string> selectedFiles;
+			nfdpathsetsize_t numPaths;
+			NFD_PathSet_GetCount(pathSet, &numPaths);
 
-			while (end != std::string::npos)
+			for (nfdpathsetsize_t i = 0; i < numPaths; ++i)
 			{
-				selectedFiles.push_back(paths.substr(start, end - start));
-				start = end + 1;
-				end   = paths.find('|', start);
-			}
-			selectedFiles.push_back(paths.substr(start));
+				nfdchar_t *originalPath;
+				NFD_PathSet_GetPath(pathSet, i, &originalPath);
 
-			// Copy files into the profile directory
-			for (const auto &originalPath : selectedFiles)
-			{
 				std::filesystem::path src(originalPath);
 				std::filesystem::path dest = std::filesystem::path(currEdit->modsDirPath) / src.filename();
 
@@ -387,7 +402,14 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 				std::filesystem::copy_file(src, dest, std::filesystem::copy_options::overwrite_existing);
 
 				currEdit->modFiles.push_back(dest.string());
+
+				NFD_PathSet_FreePath(originalPath); // Free individual path allocated
 			}
+			NFD_PathSet_Free(pathSet); // Free the entire path set
+		}
+		else if (result == NFD_ERROR)
+		{
+			std::cerr << "NFD Multi-Select Error: " << NFD_GetError() << std::endl;
 		}
 	}
 
@@ -482,8 +504,8 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			ImGui::DragInt("##MapSpinner", &currEdit->selectedLaunchMap, 1.0f, 1, 100000, "%d",
 			               ImGuiSliderFlags_AlwaysClamp);
 
-			auto DrawModePath = [&](int modeVal, const char *label, std::string *targetVar, const char *diagStr,
-			                        const char *filterDesc, const std::vector<const char *> &filters) {
+			auto DrawModePath = [&](int modeVal, const char *label, std::string *targetVar,
+			                        const std::vector<nfdfilteritem_t> &filters) {
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
 				ImGui::RadioButton(label, &currEdit->launchParameters, modeVal);
@@ -492,15 +514,25 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 				ImGui::InputText(std::string("##T" + std::to_string(modeVal)).c_str(), targetVar);
 				ImGui::SameLine();
 				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(), ImVec2(35, 0)))
-					OpenPathPicker(targetVar, diagStr, false, filterDesc, filters);
+				{
+					std::string newPath = OpenPathPicker(*targetVar, false, filters);
+					if (!newPath.empty())
+						*targetVar = newPath;
+				}
 			};
 
 			DrawModePath(2, GStrings.GetString("PROFSET_LAUNCH_SAVE"), &currEdit->selectedLaunchSave,
-			             GStrings.GetString("PROFSET_LAUNCH_SAVEDIAG"), "ZDS Files", {"*.zds"});
+			             {
+							 {"ZDS Files", "zds"}
+            });
 			DrawModePath(3, GStrings.GetString("PROFSET_LAUNCH_PLAYDEM"), &currEdit->selectedLaunchDemoPlayback,
-			             GStrings.GetString("PROFSET_LAUNCH_DEMODIAG"), "LMP Files", {"*.lmp"});
+			             {
+							 {"LMP Files", "lmp"}
+            });
 			DrawModePath(4, GStrings.GetString("PROFSET_LAUNCH_RECORD"), &currEdit->selectedLaunchDemoRecord,
-			             GStrings.GetString("PROFSET_LAUNCH_DEMODIAG"), "LMP Files", {"*.lmp"});
+			             {
+							 {"LMP Files", "lmp"}
+            });
 
 			ImGui::EndTable();
 		}
@@ -756,7 +788,8 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_TIMELIM"));
 			ImGui::TableNextColumn();
 			ImGui::SetNextItemWidth(-FLT_MIN);
-			ImGui::DragFloat("##MPtim", &currEdit->mpTimeLimit, 1.0f, 0.0f, 9999999.0f, "%.5f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::DragFloat("##MPtim", &currEdit->mpTimeLimit, 1.0f, 0.0f, 9999999.0f, "%.5f",
+			                 ImGuiSliderFlags_AlwaysClamp);
 
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();

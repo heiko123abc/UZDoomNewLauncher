@@ -17,7 +17,7 @@
 #include "about.h"
 #include "gstrings.h"
 #include "loader.h"
-#include <tinyfiledialogs.h>
+#include "profileSettings.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -141,8 +141,8 @@ void LauncherMainWindow::ApplyTheme()
 	// Define available themes
 	std::unordered_map<std::string, LauncherTheme> themes;
 
-	themes.emplace("Dark", LauncherTheme(LauncherTheme::BaseTheme::ImGuiDark));
-	themes.emplace("Light", LauncherTheme(LauncherTheme::BaseTheme::ImGuiLight));
+	themes.emplace("dark", LauncherTheme(LauncherTheme::BaseTheme::ImGuiDark));
+	themes.emplace("light", LauncherTheme(LauncherTheme::BaseTheme::ImGuiLight));
 
 	// "test" theme
 	themes.emplace("test", LauncherTheme(0xeee8d5, // bg
@@ -298,28 +298,40 @@ void LauncherMainWindow::DrawMenuBar()
 	{
 		if (ImGui::BeginMenu(GStrings.GetString("LAUNCHER_TOPBAR_FILE")))
 		{
+
+			std::string defaultPath = "";
+
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDWAD")))
 			{
-				const char *filterPatterns[] = {"*.wad", "*.pk3", "*.pk7", "*.iwad", "*.pwad", "*.ipk3", "*.ipk7"};
-				const char *result = tinyfd_openFileDialog("Select WAD", "", 7, filterPatterns, "WAD/PK3 Files", 0);
-				if (result != nullptr)
+				std::string result =
+					ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                    {
+														{"WAD/PKX Files", "wad,pk3,pk7,iwad,pwad,ipk3,ipk7"}
+                });
+
+				if (!result.empty())
 				{
 					// Capture status and trigger popup
-					lastImportStatus = Loader::ProcessWad(result);
-					showImportPopup  = true;
-					needsRefresh     = true;
+					lastImportStatus = Loader::ProcessWad(
+						result); // Use result.c_str() here if ProcessWad specifically requires a const char*
+					showImportPopup = true;
+					needsRefresh    = true;
 				}
 			}
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDARCHIVE")))
 			{
-				const char *filterPatterns[] = {"*.zip"};
-				const char *result = tinyfd_openFileDialog("Select Archive", "", 1, filterPatterns, "Zip Archives", 0);
-				if (result != nullptr)
+				std::string result = ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                                     {
+																		 {"Zip Archives", "zip"}
+                });
+
+				if (!result.empty())
 				{
 					// Capture status and trigger popup
-					lastImportStatus = Loader::ProcessArchive(result);
-					showImportPopup  = true;
-					needsRefresh     = true;
+					lastImportStatus = Loader::ProcessArchive(
+						result); // Use result.c_str() here if ProcessArchive specifically requires a const char*
+					showImportPopup = true;
+					needsRefresh    = true;
 				}
 			}
 			ImGui::EndMenu();
@@ -461,7 +473,10 @@ void LauncherMainWindow::DrawButtons()
 	ImVec2 btnSize(-FLT_MIN, 30.0f); // Stretch to column width
 	bool   hasSelection = (selectedProfileIdx != -1);
 
-	if (!hasSelection || isAlreadyLaunched)
+	// when launched, disable all buttons
+	bool disableButtons = (!hasSelection || isAlreadyLaunched);
+
+	if (disableButtons)
 		ImGui::BeginDisabled();
 
 	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_START"), btnSize))
@@ -476,14 +491,14 @@ void LauncherMainWindow::DrawButtons()
 		showSettingsModal = true;
 	}
 
-	if (!hasSelection || isAlreadyLaunched)
+	if (disableButtons)
 		ImGui::EndDisabled();
 
 	ImGui::Spacing();
 	ImGui::Separator();
 	ImGui::Spacing();
 
-	if (!hasSelection)
+	if (disableButtons)
 		ImGui::BeginDisabled();
 
 	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP"), btnSize))
@@ -503,7 +518,7 @@ void LauncherMainWindow::DrawButtons()
 	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_CLONE"), btnSize))
 		CloneSelectedProfile();
 
-	if (!hasSelection)
+	if (disableButtons)
 		ImGui::EndDisabled();
 
 	// Available Status

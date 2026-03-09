@@ -117,7 +117,7 @@ fileType getFiletype(const std::string filepath)
 }
 
 // Extracts zip using build-in miniz.
-bool ExtractArchive(const std::string &archivePath, const std::string &targetDir)
+bool Loader::ExtractArchive(const std::string &archivePath, const std::string &targetDir)
 {
 	mz_zip_archive zip_archive;
 
@@ -250,7 +250,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 
 		std::filesystem::copy(filepath, path);
 
-		bool success = ExtractArchive(targetZip, path);
+		bool success = Loader::ExtractArchive(targetZip, path);
 
 		// Did user stop or extraction fail?
 		if (!success)

@@ -22,6 +22,55 @@
 
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.cpp" // Required to bind std::string directly to ImGui::InputText
+#include <miniz.h>
+
+static void ExportProfileToZip(const std::string &profileJsonPath, const std::string &outZipPath)
+{
+	std::filesystem::path profileDir = std::filesystem::path(profileJsonPath).parent_path();
+
+	mz_zip_archive zip_archive = {};
+	if (!mz_zip_writer_init_heap(&zip_archive, 0, 16 * 1024 * 1024))
+		return;
+
+	for (const auto &entry : std::filesystem::recursive_directory_iterator(profileDir))
+	{
+		if (entry.is_regular_file())
+		{
+			std::string absPath = entry.path().string();
+			std::string relPath = std::filesystem::relative(entry.path(), profileDir).string();
+
+			// Replace backslashes with forward slashes for ZIP compatibility
+			std::replace(relPath.begin(), relPath.end(), '\\', '/');
+
+			std::ifstream file(absPath, std::ios::binary | std::ios::ate);
+			if (file.is_open())
+			{
+				std::streamsize size = file.tellg();
+				file.seekg(0, std::ios::beg);
+				std::vector<uint8_t> buffer(size);
+
+				if (file.read(reinterpret_cast<char *>(buffer.data()), size))
+				{
+					mz_zip_writer_add_mem(&zip_archive, relPath.c_str(), buffer.data(), size, MZ_DEFAULT_COMPRESSION);
+				}
+			}
+		}
+	}
+
+	void  *zip_buffer = nullptr;
+	size_t zip_size   = 0;
+	mz_zip_writer_finalize_heap_archive(&zip_archive, &zip_buffer, &zip_size);
+	mz_zip_writer_end(&zip_archive);
+
+	std::ofstream outFile(outZipPath, std::ios::binary);
+	if (outFile.is_open())
+	{
+		outFile.write(static_cast<const char *>(zip_buffer), zip_size);
+		outFile.close();
+	}
+
+	mz_free(zip_buffer);
+}
 
 // Helper Function with NFD-EX
 std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFolder,
@@ -30,7 +79,7 @@ std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFol
 
 	defaultPath = std::filesystem::absolute(defaultPath).make_preferred().string(); // NFD wants absolute paths
 	if (!isFolder)
-		defaultPath = std::filesystem::path(defaultPath).parent_path().string(); //cutofft the file itsself
+		defaultPath = std::filesystem::path(defaultPath).parent_path().string(); // cutofft the file itsself
 
 	// use last time starting point or IF not valid, start anew
 	const nfdchar_t *nfdDefaultPath = nullptr;
@@ -136,6 +185,32 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 		if (ImGui::Button(GStrings.GetString("PROFSET_DELPROF")))
 		{
 			ImGui::OpenPopup("Delete Confirmation");
+		}
+		ImGui::PopStyleColor(2);
+
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.5f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.6f, 0.1f, 1.0f));
+		if (ImGui::Button("Export Profile..."))
+		{
+			nfdchar_t      *outPath       = nullptr;
+			nfdfilteritem_t filterItem[1] = {
+				{"Zip Archive", "zip"}
+            };
+
+			// Sanitize profile title for default filename (remove chars that can't be in filenames)
+			std::string defaultName = "Export_" + currEdit->title + ".zip";
+			std::replace(defaultName.begin(), defaultName.end(), ':', '_');
+			std::replace(defaultName.begin(), defaultName.end(), '/', '_');
+			std::replace(defaultName.begin(), defaultName.end(), '\\', '_');
+
+			nfdresult_t result = NFD_SaveDialog(&outPath, filterItem, 1, nullptr, defaultName.c_str());
+			if (result == NFD_OKAY)
+			{
+				ExportProfileToZip(profilePath, outPath);
+				NFD_FreePath(outPath);
+			}
 		}
 		ImGui::PopStyleColor(2);
 
@@ -425,7 +500,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Up Arrow
 		ImGui::BeginDisabled(i == 0);
-		if (ImGui::Button("^", ImVec2(25, 25)))
+		if (ImGui::Button("▲", ImVec2(25, 25)))
 		{
 			std::swap(currEdit->modFiles[i], currEdit->modFiles[i - 1]);
 		}
@@ -435,7 +510,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Down Arrow
 		ImGui::BeginDisabled(i == currEdit->modFiles.size() - 1);
-		if (ImGui::Button("v", ImVec2(25, 25)))
+		if (ImGui::Button("▼", ImVec2(25, 25)))
 		{
 			std::swap(currEdit->modFiles[i], currEdit->modFiles[i + 1]);
 		}

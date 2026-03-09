@@ -18,6 +18,7 @@
 #include "gstrings.h"
 #include "loader.h"
 #include "profileSettings.h"
+#include "starter.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -172,7 +173,7 @@ void LauncherMainWindow::ApplyTheme()
 	                              0x0000ff, // click
 	                              0x808080  // border
 	                              )}
-	};
+    };
 
 	if (themes.find(themeVar) != themes.end())
 	{
@@ -214,6 +215,10 @@ void LauncherMainWindow::DrawPopUp()
 		case IMPORT_ARCHIVE_FAIL:
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
 			                   GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")); // Red text
+			break;
+		case IMPORT_DUPLICATE:
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_ERROR_DUPLICATE")); // Yellow text for warning
 			break;
 		case IMPORT_CANCELLED:
 			ImGui::Text("Import Cancelled.");
@@ -349,6 +354,39 @@ void LauncherMainWindow::DrawMenuBar()
 					needsRefresh     = true;
 				}
 			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_IMPORT")))
+			{
+				// Allow user to import a .zip profile
+
+				std::string defaultPath = "";
+				std::string result      = ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                                          {
+                                                                         {"Zip Archives", "zip"}
+                });
+
+				if (!result.empty())
+				{
+					ImportProfileFromZip(result);
+				}
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEEXIT")))
+			{
+				// Shutdown SDL directly
+				SDL_Event quit_event;
+				quit_event.type = SDL_QUIT;
+				SDL_PushEvent(&quit_event);
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -634,6 +672,82 @@ void LauncherMainWindow::CloneSelectedProfile()
 	profilePaths.push_back(newJsonPath.string());
 	SaveConfig();
 	RefreshList();
+}
+
+void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
+{
+	// temporary folder name with timestamp to avoid conflicts
+	auto               now  = std::chrono::system_clock::now();
+	auto               time = std::chrono::system_clock::to_time_t(now);
+	std::tm            tm   = *std::localtime(&time);
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
+
+	std::string tempFolderName = "temp_import_" + oss.str();
+	std::string tempDir        = PROFILE_DIR + tempFolderName + "/";
+
+	std::filesystem::create_directories(tempDir);
+
+	if (Loader::ExtractArchive(zipPath, tempDir))
+	{
+		std::string jsonFilename = "";
+		for (const auto &entry : std::filesystem::directory_iterator(tempDir))
+		{
+			if (entry.path().extension() == ".json")
+			{
+				jsonFilename = entry.path().filename().string();
+				break;
+			}
+		}
+
+		if (!jsonFilename.empty())
+		{
+			std::string originalFolderName = std::filesystem::path(jsonFilename).stem().string();
+			std::string targetDir          = PROFILE_DIR + originalFolderName + "/";
+			std::string finalJsonPath      = targetDir + jsonFilename;
+
+			// Check if it already exists
+			bool isDuplicate = std::filesystem::exists(targetDir);
+
+			if (!isDuplicate)
+			{
+				for (const std::string &existingPath : profilePaths)
+				{
+					if (existingPath == finalJsonPath)
+					{
+						isDuplicate = true;
+						break;
+					}
+				}
+			}
+
+			// it's a duplicate -> trigger the popup and abort!
+			if (isDuplicate)
+			{
+				std::filesystem::remove_all(tempDir);
+				lastImportStatus = IMPORT_DUPLICATE;
+				showImportPopup  = true;
+				return;
+			}
+
+			// Move the temporary directory to the correct original folder name
+			std::filesystem::rename(tempDir, targetDir);
+
+			profilePaths.push_back(finalJsonPath);
+			SaveConfig();
+			needsRefresh = true;
+		}
+		else
+		{
+			// Clean up
+			std::filesystem::remove_all(tempDir);
+		}
+	}
+	else
+	{
+		// Clean up if extraction fails entirely
+		std::filesystem::remove_all(tempDir);
+	}
 }
 
 // launch selected entry

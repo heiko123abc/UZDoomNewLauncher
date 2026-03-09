@@ -3323,3 +3323,12 @@ msgstr "Team Damage Factor (0.00 = off)"
 
 msgid "LAUNCHER_PROFBUTTON_CLONE"
 msgstr "Clone Profile"
+
+msgid "LAUNCHER_TOPBAR_IMPORT"
+msgstr "Import Profile ..."
+
+msgid "LAUNCHER_EXPORT"
+msgstr "Export Profile ..."
+
+msgid "LAUNCHER_ERROR_DUPLICATE"
+msgstr "This Profile already exists!"

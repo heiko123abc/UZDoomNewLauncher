@@ -228,4 +228,5 @@ class LauncherMainWindow
 	void UpdateLanguage();
 	void ApplyTheme();
 	void CloneSelectedProfile();
+	void ImportProfileFromZip(const std::string &zipPath);
 };

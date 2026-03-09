@@ -24,6 +24,7 @@ enum importStatus
 	IMPORT_PWAD_SUCCESS,
 	IMPORT_FAIL,
 	IMPORT_ARCHIVE_FAIL,
+	IMPORT_DUPLICATE,
 	IMPORT_CANCELLED
 };
 
@@ -36,5 +37,7 @@ class Loader
 	static importStatus ProcessArchive(const std::string &filePath);
 	static importStatus ProcessWad(const std::string &filePath);
 
+	// Extracts zip using build-in miniz.
+	static bool ExtractArchive(const std::string &archivePath, const std::string &targetDir);
 
 };

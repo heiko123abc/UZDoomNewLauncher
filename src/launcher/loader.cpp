@@ -275,22 +275,33 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 	{
 		// WAIT, the user might drop a arbitary archive here, we simply stop if there isnt even a .wad file
 		// was the archive nested once?
-		auto nestCheck = std::filesystem::directory_iterator(path);
-		if (nestCheck != std::filesystem::directory_iterator())
+		bool unnesting = true;
+		while (unnesting)
 		{
-			std::filesystem::path firstPath = nestCheck->path();
-			bool                  isDir     = nestCheck->is_directory();
-
 			int                   item_count = 0;
 			std::filesystem::path singleDir;
+
 			for (const auto &entry : std::filesystem::directory_iterator(path))
 			{
 				item_count++;
 				singleDir = entry.path();
 			}
+
+			// If there is exactly ONE item in the root and it's a directory, it's a "wrapper".
 			if (item_count == 1 && std::filesystem::is_directory(singleDir))
 			{
-				path = singleDir.string() + "/";
+				// Move all contents of the nested directory up to the profile directory
+				for (const auto &entry : std::filesystem::directory_iterator(singleDir))
+				{
+					std::filesystem::rename(entry.path(), std::filesystem::path(path) / entry.path().filename());
+				}
+				// Remove the now-empty "wrapper" directory
+				std::filesystem::remove(singleDir);
+			}
+			else
+			{
+				// We've reached the actual files (or multiple folders), stop un-nesting.
+				unnesting = false;
 			}
 		}
 

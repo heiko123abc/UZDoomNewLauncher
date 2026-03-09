@@ -18,10 +18,16 @@
 #include "i_interface.h"
 #include "launcherMainWindow.h"
 
-#include <nfd.h>
+#include "widgets/noto-sans-armenian.h"
+#include "widgets/noto-sans-georgian.h"
+#include "widgets/noto-sans-jp.h"
+#include "widgets/noto-sans-kr.h"
+#include "widgets/noto-sans.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <nfd.h>
 #include <nlohmann/json.hpp>
 
 using json      = nlohmann::json;
@@ -138,14 +144,19 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 
 	// Setup UTF-8 font using noto
 	ImFontConfig config;
-	config.PixelSnapH     = true;
+	config.PixelSnapH = true;
+	config.FontDataOwnedByAtlas = false;
 
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans.ttf", 0.0f, &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosans_compressed_data, notosans_compressed_size, 0.0f, &config);
 	config.MergeMode = true;
 
-	// Add additional fonts for CJK characters, merging them with the default font
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-jp.ttf", 0.0f, &config);
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-kr.ttf", 0.0f, &config);
+	// Add additional fonts for CJK and more characters, merging them with the default font
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosanskr_compressed_data, notosanskr_compressed_size, 0.0f, &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansarmenian_compressed_data, notosansarmenian_compressed_size, 0.0f,
+	                                         &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansgeorgian_compressed_data, notosansgeorgian_compressed_size, 0.0f,
+	                                         &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansjp_compressed_data, notosansjp_compressed_size, 0.0f, &config);
 
 	ImGui::StyleColorsDark();
 

@@ -144,7 +144,6 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 
 	// Setup UTF-8 font using noto
 	ImFontConfig config;
-	config.PixelSnapH = true;
 	config.FontDataOwnedByAtlas = false;
 
 	io.Fonts->AddFontFromMemoryCompressedTTF(notosans_compressed_data, notosans_compressed_size, 0.0f, &config);
@@ -278,7 +277,9 @@ void Starter::RunImGuiLoop(ImGuiContextState &context, const RenderCallback &ren
 
 		ImGui::Render();
 
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		int drawable_w, drawable_h;
+		SDL_GL_GetDrawableSize(context.window, &drawable_w, &drawable_h);
+		glViewport(0, 0, drawable_w, drawable_h);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 

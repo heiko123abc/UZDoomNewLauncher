@@ -24,7 +24,6 @@
 #include <vector>
 
 #include <cstdint>
-#include <imgui.h>
 
 class LauncherTheme
 {
@@ -50,7 +49,7 @@ class LauncherTheme
 	// Default constructor
 	LauncherTheme() = default;
 
-	// Construct standard themes (Marked explicit to prevent accidental implicit conversions)
+	// Construct standard themes
 	explicit LauncherTheme(BaseTheme baseType) : type(baseType)
 	{
 	}
@@ -64,7 +63,7 @@ class LauncherTheme
 	{
 	}
 
-	// Static helper: Doesn't rely on class state, so it should be static
+	// Static helper
 	static ImVec4 HexToImVec4(uint32_t hex, float alpha = 1.0f)
 	{
 		float r = ((hex >> 16) & 0xFF) / 255.0f;
@@ -78,11 +77,7 @@ class LauncherTheme
 	{
 		ImGuiStyle &style = ImGui::GetStyle();
 
-		// 1. Reset Structural Styling
-		style.WindowBorderSize = (type == BaseTheme::Custom) ? 1.0f : 0.0f;
-		style.FrameBorderSize  = (type == BaseTheme::Custom) ? 1.0f : 0.0f;
-
-		// 2. Handle Standard Themes
+		// Handle Standard Themes
 		if (type == BaseTheme::ImGuiLight)
 		{
 			ImGui::StyleColorsLight();
@@ -95,46 +90,87 @@ class LauncherTheme
 			return;
 		}
 
-		// (scrollbars, tabs, separators) that any custom theme doesn't explicitly set.
+		// Setup base dark theme to catch any missing elements safely
 		ImGui::StyleColorsDark();
-
 		ImVec4 *colors = style.Colors;
 
-		// Apply background and text
-		colors[ImGuiCol_WindowBg] = bgColor;
-		colors[ImGuiCol_ChildBg]  = bgColor;
-		colors[ImGuiCol_PopupBg]  = inputsColor;
-		colors[ImGuiCol_Text]     = textColor;
+		// Core Backgrounds & Text
+		colors[ImGuiCol_WindowBg]       = ImVec4(bgColor.x, bgColor.y, bgColor.z, 0.95f);
+		colors[ImGuiCol_ChildBg]        = ImVec4(bgColor.x, bgColor.y, bgColor.z, 0.58f);
+		colors[ImGuiCol_PopupBg]        = ImVec4(inputsColor.x, inputsColor.y, inputsColor.z, 0.92f);
+		colors[ImGuiCol_Text]           = textColor;
+		colors[ImGuiCol_TextDisabled]   = ImVec4(textColor.x, textColor.y, textColor.z, 0.50f);
+		colors[ImGuiCol_TextSelectedBg] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.43f);
 
-		colors[ImGuiCol_TextDisabled] = ImVec4(textColor.x, textColor.y, textColor.z, 0.5f);
-
-		// Apply borders
-		colors[ImGuiCol_Border] = borderColor;
+		// Borders
+		colors[ImGuiCol_Border]       = ImVec4(borderColor.x, borderColor.y, borderColor.z, 0.65f);
+		colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
 
 		// Frame Backgrounds (Inputs, Checkboxes, etc.)
 		colors[ImGuiCol_FrameBg]        = inputsColor;
-		colors[ImGuiCol_FrameBgHovered] = hoverColor;
+		colors[ImGuiCol_FrameBgHovered] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.78f);
 		colors[ImGuiCol_FrameBgActive]  = clickColor;
+
+		// Title Bar & Menus
+		colors[ImGuiCol_TitleBg]          = interactColor;
+		colors[ImGuiCol_TitleBgCollapsed] = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.75f);
+		colors[ImGuiCol_TitleBgActive]    = hoverColor;
+		colors[ImGuiCol_MenuBarBg]        = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.47f);
 
 		// Interactive Elements (Buttons)
 		colors[ImGuiCol_Button]        = interactColor;
-		colors[ImGuiCol_ButtonHovered] = hoverColor;
+		colors[ImGuiCol_ButtonHovered] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.86f);
 		colors[ImGuiCol_ButtonActive]  = clickColor;
+		colors[ImGuiCol_CheckMark]     = ImVec4(clickColor.x, clickColor.y, clickColor.z, 0.80f);
 
-		// Headers (Selectable rows in your Profile List)
-		colors[ImGuiCol_Header]        = interactColor;
-		colors[ImGuiCol_HeaderHovered] = hoverColor;
+		// Scrollbar
+		colors[ImGuiCol_ScrollbarBg]          = bgColor;
+		colors[ImGuiCol_ScrollbarGrab]        = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.50f);
+		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.78f);
+		colors[ImGuiCol_ScrollbarGrabActive]  = clickColor;
+
+		// Sliders & Grips
+		colors[ImGuiCol_SliderGrab]        = interactColor;
+		colors[ImGuiCol_SliderGrabActive]  = clickColor;
+		colors[ImGuiCol_ResizeGrip]        = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.50f);
+		colors[ImGuiCol_ResizeGripHovered] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.78f);
+		colors[ImGuiCol_ResizeGripActive]  = clickColor;
+
+		// Headers (Selectable rows, Trees)
+		colors[ImGuiCol_Header]        = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.76f);
+		colors[ImGuiCol_HeaderHovered] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.86f);
 		colors[ImGuiCol_HeaderActive]  = clickColor;
 
-		// Table specific styling
+		// Tables
 		colors[ImGuiCol_TableHeaderBg]     = inputsColor;
 		colors[ImGuiCol_TableBorderLight]  = borderColor;
 		colors[ImGuiCol_TableBorderStrong] = borderColor;
 
-		// Title bar
-		colors[ImGuiCol_TitleBg]          = interactColor;
-		colors[ImGuiCol_TitleBgActive]    = hoverColor;
-		colors[ImGuiCol_TitleBgCollapsed] = interactColor;
+		// Modals
+		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(bgColor.x, bgColor.y, bgColor.z, 0.73f);
+
+		// Tabs
+		colors[ImGuiCol_Tab]                       = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.60f);
+		colors[ImGuiCol_TabHovered]                = hoverColor;
+		colors[ImGuiCol_TabSelected]               = clickColor;
+		colors[ImGuiCol_TabDimmed]                 = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.30f);
+		colors[ImGuiCol_TabDimmedSelected]         = ImVec4(interactColor.x, interactColor.y, interactColor.z, 0.60f);
+		colors[ImGuiCol_TabSelectedOverline]       = hoverColor;
+		colors[ImGuiCol_TabDimmedSelectedOverline] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.50f);
+
+		// Separators
+		colors[ImGuiCol_Separator]        = ImVec4(borderColor.x, borderColor.y, borderColor.z, 0.50f);
+		colors[ImGuiCol_SeparatorHovered] = ImVec4(hoverColor.x, hoverColor.y, hoverColor.z, 0.78f);
+		colors[ImGuiCol_SeparatorActive]  = clickColor;
+
+		// Table Rows (Backgrounds for alternating table rows)
+		colors[ImGuiCol_TableRowBg]    = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+		colors[ImGuiCol_TableRowBgAlt] = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+
+		// Navigation (Keyboard/Gamepad)
+		colors[ImGuiCol_NavCursor]             = hoverColor;
+		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+		colors[ImGuiCol_NavWindowingDimBg]     = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 	}
 };
 
@@ -162,7 +198,7 @@ class LauncherMainWindow
 
 	// State trackers
 	std::string langVar  = "default";
-	std::string themeVar = "system";
+	std::string themeVar = "dark";
 
 	// Modal Triggers
 	bool showSettingsModal = false;

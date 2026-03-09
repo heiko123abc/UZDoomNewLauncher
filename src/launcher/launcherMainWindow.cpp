@@ -139,23 +139,40 @@ void LauncherMainWindow::UpdateLanguage()
 void LauncherMainWindow::ApplyTheme()
 {
 	// Define available themes
-	std::unordered_map<std::string, LauncherTheme> themes;
+	static std::unordered_map<std::string, LauncherTheme> themes = {
+		{"dark", LauncherTheme(LauncherTheme::BaseTheme::ImGuiDark)},
+		{"light", LauncherTheme(LauncherTheme::BaseTheme::ImGuiLight)},
 
-	themes.emplace("dark", LauncherTheme(LauncherTheme::BaseTheme::ImGuiDark));
-	themes.emplace("light", LauncherTheme(LauncherTheme::BaseTheme::ImGuiLight));
+		// Doom: Deep hellish reds, dark charcoal, and stark text
+		{"doom", LauncherTheme(0x1a1515, // bg
+	                           0xdfdfdf, // text
+	                           0x2b2222, // inputs
+	                           0x5e1313, // interact
+	                           0x8a1c1c, // hover
+	                           0xc72c2c, // click
+	                           0x3d2b2b  // border
+	                           )},
 
-	// "test" theme
-	themes.emplace("test", LauncherTheme(0xeee8d5, // bg
-	                                     0x000000, // text
-	                                     0xfdf6e3, // inputs
-	                                     0xd7d2bf, // interact
-	                                     0xa4c2e9, // hover
-	                                     0x7ca2e9, // click
-	                                     0xbdb8a7  // border
-	                                     ));
+		// Plutonia sounds green
+		{"plutonia", LauncherTheme(0x1e1f1a, // bg
+	                               0xdfd8c8, // text
+	                               0x2d3025, // inputs
+	                               0x475222, // interact
+	                               0x5e6e2d, // hover
+	                               0x7a8d3b, // click
+	                               0x313626  // border
+	                               )},
 
-	// another test
-	themes.emplace("dracula", LauncherTheme(0x282a36, 0xf8f8f2, 0x44475a, 0x6272a4, 0x8be9fd, 0xbd93f9, 0x44475a));
+		// Classic: Retro Windows 95 / Win32 vibe
+		{"classic", LauncherTheme(0xc0c0c0, // bg
+	                              0x000000, // text
+	                              0xffffff, // inputs
+	                              0xa0a0a0, // interact
+	                              0x002b80, // hover
+	                              0x0000ff, // click
+	                              0x808080  // border
+	                              )}
+	};
 
 	if (themes.find(themeVar) != themes.end())
 	{
@@ -363,12 +380,6 @@ void LauncherMainWindow::DrawMenuBar()
 
 			if (ImGui::BeginMenu(GStrings.GetString("LAUNCHER_TOPBAR_PREFTHEME")))
 			{
-				if (ImGui::MenuItem("Dracula", "", themeVar == "dracula"))
-				{
-					themeVar = "dracula";
-					ApplyTheme();
-					SaveConfig();
-				}
 				if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_THEME_LIGHT"), "", themeVar == "light"))
 				{
 					themeVar = "light";
@@ -381,6 +392,32 @@ void LauncherMainWindow::DrawMenuBar()
 					ApplyTheme();
 					SaveConfig();
 				}
+
+				ImGui::Spacing();
+				ImGui::Separator(); // separate "default" themes from more custom ones
+				ImGui::Spacing();
+
+				if (ImGui::MenuItem("Doom", "", themeVar == "doom"))
+				{
+					themeVar = "doom";
+					ApplyTheme();
+					SaveConfig();
+				}
+
+				if (ImGui::MenuItem("Plutonia", "", themeVar == "plutonia"))
+				{
+					themeVar = "plutonia";
+					ApplyTheme();
+					SaveConfig();
+				}
+
+				if (ImGui::MenuItem("Classic", "", themeVar == "classic"))
+				{
+					themeVar = "classic";
+					ApplyTheme();
+					SaveConfig();
+				}
+
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenu();

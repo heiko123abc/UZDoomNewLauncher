@@ -553,7 +553,7 @@ void LauncherMainWindow::CloneSelectedProfile()
 	std::ostringstream oss;
 	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
 
-	std::string           newFolderName = origDir.filename().string() + "_clone_" + oss.str();
+	std::string           newFolderName = "clone_ " + oss.str();
 	std::filesystem::path newDir        = origDir.parent_path() / newFolderName;
 
 	// copy the directory and its contents (WADs, mods, configs etc.)

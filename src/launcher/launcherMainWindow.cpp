@@ -306,16 +306,15 @@ void LauncherMainWindow::DrawMenuBar()
 				std::string result =
 					ProfileSettings::OpenPathPicker(defaultPath, false,
 				                                    {
-														{"WAD/PKX Files", "wad,pk3,pk7,iwad,pwad,ipk3,ipk7"}
+														{"WAD/PKX Files", "wad,pwd,pk3,pk7,iwad,pwad,ipk3,ipk7"}
                 });
 
 				if (!result.empty())
 				{
 					// Capture status and trigger popup
-					lastImportStatus = Loader::ProcessWad(
-						result); // Use result.c_str() here if ProcessWad specifically requires a const char*
-					showImportPopup = true;
-					needsRefresh    = true;
+					lastImportStatus = Loader::ProcessWad(result);
+					showImportPopup  = true;
+					needsRefresh     = true;
 				}
 			}
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDARCHIVE")))
@@ -328,10 +327,9 @@ void LauncherMainWindow::DrawMenuBar()
 				if (!result.empty())
 				{
 					// Capture status and trigger popup
-					lastImportStatus = Loader::ProcessArchive(
-						result); // Use result.c_str() here if ProcessArchive specifically requires a const char*
-					showImportPopup = true;
-					needsRefresh    = true;
+					lastImportStatus = Loader::ProcessArchive(result);
+					showImportPopup  = true;
+					needsRefresh     = true;
 				}
 			}
 			ImGui::EndMenu();

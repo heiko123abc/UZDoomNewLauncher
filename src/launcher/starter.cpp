@@ -197,7 +197,7 @@ bool Starter::Init()
 	// use os-specific slasher
 	char slash   = std::filesystem::path::preferred_separator;
 
-	std::string exePath = "." + slash; // we just need the folder where the executable is located
+	std::string exePath = std::string(".") + slash; // we just need the folder where the executable is located
 	ROOT_DIR            = exePath + "launcher" + slash;
 	PROFILE_DIR         = ROOT_DIR + "profiles" + slash;
 	CONFIG_FILE         = ROOT_DIR + "config.json";

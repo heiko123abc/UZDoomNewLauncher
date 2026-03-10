@@ -3332,3 +3332,6 @@ msgstr "Export Profile ..."
 
 msgid "LAUNCHER_ERROR_DUPLICATE"
 msgstr "This Profile already exists!"
+
+msgid "LAUNCHER_TOPBAR_PROFFOLDER"
+msgstr "Explore Profile Folder ..."

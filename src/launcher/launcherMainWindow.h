@@ -229,4 +229,5 @@ class LauncherMainWindow
 	void ApplyTheme();
 	void CloneSelectedProfile();
 	void ImportProfileFromZip(const std::string &zipPath);
+	void OpenProfileDirectory();
 };

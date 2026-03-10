@@ -33,6 +33,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
 #endif
 
 using json      = nlohmann::json;
@@ -381,6 +382,15 @@ void LauncherMainWindow::DrawMenuBar()
 			ImGui::Separator();
 			ImGui::Spacing();
 
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_PROFFOLDER")))
+			{
+				OpenProfileDirectory();
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEEXIT")))
 			{
 				// Shutdown SDL directly
@@ -706,7 +716,7 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 		{
 			std::string originalFolderName = std::filesystem::path(jsonFilename).stem().string();
 			std::string targetDir = PROFILE_DIR + originalFolderName + (char)std::filesystem::path::preferred_separator;
-			std::string finalJsonPath      = targetDir + jsonFilename;
+			std::string finalJsonPath = targetDir + jsonFilename;
 
 			// Check if it already exists
 			bool isDuplicate = std::filesystem::exists(targetDir);
@@ -824,4 +834,23 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 		needsRefresh.store(true);
 		isAlreadyLaunched.store(false);
 	}).detach();
+}
+
+void LauncherMainWindow::OpenProfileDirectory()
+{
+	std::string path = std::string(PROFILE_DIR);
+	path.pop_back(); // remove trailing slash
+
+#ifdef _WIN32
+	// Windows Explorer
+	ShellExecuteA(NULL, "open", path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+#else
+	// macOS and Linux
+#ifdef __APPLE__
+	std::string cmd = "open \"" + path + "\"";
+#else
+	std::string cmd = "xdg-open \"" + path + "\"";
+#endif
+	std::thread([cmd]() { std::system(cmd.c_str()); }).detach();
+#endif
 }

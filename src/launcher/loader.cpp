@@ -234,7 +234,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 	std::string baseProfileDir = std::string(PROFILE_DIR);
 
 	std::filesystem::create_directories(baseProfileDir + profileFilename);
-	path = baseProfileDir + profileFilename + "/";
+	path = baseProfileDir + profileFilename + (char)std::filesystem::path::preferred_separator;
 
 	// copy the file(s) to the respective folder
 	if (!wasArchive)
@@ -348,7 +348,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 		if (!wadFound)
 		{
 			// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
-			if (!path.empty() && path.back() == '/')
+			if (!path.empty() && path.back() == (char)std::filesystem::path::preferred_separator)
 				path.pop_back(); // drop the / at the end
 
 			std::filesystem::remove_all(path); // delete dir since we aborted

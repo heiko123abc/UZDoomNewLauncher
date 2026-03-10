@@ -34,14 +34,14 @@ static void ExportProfileToZip(const std::string &profileJsonPath, const std::st
 
 	for (const auto &entry : std::filesystem::recursive_directory_iterator(profileDir))
 	{
+		std::string relPath = std::filesystem::relative(entry.path(), profileDir).string();
+
+		// Replace backslashes with forward slashes for ZIP compatibility
+		std::replace(relPath.begin(), relPath.end(), '\\', '/');
+
 		if (entry.is_regular_file())
 		{
-			std::string absPath = entry.path().string();
-			std::string relPath = std::filesystem::relative(entry.path(), profileDir).string();
-
-			// Replace backslashes with forward slashes for ZIP compatibility
-			std::replace(relPath.begin(), relPath.end(), '\\', '/');
-
+			std::string   absPath = entry.path().string();
 			std::ifstream file(absPath, std::ios::binary | std::ios::ate);
 			if (file.is_open())
 			{
@@ -54,6 +54,17 @@ static void ExportProfileToZip(const std::string &profileJsonPath, const std::st
 					mz_zip_writer_add_mem(&zip_archive, relPath.c_str(), buffer.data(), size, MZ_DEFAULT_COMPRESSION);
 				}
 			}
+		}
+		else if (entry.is_directory())
+		{
+			// ZIPPED EMPTY folders needs to end with a forward slash
+			if (!relPath.empty() && relPath.back() != '/')
+			{
+				relPath += '/';
+			}
+
+			// Add the folders as an empty file with a trailing slash
+			mz_zip_writer_add_mem(&zip_archive, relPath.c_str(), nullptr, 0, MZ_DEFAULT_COMPRESSION);
 		}
 	}
 
@@ -196,11 +207,11 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 		{
 			nfdchar_t      *outPath       = nullptr;
 			nfdfilteritem_t filterItem[1] = {
-				{"Zip Archive", "zip"}
+				{"Uzdoom Profile", "uzdp"}
             };
 
 			// Sanitize profile title for default filename (remove chars that can't be in filenames)
-			std::string defaultName = "Export_" + currEdit->title + ".zip";
+			std::string defaultName = "Export_" + currEdit->title;
 			std::replace(defaultName.begin(), defaultName.end(), ':', '_');
 			std::replace(defaultName.begin(), defaultName.end(), '/', '_');
 			std::replace(defaultName.begin(), defaultName.end(), '\\', '_');

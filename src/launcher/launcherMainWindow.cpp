@@ -366,10 +366,12 @@ void LauncherMainWindow::DrawMenuBar()
 				std::string defaultPath = "";
 				std::string result      = ProfileSettings::OpenPathPicker(defaultPath, false,
 				                                                          {
-                                                                         {"Zip Archives", "zip"}
+                                                                         {"UZdoom Profiles", "uzdp"}
                 });
 
-				if (!result.empty())
+				// Only allow valid Uzdoom profile import
+				std::filesystem::path filePath(result);
+				if (!result.empty() && filePath.extension().string() == ".uzdp")
 				{
 					ImportProfileFromZip(result);
 				}
@@ -648,7 +650,7 @@ void LauncherMainWindow::CloneSelectedProfile()
 	clonedProfile.title += " (Clone)";
 
 	// Update internal paths to point to the new directory
-	std::string newDirStr           = newDir.string() + "/";
+	std::string newDirStr           = newDir.string() + (char)std::filesystem::path::preferred_separator;
 	clonedProfile.configFilePath    = newDirStr + "config.ini";
 	clonedProfile.saveDirPath       = newDirStr + "saves";
 	clonedProfile.screenshotDirPath = newDirStr + "screenshots";
@@ -684,7 +686,7 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
 
 	std::string tempFolderName = "temp_import_" + oss.str();
-	std::string tempDir        = PROFILE_DIR + tempFolderName + "/";
+	std::string tempDir        = PROFILE_DIR + tempFolderName + (char)std::filesystem::path::preferred_separator;
 
 	std::filesystem::create_directories(tempDir);
 
@@ -703,7 +705,7 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 		if (!jsonFilename.empty())
 		{
 			std::string originalFolderName = std::filesystem::path(jsonFilename).stem().string();
-			std::string targetDir          = PROFILE_DIR + originalFolderName + "/";
+			std::string targetDir = PROFILE_DIR + originalFolderName + (char)std::filesystem::path::preferred_separator;
 			std::string finalJsonPath      = targetDir + jsonFilename;
 
 			// Check if it already exists

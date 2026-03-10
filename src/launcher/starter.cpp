@@ -194,10 +194,12 @@ bool Starter::Init()
 	if (!LauncherContext.window)
 		return false;
 
-	// 3. DEFINE THE PATHS AND FILES WE NEED
-	std::string exePath = "./"; // we just need the folder where the executable is located
-	ROOT_DIR            = exePath + "launcher/";
-	PROFILE_DIR         = ROOT_DIR + "profiles/";
+	// use os-specific slasher
+	char slash   = std::filesystem::path::preferred_separator;
+
+	std::string exePath = "." + slash; // we just need the folder where the executable is located
+	ROOT_DIR            = exePath + "launcher" + slash;
+	PROFILE_DIR         = ROOT_DIR + "profiles" + slash;
 	CONFIG_FILE         = ROOT_DIR + "config.json";
 
 	// hang on, lets see if folder for launchers profiles exists

@@ -32,8 +32,8 @@
 #include <thread>
 
 #ifdef _WIN32
-#include <windows.h>
 #include <shellapi.h>
+#include <windows.h>
 #endif
 
 using json      = nlohmann::json;
@@ -317,12 +317,13 @@ void LauncherMainWindow::Draw()
 // draws the top menu bar with File, Preferences, and About
 void LauncherMainWindow::DrawMenuBar()
 {
+	std::filesystem::path defaultPath = std::filesystem::path(PROFILE_DIR);
+
 	if (ImGui::BeginMenuBar())
 	{
+
 		if (ImGui::BeginMenu(GStrings.GetString("LAUNCHER_TOPBAR_FILE")))
 		{
-
-			std::string defaultPath = "";
 
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDWAD")))
 			{
@@ -363,8 +364,6 @@ void LauncherMainWindow::DrawMenuBar()
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_IMPORT")))
 			{
 				// Allow user to import a .zip profile
-
-				std::string defaultPath = "";
 				std::string result      = ProfileSettings::OpenPathPicker(defaultPath, false,
 				                                                          {
                                                                          {"UZdoom Profiles", "uzdp"}
@@ -660,21 +659,22 @@ void LauncherMainWindow::CloneSelectedProfile()
 	clonedProfile.title += " (Clone)";
 
 	// Update internal paths to point to the new directory
-	std::string newDirStr           = newDir.string() + (char)std::filesystem::path::preferred_separator;
-	clonedProfile.configFilePath    = newDirStr + "config.ini";
-	clonedProfile.saveDirPath       = newDirStr + "saves";
-	clonedProfile.screenshotDirPath = newDirStr + "screenshots";
-	clonedProfile.demoDirPath       = newDirStr + "demos";
-	clonedProfile.modsDirPath       = newDirStr + "mods";
+	clonedProfile.configFilePath    = (newDir / "config.ini").generic_string();
+	clonedProfile.saveDirPath       = (newDir / "saves").generic_string();
+	clonedProfile.screenshotDirPath = (newDir / "screenshots").generic_string();
+	clonedProfile.demoDirPath       = (newDir / "demos").generic_string();
+	clonedProfile.modsDirPath       = (newDir / "mods").generic_string();
 
 	// If IWAD/PWAD were inside the profile dir, update those paths too
 	if (clonedProfile.iwadFilePath.find(origDir.string()) != std::string::npos)
 	{
-		clonedProfile.iwadFilePath = newDirStr + std::filesystem::path(clonedProfile.iwadFilePath).filename().string();
+		clonedProfile.iwadFilePath =
+			(newDir / std::filesystem::path(clonedProfile.iwadFilePath).filename()).generic_string();
 	}
 	if (clonedProfile.pwadFilePath.find(origDir.string()) != std::string::npos)
 	{
-		clonedProfile.pwadFilePath = newDirStr + std::filesystem::path(clonedProfile.pwadFilePath).filename().string();
+		clonedProfile.pwadFilePath =
+			(newDir / std::filesystem::path(clonedProfile.pwadFilePath).filename()).generic_string();
 	}
 
 	// Save the updated JSON
@@ -696,7 +696,7 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
 
 	std::string tempFolderName = "temp_import_" + oss.str();
-	std::string tempDir        = PROFILE_DIR + tempFolderName + (char)std::filesystem::path::preferred_separator;
+	std::string tempDir        = (std::filesystem::path(PROFILE_DIR) / tempFolderName).string();
 
 	std::filesystem::create_directories(tempDir);
 
@@ -714,9 +714,11 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 
 		if (!jsonFilename.empty())
 		{
-			std::string originalFolderName = std::filesystem::path(jsonFilename).stem().string();
-			std::string targetDir = PROFILE_DIR + originalFolderName + (char)std::filesystem::path::preferred_separator;
-			std::string finalJsonPath = targetDir + jsonFilename;
+			std::string           originalFolderName = std::filesystem::path(jsonFilename).stem().string();
+			std::filesystem::path targetDirPath      = std::filesystem::path(PROFILE_DIR) / originalFolderName;
+
+			std::string targetDir     = targetDirPath.string();
+			std::string finalJsonPath = (targetDirPath / jsonFilename).generic_string();
 
 			// Check if it already exists
 			bool isDuplicate = std::filesystem::exists(targetDir);
@@ -838,18 +840,15 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 
 void LauncherMainWindow::OpenProfileDirectory()
 {
-	std::string path = std::string(PROFILE_DIR);
-	path.pop_back(); // remove trailing slash
-
 #ifdef _WIN32
 	// Windows Explorer
-	ShellExecuteA(NULL, "open", path.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	ShellExecuteA(NULL, "open", PROFILE_DIR.c_str(), NULL, NULL, SW_SHOWNORMAL);
 #else
 	// macOS and Linux
 #ifdef __APPLE__
-	std::string cmd = "open \"" + path + "\"";
+	std::string cmd = "open \"" + PROFILE_DIR + "\"";
 #else
-	std::string cmd = "xdg-open \"" + path + "\"";
+	std::string cmd = "xdg-open \"" + PROFILE_DIR + "\"";
 #endif
 	std::thread([cmd]() { std::system(cmd.c_str()); }).detach();
 #endif

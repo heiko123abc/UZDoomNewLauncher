@@ -34,10 +34,10 @@ class Loader
   public:
 
 	// Pass the filepath obtained from File Picker to be processed then return status after profile creation (if)
-	static importStatus ProcessArchive(const std::string &filePath);
-	static importStatus ProcessWad(const std::string &filePath);
+	static importStatus ProcessArchive(const std::filesystem::path &filePath);
+	static importStatus ProcessWad(const std::filesystem::path &filePath);
 
 	// Extracts zip using build-in miniz.
-	static bool ExtractArchive(const std::string &archivePath, const std::string &targetDir);
+	static bool ExtractArchive(const std::filesystem::path &archivePath, const std::filesystem::path &targetDir);
 
 };

@@ -27,7 +27,8 @@ class ProfileSettings
 	void Draw(bool *p_open, Profile *currEdit, const std::string &profilePath);
 
 	// Helper for file picking (uses library: nativefiledialog-extended)
-	static std::string OpenPathPicker(std::string &defaultPath, bool isFolder, const std::vector<nfdfilteritem_t> &filters);
+	static std::string OpenPathPicker(std::filesystem::path &defaultPath, bool isFolder,
+	                                  const std::vector<nfdfilteritem_t> &filters);
 
   private:
 	// Tab rendering functions

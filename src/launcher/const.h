@@ -32,6 +32,9 @@ inline std::string CONFIG_FILE;
 // default language is u.s english
 inline std::string_view DEFAULT_LANG = "default";
 
+// default theme is dark imgui
+inline std::string_view DEFAULT_THEME = "dark";
+
 inline std::string VERSION = "5.0.0";
 
 // helper to better sort the data

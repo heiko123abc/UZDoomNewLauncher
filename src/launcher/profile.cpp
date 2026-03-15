@@ -71,8 +71,6 @@ void Profile::saveToFile(const std::string &filepath)
 	j["launch"]["mpTimeLimit"]                = this->mpTimeLimit;
 	j["launch"]["teamDamageFactor"]           = this->teamDamageFactor;
 
-
-
 	j["launch"]["DMFlags"]            = this->DMFlags;
 	j["launch"]["DMFlags2"]           = this->DMFlags2;
 	j["launch"]["DMFlags3"]           = this->DMFlags3;
@@ -102,7 +100,7 @@ void Profile::saveToFile(const std::string &filepath)
 	std::ofstream file(filepath);
 	if (file.is_open())
 	{
-		//handle bad characters safely
+		// handle bad characters safely
 		file << j.dump(5, ' ', false, json::error_handler_t::replace);
 		file.close();
 	}
@@ -128,8 +126,10 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->playedTime     = j["general"].value("playedTime", 0);
 		this->description    = j["general"].value("description", "");
 		this->isIWAD         = j["general"].value("isIWAD", 0);
-		this->iwadFilePath   = j["general"].value("iwadFilePath", "");
-		this->pwadFilePath   = j["general"].value("pwadFilePath", "");
+		this->iwadFilePath   = std::filesystem::path(j["general"].value("iwadFilePath", "")).make_preferred().string();
+		;
+		this->pwadFilePath = std::filesystem::path(j["general"].value("pwadFilePath", "")).make_preferred().string();
+		;
 
 		// Launch Parameters
 		this->launchParameters           = j["launch"].value("launchParameters", 0);
@@ -167,12 +167,24 @@ void Profile::loadFromFile(const std::string &filepath)
 		this->compatflags2       = j["launch"].value("compatflags2", 0);
 
 		// File Paths
-		this->configFilePath    = j["files"].value("configFilePath", "");
-		this->saveDirPath       = j["files"].value("saveDirPath", "");
-		this->screenshotDirPath = j["files"].value("screenshotDirPath", "");
-		this->demoDirPath       = j["files"].value("demoDirPath", "");
-		this->modsDirPath       = j["files"].value("modsDirPath", "");
-		this->modFiles          = j["files"].value("modFiles", std::vector<std::string>{});
+		this->configFilePath = std::filesystem::path(j["files"].value("configFilePath", "")).make_preferred().string();
+		;
+		this->saveDirPath = std::filesystem::path(j["files"].value("saveDirPath", "")).make_preferred().string();
+		;
+		this->screenshotDirPath =
+			std::filesystem::path(j["files"].value("screenshotDirPath", "")).make_preferred().string();
+		;
+		this->demoDirPath = std::filesystem::path(j["files"].value("demoDirPath", "")).make_preferred().string();
+		;
+		this->modsDirPath = std::filesystem::path(j["files"].value("modsDirPath", "")).make_preferred().string();
+		;
+
+		// prefere slashes here too
+		std::vector<std::string> tmpModPaths = j["files"].value("modFiles", std::vector<std::string>{});
+		for (const auto &mod : tmpModPaths)
+		{
+			this->modFiles.push_back(std::filesystem::path(mod).make_preferred().string());
+		}
 
 		// Output Settings
 		this->enableFullscreen = j["output"].value("enableFullscreen", false);
@@ -315,9 +327,9 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	cmd << "+set language " << this->wadLanguage << " ";
 
 	// pass directories
-	cmd << "-config " << this->configFilePath << " ";
-	cmd << "-savedir " << this->saveDirPath << " ";
-	cmd << "-shotdir " << this->screenshotDirPath << " ";
+	cmd << "-config \"" << this->configFilePath << "\" ";
+	cmd << "-savedir \"" << this->saveDirPath << "\" ";
+	cmd << "-shotdir \"" << this->screenshotDirPath << "\" ";
 	// demo does nothing right now
 
 	// append mod files (e.g more wads/pk3)

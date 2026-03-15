@@ -83,19 +83,18 @@ static void ExportProfileToZip(const std::string &profileJsonPath, const std::st
 	mz_free(zip_buffer);
 }
 
-// Helper Function with NFD-EX
-std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFolder,
+// Helper Function with NFD-EX (path given must be absolute and preferred, otherwise give empty string)
+std::string ProfileSettings::OpenPathPicker(std::filesystem::path &defaultPath, bool isFolder,
                                             const std::vector<nfdfilteritem_t> &filters = {})
 {
+	if (std::filesystem::exists(defaultPath) && std::filesystem::is_regular_file(defaultPath))
+	defaultPath = defaultPath.parent_path(); // NFD expects a directory for the default path
 
-	defaultPath = std::filesystem::absolute(defaultPath).make_preferred().string(); // NFD wants absolute paths
-	if (!isFolder)
-		defaultPath = std::filesystem::path(defaultPath).parent_path().string(); // cutofft the file itsself
+	std::string nfdDefaultPathStr = defaultPath.empty() ? "" : defaultPath.string();
 
-	// use last time starting point or IF not valid, start anew
 	const nfdchar_t *nfdDefaultPath = nullptr;
-	if (!defaultPath.empty() && std::filesystem::exists(defaultPath))
-		nfdDefaultPath = defaultPath.c_str();
+	if (!nfdDefaultPathStr.empty() && std::filesystem::exists(nfdDefaultPathStr))
+		nfdDefaultPath = nfdDefaultPathStr.c_str();
 
 	nfdchar_t  *outPath = nullptr;
 	nfdresult_t result;
@@ -103,7 +102,7 @@ std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFol
 	if (isFolder)
 	{
 		// Folder selection
-		result = NFD_PickFolder(&outPath, nfdDefaultPath);
+		result = NFD_PickFolderU8(&outPath, nfdDefaultPath);
 	}
 	else
 	{
@@ -111,7 +110,7 @@ std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFol
 		const nfdfilteritem_t *filterData  = filters.empty() ? nullptr : filters.data();
 		nfdfiltersize_t        filterCount = static_cast<nfdfiltersize_t>(filters.size());
 
-		result = NFD_OpenDialog(&outPath, filterData, filterCount, nfdDefaultPath);
+		result = NFD_OpenDialogU8(&outPath, filterData, filterCount, nfdDefaultPath);
 	}
 
 	std::string selectedPath = ""; // Default to empty string (if user cancels)
@@ -119,7 +118,7 @@ std::string ProfileSettings::OpenPathPicker(std::string &defaultPath, bool isFol
 	if (result == NFD_OKAY)
 	{
 		selectedPath = outPath;
-		NFD_FreePath(outPath); // free path allocated by NFD
+		NFD_FreePathU8(outPath); // free path allocated by NFD
 	}
 	else if (result == NFD_ERROR)
 	{
@@ -216,11 +215,11 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 			std::replace(defaultName.begin(), defaultName.end(), '/', '_');
 			std::replace(defaultName.begin(), defaultName.end(), '\\', '_');
 
-			nfdresult_t result = NFD_SaveDialog(&outPath, filterItem, 1, nullptr, defaultName.c_str());
+			nfdresult_t result = NFD_SaveDialogU8(&outPath, filterItem, 1, nullptr, defaultName.c_str());
 			if (result == NFD_OKAY)
 			{
 				ExportProfileToZip(profilePath, outPath);
-				NFD_FreePath(outPath);
+				NFD_FreePathU8(outPath);
 			}
 		}
 		ImGui::PopStyleColor(2);
@@ -328,9 +327,11 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 		ImGui::SameLine();
 		if (ImGui::Button("...##iwadbtn", ImVec2(35, 0)))
 		{
-			std::string startPath = currEdit->iwadFilePath.empty() ? PROFILE_DIR : currEdit->iwadFilePath;
-			std::string newPath   = OpenPathPicker(startPath, false,
-			                                       {
+			std::filesystem::path startPath = currEdit->iwadFilePath.empty()
+			                                      ? std::filesystem::path(PROFILE_DIR)
+			                                      : std::filesystem::path(currEdit->iwadFilePath);
+			std::string           newPath   = OpenPathPicker(startPath, false,
+			                                                 {
                                                      {"WAD Files", "iwad,wad,pk3"}
             });
 			if (!newPath.empty())
@@ -350,9 +351,11 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 			ImGui::SameLine();
 			if (ImGui::Button("...##pwadbtn", ImVec2(35, 0)))
 			{
-				std::string startPath = currEdit->pwadFilePath.empty() ? PROFILE_DIR : currEdit->pwadFilePath;
-				std::string newPath   = OpenPathPicker(startPath, false,
-				                                       {
+				std::filesystem::path startPath = currEdit->iwadFilePath.empty()
+				                                      ? std::filesystem::path(PROFILE_DIR)
+				                                      : std::filesystem::path(currEdit->pwadFilePath);
+				std::string           newPath   = OpenPathPicker(startPath, false,
+				                                                 {
                                                          {"WAD Files", "pwad,wad,pk3"}
                 });
 				if (!newPath.empty())
@@ -440,7 +443,10 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			ImGui::SameLine();
 			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(), ImVec2(35, 0)))
 			{
-				std::string newPath = OpenPathPicker(*targetVar, isFolder, filters);
+				std::filesystem::path startPath =
+					targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
+
+				std::string newPath = OpenPathPicker(startPath, isFolder, filters);
 				if (!newPath.empty())
 					*targetVar = newPath;
 			}
@@ -469,7 +475,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
         };
 
 		// Allow user to select multiple files, then iterate to add them
-		nfdresult_t result = NFD_OpenDialogMultiple(&pathSet, filterItem, 1, nullptr);
+		nfdresult_t result = NFD_OpenDialogMultipleU8(&pathSet, filterItem, 1, nullptr);
 
 		if (result == NFD_OKAY)
 		{
@@ -479,7 +485,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			for (nfdpathsetsize_t i = 0; i < numPaths; ++i)
 			{
 				nfdchar_t *originalPath;
-				NFD_PathSet_GetPath(pathSet, i, &originalPath);
+				NFD_PathSet_GetPathU8(pathSet, i, &originalPath);
 
 				std::filesystem::path src(originalPath);
 				std::filesystem::path dest = std::filesystem::path(currEdit->modsDirPath) / src.filename();
@@ -487,9 +493,9 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 				// Copy the file, overwriting if the user is replacing an existing mod of the same name
 				std::filesystem::copy_file(src, dest, std::filesystem::copy_options::overwrite_existing);
 
-				currEdit->modFiles.push_back(dest.string());
+				currEdit->modFiles.push_back(dest.generic_string());
 
-				NFD_PathSet_FreePath(originalPath); // Free individual path allocated
+				NFD_FreePathU8(originalPath); // Free individual path
 			}
 			NFD_PathSet_Free(pathSet); // Free the entire path set
 		}
@@ -601,7 +607,10 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 				ImGui::SameLine();
 				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(), ImVec2(35, 0)))
 				{
-					std::string newPath = OpenPathPicker(*targetVar, false, filters);
+					std::filesystem::path startPath =
+						targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
+
+					std::string newPath = OpenPathPicker(startPath, false, filters);
 					if (!newPath.empty())
 						*targetVar = newPath;
 				}

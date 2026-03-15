@@ -134,6 +134,9 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
+
+	io.IniFilename = nullptr; //do not generate imgui ini file
+
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
@@ -194,13 +197,10 @@ bool Starter::Init()
 	if (!LauncherContext.window)
 		return false;
 
-	// use os-specific slasher
-	char slash   = std::filesystem::path::preferred_separator;
-
-	std::string exePath = std::string(".") + slash; // we just need the folder where the executable is located
-	ROOT_DIR            = exePath + "launcher" + slash;
-	PROFILE_DIR         = ROOT_DIR + "profiles" + slash;
-	CONFIG_FILE         = ROOT_DIR + "config.json";
+	std::filesystem::path exePath = std::filesystem::current_path(); // Get the current absolute directory
+	ROOT_DIR                      = (exePath / "launcher").string();
+	PROFILE_DIR                   = (exePath / "launcher" / "profiles").string();
+	CONFIG_FILE                   = (exePath / "launcher" / "config.json").string();
 
 	// hang on, lets see if folder for launchers profiles exists
 	// if not, create them
@@ -214,8 +214,8 @@ bool Starter::Init()
 		if (configFile.is_open())
 		{
 			json j;
-			j["lang"]     = "default"; // Fallback to default if macro isn't defined
-			j["theme"]    = "system";
+			j["lang"]     = DEFAULT_LANG;
+			j["theme"]    = DEFAULT_THEME;
 			j["profiles"] = json::array(); // Ready array for later profiles
 
 			configFile << j.dump(4); // indent for readability

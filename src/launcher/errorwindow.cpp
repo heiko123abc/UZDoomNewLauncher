@@ -121,7 +121,7 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 		                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 		                         ImGuiWindowFlags_NoScrollWithMouse;
 
-		ImGui::Begin("Fatal Error Panel", nullptr, flags);
+		ImGui::Begin("Fatal Error :(", nullptr, flags);
 
 		ImGuiStyle &style = ImGui::GetStyle();
 
@@ -129,7 +129,8 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0, 0, 0, 0));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
-		ImGui::InputTextMultiline("##Log", const_cast<char *>(fullClipboardText.c_str()), fullClipboardText.size() + 1,
+		ImGui::InputTextMultiline(
+			"##Log", const_cast<char *>(fullClipboardText.c_str()), fullClipboardText.size() + 1,
 		                          ImVec2(-1.0f, -ImGui::GetFrameHeightWithSpacing() - style.WindowPadding.y),
 		                          ImGuiInputTextFlags_ReadOnly);
 

@@ -85,18 +85,18 @@ static void ExportProfileToZip(const std::string &profileJsonPath, const std::st
 
 // Helper Function with NFD-EX (path given must be absolute and preferred, otherwise give empty string)
 std::string ProfileSettings::OpenPathPicker(std::filesystem::path &defaultPath, bool isFolder,
-                                            const std::vector<nfdfilteritem_t> &filters = {})
+                                            const std::vector<nfdu8filteritem_t> &filters = {})
 {
 	if (std::filesystem::exists(defaultPath) && std::filesystem::is_regular_file(defaultPath))
 	defaultPath = defaultPath.parent_path(); // NFD expects a directory for the default path
 
 	std::string nfdDefaultPathStr = defaultPath.empty() ? "" : defaultPath.string();
 
-	const nfdchar_t *nfdDefaultPath = nullptr;
+	const nfdu8char_t *nfdDefaultPath = nullptr;
 	if (!nfdDefaultPathStr.empty() && std::filesystem::exists(nfdDefaultPathStr))
 		nfdDefaultPath = nfdDefaultPathStr.c_str();
 
-	nfdchar_t  *outPath = nullptr;
+	nfdu8char_t *outPath;
 	nfdresult_t result;
 
 	if (isFolder)
@@ -107,8 +107,8 @@ std::string ProfileSettings::OpenPathPicker(std::filesystem::path &defaultPath, 
 	else
 	{
 		// File selection
-		const nfdfilteritem_t *filterData  = filters.empty() ? nullptr : filters.data();
-		nfdfiltersize_t        filterCount = static_cast<nfdfiltersize_t>(filters.size());
+		const nfdu8filteritem_t *filterData  = filters.empty() ? nullptr : filters.data();
+		nfdfiltersize_t filterCount = static_cast<nfdfiltersize_t>(filters.size());
 
 		result = NFD_OpenDialogU8(&outPath, filterData, filterCount, nfdDefaultPath);
 	}

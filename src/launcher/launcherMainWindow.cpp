@@ -34,6 +34,11 @@
 #ifdef _WIN32
 #include <shellapi.h>
 #include <windows.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#elif __linux__
+#include <limits.h>
+#include <unistd.h>
 #endif
 
 using json      = nlohmann::json;
@@ -364,9 +369,9 @@ void LauncherMainWindow::DrawMenuBar()
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_IMPORT")))
 			{
 				// Allow user to import a .zip profile
-				std::string result      = ProfileSettings::OpenPathPicker(defaultPath, false,
-				                                                          {
-                                                                         {"UZdoom Profiles", "uzdp"}
+				std::string result = ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                                     {
+																		 {"UZdoom Profiles", "uzdp"}
                 });
 
 				// Only allow valid Uzdoom profile import
@@ -658,23 +663,49 @@ void LauncherMainWindow::CloneSelectedProfile()
 
 	clonedProfile.title += " (Clone)";
 
-	// Update internal paths to point to the new directory
-	clonedProfile.configFilePath    = (newDir / "config.ini").generic_string();
-	clonedProfile.saveDirPath       = (newDir / "saves").generic_string();
-	clonedProfile.screenshotDirPath = (newDir / "screenshots").generic_string();
-	clonedProfile.demoDirPath       = (newDir / "demos").generic_string();
-	clonedProfile.modsDirPath       = (newDir / "mods").generic_string();
+	// Lambda to safely swap the original base directory with the new one
+	auto remapPath = [&](std::string &pathRef) {
+		if (pathRef.empty())
+			return;
 
-	// If IWAD/PWAD were inside the profile dir, update those paths too
-	if (clonedProfile.iwadFilePath.find(origDir.string()) != std::string::npos)
+		std::string normalizedPath = pathRef;
+		std::string normalizedOrig = origDir.generic_string();
+
+		// Normalize slashes for safe string comparison
+		std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+		std::replace(normalizedOrig.begin(), normalizedOrig.end(), '\\', '/');
+
+		size_t pos = normalizedPath.find(normalizedOrig);
+		if (pos != std::string::npos)
+		{
+			// Extract whatever comes AFTER the original directory path
+			std::string subPath = normalizedPath.substr(pos + normalizedOrig.length());
+
+			// Strip leading slash if present so std::filesystem path append works properly
+			if (!subPath.empty() && subPath.front() == '/')
+			{
+				subPath.erase(0, 1);
+			}
+
+			// Rebuild the path with the new directory + original custom subpath/filename
+			pathRef = (newDir / subPath).generic_string();
+		}
+	};
+
+	// Apply the remap to all profile directories and files etc.
+	remapPath(clonedProfile.configFilePath);
+	remapPath(clonedProfile.saveDirPath);
+	remapPath(clonedProfile.screenshotDirPath);
+	remapPath(clonedProfile.demoDirPath);
+	remapPath(clonedProfile.modsDirPath);
+
+	// Remap IWAD and PWAD paths
+	remapPath(clonedProfile.iwadFilePath);
+	remapPath(clonedProfile.pwadFilePath);
+
+	for (std::string &modPath : clonedProfile.modFiles)
 	{
-		clonedProfile.iwadFilePath =
-			(newDir / std::filesystem::path(clonedProfile.iwadFilePath).filename()).generic_string();
-	}
-	if (clonedProfile.pwadFilePath.find(origDir.string()) != std::string::npos)
-	{
-		clonedProfile.pwadFilePath =
-			(newDir / std::filesystem::path(clonedProfile.pwadFilePath).filename()).generic_string();
+		remapPath(modPath);
 	}
 
 	// Save the updated JSON
@@ -747,13 +778,47 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 			// Move the temporary directory to the correct original folder name
 			std::filesystem::rename(tempDir, targetDir);
 
+			Profile importedProfile;
+			importedProfile.loadFromFile(finalJsonPath);
+
+			auto rewritePath = [&](std::string &pathRef) {
+				if (pathRef.empty())
+					return;
+
+				std::replace(pathRef.begin(), pathRef.end(), '\\', '/');
+
+				size_t pos = pathRef.rfind("/launcher/");
+				if (pos != std::string::npos)
+				{
+					// Extract the sub-path and prepend ROOT_DIR
+					std::string subPath = pathRef.substr(pos + 10);
+					pathRef             = (std::filesystem::path(ROOT_DIR) / subPath).generic_string();
+				}
+			};
+
+			// Apply to all paths
+			rewritePath(importedProfile.configFilePath);
+			rewritePath(importedProfile.saveDirPath);
+			rewritePath(importedProfile.screenshotDirPath);
+			rewritePath(importedProfile.demoDirPath);
+			rewritePath(importedProfile.modsDirPath);
+
+			rewritePath(importedProfile.iwadFilePath);
+			rewritePath(importedProfile.pwadFilePath);
+
+			for (std::string &modPath : importedProfile.modFiles)
+			{
+				rewritePath(modPath);
+			}
+
+			importedProfile.saveToFile(finalJsonPath);
+
 			profilePaths.push_back(finalJsonPath);
 			SaveConfig();
 			needsRefresh = true;
 		}
 		else
 		{
-			// Clean up
 			std::filesystem::remove_all(tempDir);
 		}
 	}
@@ -780,10 +845,25 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 		return;
 
 	// get executable path and prepend to command
+	std::string exePath = "";
 #ifdef _WIN32
-	std::string exePath = "uzdoom.exe";
-#else
-	std::string exePath = "./uzdoom";
+	wchar_t path[MAX_PATH] = {0};
+	GetModuleFileNameW(NULL, path, MAX_PATH);
+	exePath = std::filesystem::path(path).string();
+#elif __APPLE__
+	char     path[1024];
+	uint32_t size = sizeof(path);
+	if (_NSGetExecutablePath(path, &size) == 0)
+	{
+		exePath = std::filesystem::path(path).string();
+	}
+#elif __linux__
+	char    result[PATH_MAX];
+	ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+	if (count != -1)
+	{
+		exePath = std::filesystem::path(std::string(result, count)).string();
+	}
 #endif
 
 	dispatchedCmd = exePath + " " + dispatchedCmd;

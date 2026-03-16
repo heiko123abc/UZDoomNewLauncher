@@ -18,9 +18,16 @@
 #include "i_interface.h"
 #include "launcherMainWindow.h"
 
+#include "widgets/noto-sans-armenian.h"
+#include "widgets/noto-sans-georgian.h"
+#include "widgets/noto-sans-jp.h"
+#include "widgets/noto-sans-kr.h"
+#include "widgets/noto-sans.h"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <nfd.h>
 #include <nlohmann/json.hpp>
 
 using json      = nlohmann::json;
@@ -35,6 +42,7 @@ static Starter::ImGuiContextState LauncherContext;
 // This is called from outside to kickstart the launcher ui and logics
 bool ImGuiKickStarter(const FStartupSelectionInfo &info)
 {
+
 	if (!Starter::Init())
 	{
 		std::cerr << "Failed to initialize the launcher." << std::endl;
@@ -120,10 +128,15 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 	SDL_GL_MakeCurrent(state.window, state.gl_context);
 	SDL_GL_SetSwapInterval(1); // Enable vsync
 
+	NFD_Init();
+
 	// Setup Dear ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
+
+	io.IniFilename = nullptr; //do not generate imgui ini file
+
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
 
@@ -134,15 +147,18 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 
 	// Setup UTF-8 font using noto
 	ImFontConfig config;
-	float        fontSize = 16.0f;
-	config.PixelSnapH     = true;
+	config.FontDataOwnedByAtlas = false;
 
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans.ttf", fontSize, &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosans_compressed_data, notosans_compressed_size, 0.0f, &config);
 	config.MergeMode = true;
 
-	// Add additional fonts for CJK characters, merging them with the default font
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-jp.ttf", fontSize, &config);
-	io.Fonts->AddFontFromFileTTF("../../wadsrc/static/ui/noto/noto-sans-kr.ttf", fontSize, &config);
+	// Add additional fonts for CJK and more characters, merging them with the default font
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosanskr_compressed_data, notosanskr_compressed_size, 0.0f, &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansarmenian_compressed_data, notosansarmenian_compressed_size, 0.0f,
+	                                         &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansgeorgian_compressed_data, notosansgeorgian_compressed_size, 0.0f,
+	                                         &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansjp_compressed_data, notosansjp_compressed_size, 0.0f, &config);
 
 	ImGui::StyleColorsDark();
 
@@ -169,6 +185,7 @@ void Starter::TeardownContext(ImGuiContextState &state)
 		state.window = nullptr;
 	}
 
+	NFD_Quit();
 	SDL_Quit();
 }
 
@@ -180,11 +197,10 @@ bool Starter::Init()
 	if (!LauncherContext.window)
 		return false;
 
-	// 3. DEFINE THE PATHS AND FILES WE NEED
-	std::string exePath = "./"; // we just need the folder where the executable is located
-	ROOT_DIR            = exePath + "launcher/";
-	PROFILE_DIR         = ROOT_DIR + "profiles/";
-	CONFIG_FILE         = ROOT_DIR + "config.json";
+	std::filesystem::path exePath = std::filesystem::current_path(); // Get the current absolute directory
+	ROOT_DIR                      = (exePath / "launcher").string();
+	PROFILE_DIR                   = (exePath / "launcher" / "profiles").string();
+	CONFIG_FILE                   = (exePath / "launcher" / "config.json").string();
 
 	// hang on, lets see if folder for launchers profiles exists
 	// if not, create them
@@ -198,8 +214,8 @@ bool Starter::Init()
 		if (configFile.is_open())
 		{
 			json j;
-			j["lang"]     = "default"; // Fallback to default if macro isn't defined
-			j["theme"]    = "system";
+			j["lang"]     = DEFAULT_LANG;
+			j["theme"]    = DEFAULT_THEME;
 			j["profiles"] = json::array(); // Ready array for later profiles
 
 			configFile << j.dump(4); // indent for readability
@@ -263,7 +279,9 @@ void Starter::RunImGuiLoop(ImGuiContextState &context, const RenderCallback &ren
 
 		ImGui::Render();
 
-		glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
+		int drawable_w, drawable_h;
+		SDL_GL_GetDrawableSize(context.window, &drawable_w, &drawable_h);
+		glViewport(0, 0, drawable_w, drawable_h);
 		glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
 		glClear(GL_COLOR_BUFFER_BIT);
 

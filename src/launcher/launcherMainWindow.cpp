@@ -17,7 +17,8 @@
 #include "about.h"
 #include "gstrings.h"
 #include "loader.h"
-#include <tinyfiledialogs.h>
+#include "profileSettings.h"
+#include "starter.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -31,7 +32,13 @@
 #include <thread>
 
 #ifdef _WIN32
+#include <shellapi.h>
 #include <windows.h>
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#elif __linux__
+#include <limits.h>
+#include <unistd.h>
 #endif
 
 using json      = nlohmann::json;
@@ -139,23 +146,40 @@ void LauncherMainWindow::UpdateLanguage()
 void LauncherMainWindow::ApplyTheme()
 {
 	// Define available themes
-	std::unordered_map<std::string, LauncherTheme> themes;
+	static std::unordered_map<std::string, LauncherTheme> themes = {
+		{"dark", LauncherTheme(LauncherTheme::BaseTheme::ImGuiDark)},
+		{"light", LauncherTheme(LauncherTheme::BaseTheme::ImGuiLight)},
 
-	themes.emplace("Dark", LauncherTheme(LauncherTheme::BaseTheme::ImGuiDark));
-	themes.emplace("Light", LauncherTheme(LauncherTheme::BaseTheme::ImGuiLight));
+		// Doom: Deep hellish reds, dark charcoal, and stark text
+		{"doom", LauncherTheme(0x1a1515, // bg
+	                           0xdfdfdf, // text
+	                           0x2b2222, // inputs
+	                           0x5e1313, // interact
+	                           0x8a1c1c, // hover
+	                           0xc72c2c, // click
+	                           0x3d2b2b  // border
+	                           )},
 
-	// "test" theme
-	themes.emplace("test", LauncherTheme(0xeee8d5, // bg
-	                                     0x000000, // text
-	                                     0xfdf6e3, // inputs
-	                                     0xd7d2bf, // interact
-	                                     0xa4c2e9, // hover
-	                                     0x7ca2e9, // click
-	                                     0xbdb8a7  // border
-	                                     ));
+		// Plutonia sounds green
+		{"plutonia", LauncherTheme(0x1e1f1a, // bg
+	                               0xdfd8c8, // text
+	                               0x2d3025, // inputs
+	                               0x475222, // interact
+	                               0x5e6e2d, // hover
+	                               0x7a8d3b, // click
+	                               0x313626  // border
+	                               )},
 
-	// another test
-	themes.emplace("dracula", LauncherTheme(0x282a36, 0xf8f8f2, 0x44475a, 0x6272a4, 0x8be9fd, 0xbd93f9, 0x44475a));
+		// Classic: Retro Windows 95 / Win32 vibe
+		{"classic", LauncherTheme(0xc0c0c0, // bg
+	                              0x000000, // text
+	                              0xffffff, // inputs
+	                              0xa0a0a0, // interact
+	                              0x002b80, // hover
+	                              0x0000ff, // click
+	                              0x808080  // border
+	                              )}
+    };
 
 	if (themes.find(themeVar) != themes.end())
 	{
@@ -172,24 +196,35 @@ void LauncherMainWindow::DrawPopUp()
 {
 	if (showImportPopup)
 	{
-		ImGui::OpenPopup("Import Status");
+		ImGui::OpenPopup("UZDoom");
 		showImportPopup = false; // Reset the trigger immediately so it only opens once
 	}
 
 	// ImGuiWindowFlags_AlwaysAutoResize makes the popup snap to the text size
-	if (ImGui::BeginPopupModal("Import Status", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("UZDoom", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		// Display a message based on the status enum
 		switch (lastImportStatus)
 		{
-		case IMPORT_ARCHIVE_SUCCESS:
 		case IMPORT_IWAD_SUCCESS:
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_DETECT_IWAD")); // Green text
+			break;
 		case IMPORT_PWAD_SUCCESS:
-			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Import Successful!"); // Green text
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_DETECT_PWAD")); // Green text
 			break;
 		case IMPORT_FAIL:
-			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "Import Failed."); // Red text
-			ImGui::Text("There was no WAD in there lol ...");
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_DETECT_NOWAD")); // Red text
+			break;
+		case IMPORT_ARCHIVE_FAIL:
+			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")); // Red text
+			break;
+		case IMPORT_DUPLICATE:
+			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f),
+			                   GStrings.GetString("LAUNCHER_ERROR_DUPLICATE")); // Yellow text for warning
 			break;
 		case IMPORT_CANCELLED:
 			ImGui::Text("Import Cancelled.");
@@ -287,15 +322,23 @@ void LauncherMainWindow::Draw()
 // draws the top menu bar with File, Preferences, and About
 void LauncherMainWindow::DrawMenuBar()
 {
+	std::filesystem::path defaultPath = std::filesystem::path(PROFILE_DIR);
+
 	if (ImGui::BeginMenuBar())
 	{
+
 		if (ImGui::BeginMenu(GStrings.GetString("LAUNCHER_TOPBAR_FILE")))
 		{
+
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDWAD")))
 			{
-				const char *filterPatterns[] = {"*.wad", "*.pk3", "*.pk7", "*.iwad", "*.pwad", "*.ipk3", "*.ipk7"};
-				const char *result = tinyfd_openFileDialog("Select WAD", "", 7, filterPatterns, "WAD/PK3 Files", 0);
-				if (result != nullptr)
+				std::string result =
+					ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                    {
+														{"WAD/PKX Files", "wad,pwd,pk3,pk7,iwad,pwad,ipk3,ipk7"}
+                });
+
+				if (!result.empty())
 				{
 					// Capture status and trigger popup
 					lastImportStatus = Loader::ProcessWad(result);
@@ -305,9 +348,12 @@ void LauncherMainWindow::DrawMenuBar()
 			}
 			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEADDARCHIVE")))
 			{
-				const char *filterPatterns[] = {"*.zip"};
-				const char *result = tinyfd_openFileDialog("Select Archive", "", 1, filterPatterns, "Zip Archives", 0);
-				if (result != nullptr)
+				std::string result = ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                                     {
+																		 {"Zip Archives", "zip"}
+                });
+
+				if (!result.empty())
 				{
 					// Capture status and trigger popup
 					lastImportStatus = Loader::ProcessArchive(result);
@@ -315,6 +361,48 @@ void LauncherMainWindow::DrawMenuBar()
 					needsRefresh     = true;
 				}
 			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_IMPORT")))
+			{
+				// Allow user to import a .zip profile
+				std::string result = ProfileSettings::OpenPathPicker(defaultPath, false,
+				                                                     {
+																		 {"UZdoom Profiles", "uzdp"}
+                });
+
+				// Only allow valid Uzdoom profile import
+				std::filesystem::path filePath(result);
+				if (!result.empty() && filePath.extension().string() == ".uzdp")
+				{
+					ImportProfileFromZip(result);
+				}
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_PROFFOLDER")))
+			{
+				OpenProfileDirectory();
+			}
+
+			ImGui::Spacing();
+			ImGui::Separator();
+			ImGui::Spacing();
+
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_FILEEXIT")))
+			{
+				// Shutdown SDL directly
+				SDL_Event quit_event;
+				quit_event.type = SDL_QUIT;
+				SDL_PushEvent(&quit_event);
+			}
+
 			ImGui::EndMenu();
 		}
 
@@ -346,12 +434,6 @@ void LauncherMainWindow::DrawMenuBar()
 
 			if (ImGui::BeginMenu(GStrings.GetString("LAUNCHER_TOPBAR_PREFTHEME")))
 			{
-				if (ImGui::MenuItem("Dracula", "", themeVar == "dracula"))
-				{
-					themeVar = "dracula";
-					ApplyTheme();
-					SaveConfig();
-				}
 				if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_THEME_LIGHT"), "", themeVar == "light"))
 				{
 					themeVar = "light";
@@ -364,6 +446,32 @@ void LauncherMainWindow::DrawMenuBar()
 					ApplyTheme();
 					SaveConfig();
 				}
+
+				ImGui::Spacing();
+				ImGui::Separator(); // separate "default" themes from more custom ones
+				ImGui::Spacing();
+
+				if (ImGui::MenuItem("Doom", "", themeVar == "doom"))
+				{
+					themeVar = "doom";
+					ApplyTheme();
+					SaveConfig();
+				}
+
+				if (ImGui::MenuItem("Plutonia", "", themeVar == "plutonia"))
+				{
+					themeVar = "plutonia";
+					ApplyTheme();
+					SaveConfig();
+				}
+
+				if (ImGui::MenuItem("Classic", "", themeVar == "classic"))
+				{
+					themeVar = "classic";
+					ApplyTheme();
+					SaveConfig();
+				}
+
 				ImGui::EndMenu();
 			}
 			ImGui::EndMenu();
@@ -454,7 +562,10 @@ void LauncherMainWindow::DrawButtons()
 	ImVec2 btnSize(-FLT_MIN, 30.0f); // Stretch to column width
 	bool   hasSelection = (selectedProfileIdx != -1);
 
-	if (!hasSelection || isAlreadyLaunched)
+	// when launched, disable all buttons
+	bool disableButtons = (!hasSelection || isAlreadyLaunched);
+
+	if (disableButtons)
 		ImGui::BeginDisabled();
 
 	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_START"), btnSize))
@@ -469,8 +580,20 @@ void LauncherMainWindow::DrawButtons()
 		showSettingsModal = true;
 	}
 
-	if (!hasSelection || isAlreadyLaunched)
+	if (disableButtons)
 		ImGui::EndDisabled();
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	if (disableButtons)
+		ImGui::BeginDisabled();
+
+	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP"), btnSize))
+		MoveSelectedEntry(-1);
+	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN"), btnSize))
+		MoveSelectedEntry(1);
 
 	ImGui::Spacing();
 	ImGui::Separator();
@@ -481,15 +604,10 @@ void LauncherMainWindow::DrawButtons()
 		RefreshList();
 	}
 
-	if (!hasSelection)
-		ImGui::BeginDisabled();
+	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_CLONE"), btnSize))
+		CloneSelectedProfile();
 
-	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_MVUP"), btnSize))
-		MoveSelectedEntry(-1);
-	if (ImGui::Button(GStrings.GetString("LAUNCHER_PROFBUTTON_MVDOWN"), btnSize))
-		MoveSelectedEntry(1);
-
-	if (!hasSelection)
+	if (disableButtons)
 		ImGui::EndDisabled();
 
 	// Available Status
@@ -510,6 +628,207 @@ void LauncherMainWindow::MoveSelectedEntry(int offset)
 	}
 }
 
+// clone the selected profile
+void LauncherMainWindow::CloneSelectedProfile()
+{
+	if (selectedProfileIdx < 0 || selectedProfileIdx >= profilePaths.size())
+		return;
+
+	std::string           originalJsonPath = profilePaths[selectedProfileIdx];
+	std::filesystem::path origDir          = std::filesystem::path(originalJsonPath).parent_path();
+
+	// Generate new directory name with correct timestamp
+	auto               now  = std::chrono::system_clock::now();
+	auto               time = std::chrono::system_clock::to_time_t(now);
+	std::tm            tm   = *std::localtime(&time);
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
+
+	std::string           newFolderName = "clone_ " + oss.str();
+	std::filesystem::path newDir        = origDir.parent_path() / newFolderName;
+
+	// copy the directory and its contents (WADs, mods, configs etc.)
+	std::filesystem::copy(origDir, newDir, std::filesystem::copy_options::recursive);
+
+	// in the copied JSON profile and update its internal paths
+	std::filesystem::path copiedJsonPath = newDir / std::filesystem::path(originalJsonPath).filename();
+	std::filesystem::path newJsonPath    = newDir / (newFolderName + ".json");
+
+	// Rename the JSON file to match the new folder name
+	std::filesystem::rename(copiedJsonPath, newJsonPath);
+
+	// Update the Profile data
+	Profile clonedProfile;
+	clonedProfile.loadFromFile(newJsonPath.string());
+
+	clonedProfile.title += " (Clone)";
+
+	// Lambda to safely swap the original base directory with the new one
+	auto remapPath = [&](std::string &pathRef) {
+		if (pathRef.empty())
+			return;
+
+		std::string normalizedPath = pathRef;
+		std::string normalizedOrig = origDir.generic_string();
+
+		// Normalize slashes for safe string comparison
+		std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
+		std::replace(normalizedOrig.begin(), normalizedOrig.end(), '\\', '/');
+
+		size_t pos = normalizedPath.find(normalizedOrig);
+		if (pos != std::string::npos)
+		{
+			// Extract whatever comes AFTER the original directory path
+			std::string subPath = normalizedPath.substr(pos + normalizedOrig.length());
+
+			// Strip leading slash if present so std::filesystem path append works properly
+			if (!subPath.empty() && subPath.front() == '/')
+			{
+				subPath.erase(0, 1);
+			}
+
+			// Rebuild the path with the new directory + original custom subpath/filename
+			pathRef = (newDir / subPath).generic_string();
+		}
+	};
+
+	// Apply the remap to all profile directories and files etc.
+	remapPath(clonedProfile.configFilePath);
+	remapPath(clonedProfile.saveDirPath);
+	remapPath(clonedProfile.screenshotDirPath);
+	remapPath(clonedProfile.demoDirPath);
+	remapPath(clonedProfile.modsDirPath);
+
+	// Remap IWAD and PWAD paths
+	remapPath(clonedProfile.iwadFilePath);
+	remapPath(clonedProfile.pwadFilePath);
+
+	for (std::string &modPath : clonedProfile.modFiles)
+	{
+		remapPath(modPath);
+	}
+
+	// Save the updated JSON
+	clonedProfile.saveToFile(newJsonPath.string());
+
+	// add to Launcher
+	profilePaths.push_back(newJsonPath.string());
+	SaveConfig();
+	RefreshList();
+}
+
+void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
+{
+	// temporary folder name with timestamp to avoid conflicts
+	auto               now  = std::chrono::system_clock::now();
+	auto               time = std::chrono::system_clock::to_time_t(now);
+	std::tm            tm   = *std::localtime(&time);
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
+
+	std::string tempFolderName = "temp_import_" + oss.str();
+	std::string tempDir        = (std::filesystem::path(PROFILE_DIR) / tempFolderName).string();
+
+	std::filesystem::create_directories(tempDir);
+
+	if (Loader::ExtractArchive(zipPath, tempDir))
+	{
+		std::string jsonFilename = "";
+		for (const auto &entry : std::filesystem::directory_iterator(tempDir))
+		{
+			if (entry.path().extension() == ".json")
+			{
+				jsonFilename = entry.path().filename().string();
+				break;
+			}
+		}
+
+		if (!jsonFilename.empty())
+		{
+			std::string           originalFolderName = std::filesystem::path(jsonFilename).stem().string();
+			std::filesystem::path targetDirPath      = std::filesystem::path(PROFILE_DIR) / originalFolderName;
+
+			std::string targetDir     = targetDirPath.string();
+			std::string finalJsonPath = (targetDirPath / jsonFilename).generic_string();
+
+			// Check if it already exists
+			bool isDuplicate = std::filesystem::exists(targetDir);
+
+			if (!isDuplicate)
+			{
+				for (const std::string &existingPath : profilePaths)
+				{
+					if (existingPath == finalJsonPath)
+					{
+						isDuplicate = true;
+						break;
+					}
+				}
+			}
+
+			// it's a duplicate -> trigger the popup and abort!
+			if (isDuplicate)
+			{
+				std::filesystem::remove_all(tempDir);
+				lastImportStatus = IMPORT_DUPLICATE;
+				showImportPopup  = true;
+				return;
+			}
+
+			// Move the temporary directory to the correct original folder name
+			std::filesystem::rename(tempDir, targetDir);
+
+			Profile importedProfile;
+			importedProfile.loadFromFile(finalJsonPath);
+
+			auto rewritePath = [&](std::string &pathRef) {
+				if (pathRef.empty())
+					return;
+
+				std::replace(pathRef.begin(), pathRef.end(), '\\', '/');
+
+				size_t pos = pathRef.rfind("/launcher/");
+				if (pos != std::string::npos)
+				{
+					// Extract the sub-path and prepend ROOT_DIR
+					std::string subPath = pathRef.substr(pos + 10);
+					pathRef             = (std::filesystem::path(ROOT_DIR) / subPath).generic_string();
+				}
+			};
+
+			// Apply to all paths
+			rewritePath(importedProfile.configFilePath);
+			rewritePath(importedProfile.saveDirPath);
+			rewritePath(importedProfile.screenshotDirPath);
+			rewritePath(importedProfile.demoDirPath);
+			rewritePath(importedProfile.modsDirPath);
+
+			rewritePath(importedProfile.iwadFilePath);
+			rewritePath(importedProfile.pwadFilePath);
+
+			for (std::string &modPath : importedProfile.modFiles)
+			{
+				rewritePath(modPath);
+			}
+
+			importedProfile.saveToFile(finalJsonPath);
+
+			profilePaths.push_back(finalJsonPath);
+			SaveConfig();
+			needsRefresh = true;
+		}
+		else
+		{
+			std::filesystem::remove_all(tempDir);
+		}
+	}
+	else
+	{
+		// Clean up if extraction fails entirely
+		std::filesystem::remove_all(tempDir);
+	}
+}
+
 // launch selected entry
 void LauncherMainWindow::LaunchGame(const std::string &mode)
 {
@@ -526,10 +845,25 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 		return;
 
 	// get executable path and prepend to command
+	std::string exePath = "";
 #ifdef _WIN32
-	std::string exePath = "uzdoom.exe";
-#else
-	std::string exePath = "./uzdoom";
+	wchar_t path[MAX_PATH] = {0};
+	GetModuleFileNameW(NULL, path, MAX_PATH);
+	exePath = std::filesystem::path(path).string();
+#elif __APPLE__
+	char     path[1024];
+	uint32_t size = sizeof(path);
+	if (_NSGetExecutablePath(path, &size) == 0)
+	{
+		exePath = std::filesystem::path(path).string();
+	}
+#elif __linux__
+	char    result[PATH_MAX];
+	ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+	if (count != -1)
+	{
+		exePath = std::filesystem::path(std::string(result, count)).string();
+	}
 #endif
 
 	dispatchedCmd = exePath + " " + dispatchedCmd;
@@ -582,4 +916,20 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 		needsRefresh.store(true);
 		isAlreadyLaunched.store(false);
 	}).detach();
+}
+
+void LauncherMainWindow::OpenProfileDirectory()
+{
+#ifdef _WIN32
+	// Windows Explorer
+	ShellExecuteA(NULL, "open", PROFILE_DIR.c_str(), NULL, NULL, SW_SHOWNORMAL);
+#else
+	// macOS and Linux
+#ifdef __APPLE__
+	std::string cmd = "open \"" + PROFILE_DIR + "\"";
+#else
+	std::string cmd = "xdg-open \"" + PROFILE_DIR + "\"";
+#endif
+	std::thread([cmd]() { std::system(cmd.c_str()); }).detach();
+#endif
 }

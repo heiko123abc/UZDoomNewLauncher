@@ -22,36 +22,110 @@
 
 #include "imgui.h"
 #include "misc/cpp/imgui_stdlib.cpp" // Required to bind std::string directly to ImGui::InputText
-#include <tinyfiledialogs.h>
+#include <miniz.h>
 
-// Helper Function - Integrated with tinyfiledialogs
-void ProfileSettings::OpenPathPicker(std::string *targetInput, const char *title, bool isFolder, const char *filterDesc,
-                                     const std::vector<const char *> &filters)
+static void ExportProfileToZip(const std::string &profileJsonPath, const std::string &outZipPath)
 {
+	std::filesystem::path profileDir = std::filesystem::path(profileJsonPath).parent_path();
+
+	mz_zip_archive zip_archive = {};
+	if (!mz_zip_writer_init_heap(&zip_archive, 0, 16 * 1024 * 1024))
+		return;
+
+	for (const auto &entry : std::filesystem::recursive_directory_iterator(profileDir))
+	{
+		std::string relPath = std::filesystem::relative(entry.path(), profileDir).string();
+
+		// Replace backslashes with forward slashes for ZIP compatibility
+		std::replace(relPath.begin(), relPath.end(), '\\', '/');
+
+		if (entry.is_regular_file())
+		{
+			std::string   absPath = entry.path().string();
+			std::ifstream file(absPath, std::ios::binary | std::ios::ate);
+			if (file.is_open())
+			{
+				std::streamsize size = file.tellg();
+				file.seekg(0, std::ios::beg);
+				std::vector<uint8_t> buffer(size);
+
+				if (file.read(reinterpret_cast<char *>(buffer.data()), size))
+				{
+					mz_zip_writer_add_mem(&zip_archive, relPath.c_str(), buffer.data(), size, MZ_DEFAULT_COMPRESSION);
+				}
+			}
+		}
+		else if (entry.is_directory())
+		{
+			// ZIPPED EMPTY folders needs to end with a forward slash
+			if (!relPath.empty() && relPath.back() != '/')
+			{
+				relPath += '/';
+			}
+
+			// Add the folders as an empty file with a trailing slash
+			mz_zip_writer_add_mem(&zip_archive, relPath.c_str(), nullptr, 0, MZ_DEFAULT_COMPRESSION);
+		}
+	}
+
+	void  *zip_buffer = nullptr;
+	size_t zip_size   = 0;
+	mz_zip_writer_finalize_heap_archive(&zip_archive, &zip_buffer, &zip_size);
+	mz_zip_writer_end(&zip_archive);
+
+	std::ofstream outFile(outZipPath, std::ios::binary);
+	if (outFile.is_open())
+	{
+		outFile.write(static_cast<const char *>(zip_buffer), zip_size);
+		outFile.close();
+	}
+
+	mz_free(zip_buffer);
+}
+
+// Helper Function with NFD-EX (path given must be absolute and preferred, otherwise give empty string)
+std::string ProfileSettings::OpenPathPicker(std::filesystem::path &defaultPath, bool isFolder,
+                                            const std::vector<nfdu8filteritem_t> &filters = {})
+{
+	if (std::filesystem::exists(defaultPath) && std::filesystem::is_regular_file(defaultPath))
+	defaultPath = defaultPath.parent_path(); // NFD expects a directory for the default path
+
+	std::string nfdDefaultPathStr = defaultPath.empty() ? "" : defaultPath.string();
+
+	const nfdu8char_t *nfdDefaultPath = nullptr;
+	if (!nfdDefaultPathStr.empty() && std::filesystem::exists(nfdDefaultPathStr))
+		nfdDefaultPath = nfdDefaultPathStr.c_str();
+
+	nfdu8char_t *outPath;
+	nfdresult_t result;
+
 	if (isFolder)
 	{
 		// Folder selection
-		const char *result = tinyfd_selectFolderDialog(title, targetInput->c_str());
-		if (result != nullptr)
-		{
-			*targetInput = result;
-		}
+		result = NFD_PickFolderU8(&outPath, nfdDefaultPath);
 	}
 	else
 	{
 		// File selection
-		const char *result =
-			tinyfd_openFileDialog(title,
-		                          targetInput->c_str(), // Default path (uses current value of input box)
-		                          (int)filters.size(), filters.empty() ? nullptr : filters.data(), filterDesc,
-		                          0 // 0 = single file, 1 = multiple files
-		    );
+		const nfdu8filteritem_t *filterData  = filters.empty() ? nullptr : filters.data();
+		nfdfiltersize_t filterCount = static_cast<nfdfiltersize_t>(filters.size());
 
-		if (result != nullptr)
-		{
-			*targetInput = result;
-		}
+		result = NFD_OpenDialogU8(&outPath, filterData, filterCount, nfdDefaultPath);
 	}
+
+	std::string selectedPath = ""; // Default to empty string (if user cancels)
+
+	if (result == NFD_OKAY)
+	{
+		selectedPath = outPath;
+		NFD_FreePathU8(outPath); // free path allocated by NFD
+	}
+	else if (result == NFD_ERROR)
+	{
+		std::cerr << "NFD Error: " << NFD_GetError() << std::endl;
+	}
+
+	return selectedPath;
 }
 
 // Main Window Rendering
@@ -121,6 +195,32 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 		if (ImGui::Button(GStrings.GetString("PROFSET_DELPROF")))
 		{
 			ImGui::OpenPopup("Delete Confirmation");
+		}
+		ImGui::PopStyleColor(2);
+
+		ImGui::SameLine();
+
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.8f, 0.5f, 0.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(1.0f, 0.6f, 0.1f, 1.0f));
+		if (ImGui::Button("Export Profile..."))
+		{
+			nfdchar_t      *outPath       = nullptr;
+			nfdfilteritem_t filterItem[1] = {
+				{"Uzdoom Profile", "uzdp"}
+            };
+
+			// Sanitize profile title for default filename (remove chars that can't be in filenames)
+			std::string defaultName = "Export_" + currEdit->title;
+			std::replace(defaultName.begin(), defaultName.end(), ':', '_');
+			std::replace(defaultName.begin(), defaultName.end(), '/', '_');
+			std::replace(defaultName.begin(), defaultName.end(), '\\', '_');
+
+			nfdresult_t result = NFD_SaveDialogU8(&outPath, filterItem, 1, nullptr, defaultName.c_str());
+			if (result == NFD_OKAY)
+			{
+				ExportProfileToZip(profilePath, outPath);
+				NFD_FreePathU8(outPath);
+			}
 		}
 		ImGui::PopStyleColor(2);
 
@@ -227,12 +327,19 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 		ImGui::SameLine();
 		if (ImGui::Button("...##iwadbtn", ImVec2(35, 0)))
 		{
-			OpenPathPicker(&PROFILE_DIR, GStrings.GetString("PROFSET_GENERAL_IWADDIAG"), false, "WAD Files",
-			               {"*.wad", "*.pk3"});
+			std::filesystem::path startPath = currEdit->iwadFilePath.empty()
+			                                      ? std::filesystem::path(PROFILE_DIR)
+			                                      : std::filesystem::path(currEdit->iwadFilePath);
+			std::string           newPath   = OpenPathPicker(startPath, false,
+			                                                 {
+                                                     {"WAD Files", "iwad,wad,pk3"}
+            });
+			if (!newPath.empty())
+				currEdit->iwadFilePath = newPath;
 		}
 
 		// Conditionally show PWAD Path
-		if (currEdit->isIWAD == 0) // PWAD Selected
+		if (currEdit->isIWAD == 0)
 		{
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
@@ -244,8 +351,15 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 			ImGui::SameLine();
 			if (ImGui::Button("...##pwadbtn", ImVec2(35, 0)))
 			{
-				OpenPathPicker(&PROFILE_DIR, GStrings.GetString("PROFSET_GENERAL_PWADDIAG"), false, "WAD Files",
-				               {"*.wad", "*.pk3"});
+				std::filesystem::path startPath = currEdit->iwadFilePath.empty()
+				                                      ? std::filesystem::path(PROFILE_DIR)
+				                                      : std::filesystem::path(currEdit->pwadFilePath);
+				std::string           newPath   = OpenPathPicker(startPath, false,
+				                                                 {
+                                                         {"WAD Files", "pwad,wad,pk3"}
+                });
+				if (!newPath.empty())
+					currEdit->pwadFilePath = newPath;
 			}
 		}
 		ImGui::EndTable();
@@ -317,8 +431,8 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 		ImGui::TableSetupColumn("Labels", ImGuiTableColumnFlags_WidthFixed, 0.0f);
 		ImGui::TableSetupColumn("Inputs", ImGuiTableColumnFlags_WidthStretch);
 
-		auto DrawPathPickerRow = [&](const char *label, std::string *targetVar, const char *diagTitle, bool isFolder,
-		                             const char *filterDesc, const std::vector<const char *> &filters) {
+		auto DrawPathPickerRow = [&](const char *label, std::string *targetVar, bool isFolder,
+		                             const std::vector<nfdfilteritem_t> &filters) {
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 			ImGui::AlignTextToFramePadding();
@@ -329,18 +443,22 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			ImGui::SameLine();
 			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(), ImVec2(35, 0)))
 			{
-				OpenPathPicker(targetVar, diagTitle, isFolder, filterDesc, filters);
+				std::filesystem::path startPath =
+					targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
+
+				std::string newPath = OpenPathPicker(startPath, isFolder, filters);
+				if (!newPath.empty())
+					*targetVar = newPath;
 			}
 		};
 
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_CONFIG"), &currEdit->configFilePath,
-		                  GStrings.GetString("PROFSET_FILES_CONFIGDIAG"), false, "INI Files", {"*.ini"});
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SAVE"), &currEdit->saveDirPath,
-		                  GStrings.GetString("PROFSET_FILES_SAVEDIAG"), true, nullptr, {});
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SCREEN"), &currEdit->screenshotDirPath,
-		                  GStrings.GetString("PROFSET_FILES_SCREENDIAG"), true, nullptr, {});
-		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_DEMO"), &currEdit->demoDirPath,
-		                  GStrings.GetString("PROFSET_FILES_DEMODIAG"), true, nullptr, {});
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_CONFIG"), &currEdit->configFilePath, false,
+		                  {
+							  {"INI Files", "ini"}
+        });
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SAVE"), &currEdit->saveDirPath, true, {});
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_SCREEN"), &currEdit->screenshotDirPath, true, {});
+		DrawPathPickerRow(GStrings.GetString("PROFSET_FILES_DEMO"), &currEdit->demoDirPath, true, {});
 
 		ImGui::EndTable();
 	}
@@ -351,43 +469,39 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 	ImGui::SeparatorText(GStrings.GetString("PROFSET_FILES_MODS"));
 	if (ImGui::Button(GStrings.GetString("PROFSET_FILES_ADDMOD")))
 	{
-		const char *filterPatterns[] = {"*.wad", "*.pk3", "*.pk7", "*.zip"};
+		const nfdpathset_t *pathSet       = nullptr;
+		nfdfilteritem_t     filterItem[1] = {
+            {"Mod Files (.wad,.pk3,.pk7,.zip)", "wad,pk3,pk7,zip"}
+        };
 
-		const char *result = tinyfd_openFileDialog("Select Mod Files",
-		                                           "",               // Default path
-		                                           4,                // Number of filter patterns
-		                                           filterPatterns,   // Array of patterns
-		                                           "Doom Mod Files", // Description
-		                                           1                 // 1 = Allow multiple select
-		);
+		// Allow user to select multiple files, then iterate to add them
+		nfdresult_t result = NFD_OpenDialogMultipleU8(&pathSet, filterItem, 1, nullptr);
 
-		if (result != nullptr)
+		if (result == NFD_OKAY)
 		{
-			// tinyfiledialogs returns multiple paths separated by '|'
-			std::string              paths = result;
-			size_t                   start = 0;
-			size_t                   end   = paths.find('|');
-			std::vector<std::string> selectedFiles;
+			nfdpathsetsize_t numPaths;
+			NFD_PathSet_GetCount(pathSet, &numPaths);
 
-			while (end != std::string::npos)
+			for (nfdpathsetsize_t i = 0; i < numPaths; ++i)
 			{
-				selectedFiles.push_back(paths.substr(start, end - start));
-				start = end + 1;
-				end   = paths.find('|', start);
-			}
-			selectedFiles.push_back(paths.substr(start));
+				nfdchar_t *originalPath;
+				NFD_PathSet_GetPathU8(pathSet, i, &originalPath);
 
-			// Copy files into the profile directory
-			for (const auto &originalPath : selectedFiles)
-			{
 				std::filesystem::path src(originalPath);
 				std::filesystem::path dest = std::filesystem::path(currEdit->modsDirPath) / src.filename();
 
 				// Copy the file, overwriting if the user is replacing an existing mod of the same name
 				std::filesystem::copy_file(src, dest, std::filesystem::copy_options::overwrite_existing);
 
-				currEdit->modFiles.push_back(dest.string());
+				currEdit->modFiles.push_back(dest.generic_string());
+
+				NFD_FreePathU8(originalPath); // Free individual path
 			}
+			NFD_PathSet_Free(pathSet); // Free the entire path set
+		}
+		else if (result == NFD_ERROR)
+		{
+			std::cerr << "NFD Multi-Select Error: " << NFD_GetError() << std::endl;
 		}
 	}
 
@@ -403,7 +517,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Up Arrow
 		ImGui::BeginDisabled(i == 0);
-		if (ImGui::Button("^", ImVec2(25, 25)))
+		if (ImGui::Button("▲", ImVec2(25, 25)))
 		{
 			std::swap(currEdit->modFiles[i], currEdit->modFiles[i - 1]);
 		}
@@ -413,7 +527,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Down Arrow
 		ImGui::BeginDisabled(i == currEdit->modFiles.size() - 1);
-		if (ImGui::Button("v", ImVec2(25, 25)))
+		if (ImGui::Button("▼", ImVec2(25, 25)))
 		{
 			std::swap(currEdit->modFiles[i], currEdit->modFiles[i + 1]);
 		}
@@ -482,8 +596,8 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			ImGui::DragInt("##MapSpinner", &currEdit->selectedLaunchMap, 1.0f, 1, 100000, "%d",
 			               ImGuiSliderFlags_AlwaysClamp);
 
-			auto DrawModePath = [&](int modeVal, const char *label, std::string *targetVar, const char *diagStr,
-			                        const char *filterDesc, const std::vector<const char *> &filters) {
+			auto DrawModePath = [&](int modeVal, const char *label, std::string *targetVar,
+			                        const std::vector<nfdfilteritem_t> &filters) {
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
 				ImGui::RadioButton(label, &currEdit->launchParameters, modeVal);
@@ -492,15 +606,28 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 				ImGui::InputText(std::string("##T" + std::to_string(modeVal)).c_str(), targetVar);
 				ImGui::SameLine();
 				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(), ImVec2(35, 0)))
-					OpenPathPicker(targetVar, diagStr, false, filterDesc, filters);
+				{
+					std::filesystem::path startPath =
+						targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
+
+					std::string newPath = OpenPathPicker(startPath, false, filters);
+					if (!newPath.empty())
+						*targetVar = newPath;
+				}
 			};
 
 			DrawModePath(2, GStrings.GetString("PROFSET_LAUNCH_SAVE"), &currEdit->selectedLaunchSave,
-			             GStrings.GetString("PROFSET_LAUNCH_SAVEDIAG"), "ZDS Files", {"*.zds"});
+			             {
+							 {"ZDS Files", "zds"}
+            });
 			DrawModePath(3, GStrings.GetString("PROFSET_LAUNCH_PLAYDEM"), &currEdit->selectedLaunchDemoPlayback,
-			             GStrings.GetString("PROFSET_LAUNCH_DEMODIAG"), "LMP Files", {"*.lmp"});
+			             {
+							 {"LMP Files", "lmp"}
+            });
 			DrawModePath(4, GStrings.GetString("PROFSET_LAUNCH_RECORD"), &currEdit->selectedLaunchDemoRecord,
-			             GStrings.GetString("PROFSET_LAUNCH_DEMODIAG"), "LMP Files", {"*.lmp"});
+			             {
+							 {"LMP Files", "lmp"}
+            });
 
 			ImGui::EndTable();
 		}
@@ -668,6 +795,7 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_REMADDR"), &currEdit->joinAddress);
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_REMPORT"), &currEdit->joinPort);
 			DrawRightInput(GStrings.GetString("PROFSET_LAUNCH_TEAMNO"), &currEdit->joinTeamNo);
+
 			ImGui::EndTable();
 		}
 
@@ -740,6 +868,32 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 					nIdx = i;
 			if (ImGui::Combo("##NMode", &nIdx, nModeLabels, IM_ARRAYSIZE(nModeLabels)))
 				currEdit->hostNetworkMode = nModes[nIdx];
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_FRAGLIM"));
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::DragInt("##MPfrg", &currEdit->mpFragLimit, 1.0f, 0, 100000, "%d", ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_TIMELIM"));
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::DragFloat("##MPtim", &currEdit->mpTimeLimit, 1.0f, 0.0f, 9999999.0f, "%.5f",
+			                 ImGuiSliderFlags_AlwaysClamp);
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("%s", GStrings.GetString("PROFSET_LAUNCH_TEAMDMG"));
+			ImGui::TableNextColumn();
+			ImGui::SetNextItemWidth(-FLT_MIN);
+			ImGui::DragFloat("##Tdmg", &currEdit->teamDamageFactor, 1.0f, 0.0f, 9999999.0f, "%.5f",
+			                 ImGuiSliderFlags_AlwaysClamp);
 
 			ImGui::EndTable();
 		}
@@ -861,7 +1015,8 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 			}
 			else
 			{
-				// Fallback to wrapping if the string is too long to fit on a single centered line (maybe for some translations?)
+				// Fallback to wrapping if the string is too long to fit on a single centered line (maybe for some
+				// translations?)
 				ImGui::TextWrapped("%s", compInfoText);
 			}
 		}

@@ -16,6 +16,7 @@
 #pragma once
 #include "const.h"
 #include "profile.h"
+#include <nfd.h>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,10 @@ class ProfileSettings
   public:
 	// is called from outside
 	void Draw(bool *p_open, Profile *currEdit, const std::string &profilePath);
+
+	// Helper for file picking (uses library: nativefiledialog-extended)
+	static std::string OpenPathPicker(std::filesystem::path &defaultPath, bool isFolder,
+	                                  const std::vector<nfdfilteritem_t> &filters);
 
   private:
 	// Tab rendering functions
@@ -36,15 +41,11 @@ class ProfileSettings
 	// Modals
 	void DrawFlagEditorModal(Profile *currEdit);
 
-	// Helper for file picking (uses library: tinyfiledialogs)
-	void OpenPathPicker(std::string *targetInput, const char *title, bool isFolder, const char *filterDesc,
-	                    const std::vector<const char *> &filters);
-
 	// Internal state for the flag editor modals
-	int tempFlags[3]    = {0, 0, 0};
-	int tempFlagsCount  = 0;
-	bool isGameplayFlags = true;  // true for Gameplay (DMFlags), false for CompatFlags
-	bool forceDmFlags    = false; // specific to Gameplay flags
+	int         tempFlags[3]    = {0, 0, 0};
+	int         tempFlagsCount  = 0;
+	bool        isGameplayFlags = true;  // true for Gameplay (DMFlags), false for CompatFlags
+	bool        forceDmFlags    = false; // specific to Gameplay flags
 	std::string currentModalTitle;
-	bool openFlagEditor = false;
+	bool        openFlagEditor = false;
 };

@@ -24,23 +24,26 @@
 
 // HEADER FILES ------------------------------------------------------------
 
-#include "c_console.h"
+#include <SDL.h>
+
+#ifdef HAVE_VULKAN
+#include <SDL_vulkan.h>
+#include <zvulkan/vulkanbuilders.h>
+#include <zvulkan/vulkandevice.h>
+#include <zvulkan/vulkaninstance.h>
+#include <zvulkan/vulkansurface.h>
+#endif
+
+#include "basics.h"
 #include "c_dispatch.h"
-#include "i_module.h"
+#include "gl_framebuffer.h"
+#include "gl_sysfb.h"
 #include "i_soundinternal.h"
-#include "i_system.h"
 #include "i_video.h"
 #include "m_argv.h"
 #include "printf.h"
 #include "v_video.h"
 #include "version.h"
-
-#include "gl_sysfb.h"
-#include "gl_system.h"
-#include "hardware.h"
-
-#include "gl_framebuffer.h"
-#include "gl_renderer.h"
 
 #ifdef HAVE_GLES2
 #include "gles_framebuffer.h"
@@ -48,17 +51,9 @@
 
 #ifdef HAVE_VULKAN
 #include "vulkan/system/vk_renderdevice.h"
-#include <zvulkan/vulkanbuilders.h>
-#include <zvulkan/vulkandevice.h>
-#include <zvulkan/vulkaninstance.h>
-#include <zvulkan/vulkansurface.h>
 #endif
 
 // MACROS ------------------------------------------------------------------
-
-#if defined HAVE_VULKAN
-#include <SDL2/SDL_vulkan.h>
-#endif // HAVE_VULKAN
 
 // TYPES -------------------------------------------------------------------
 
@@ -67,13 +62,14 @@
 // PRIVATE FUNCTION PROTOTYPES ---------------------------------------------
 
 // EXTERNAL DATA DECLARATIONS ----------------------------------------------
+
 extern IVideo *Video;
 
-EXTERN_CVAR (Int, vid_adapter)
-EXTERN_CVAR (Int, vid_displaybits)
-EXTERN_CVAR (Int, vid_defwidth)
-EXTERN_CVAR (Int, vid_defheight)
-EXTERN_CVAR (Bool, cl_capfps)
+EXTERN_CVAR(Int, vid_adapter)
+EXTERN_CVAR(Int, vid_displaybits)
+EXTERN_CVAR(Int, vid_defwidth)
+EXTERN_CVAR(Int, vid_defheight)
+EXTERN_CVAR(Bool, cl_capfps)
 EXTERN_CVAR(Bool, vk_debug)
 EXTERN_FARG(glversion);
 
@@ -107,145 +103,156 @@ CCMD(vid_list_sdl_render_drivers)
 
 namespace Priv
 {
-	SDL_Window *window;
-	bool vulkanEnabled;
-	bool softpolyEnabled;
-	bool fullscreenSwitch;
-	int numberOfDisplays;
-	SDL_Rect* displayBounds = nullptr;
+SDL_Window *window;
+bool        vulkanEnabled;
+bool        softpolyEnabled;
+bool        fullscreenSwitch;
+int         numberOfDisplays;
+SDL_Rect   *displayBounds = nullptr;
 
-	void updateDisplayInfo()
+void updateDisplayInfo()
+{
+	Priv::numberOfDisplays = SDL_GetNumVideoDisplays();
+	if (Priv::numberOfDisplays <= 0)
 	{
-		Priv::numberOfDisplays = SDL_GetNumVideoDisplays();
-		if (Priv::numberOfDisplays <= 0) {
-			Printf("%sWrong number of displays detected.\n", TEXTCOLOR_BOLD);
-			return;
-		}
-		Printf("Number of detected displays %d .\n", Priv::numberOfDisplays);
+		Printf("%sWrong number of displays detected.\n", TEXTCOLOR_BOLD);
+		return;
+	}
+	Printf("Number of detected displays %d .\n", Priv::numberOfDisplays);
 
-		if (Priv::displayBounds != nullptr) {
-			free(Priv::displayBounds);
-		}
-		Priv::displayBounds = (SDL_Rect*) calloc(Priv::numberOfDisplays, sizeof(SDL_Rect));
+	if (Priv::displayBounds != nullptr)
+	{
+		free(Priv::displayBounds);
+	}
+	Priv::displayBounds = (SDL_Rect *)calloc(Priv::numberOfDisplays, sizeof(SDL_Rect));
 
-		for (int i=0; i < Priv::numberOfDisplays; i++) {
-			if (0 != SDL_GetDisplayBounds(i, &Priv::displayBounds[i])) {
-				Printf("%sError getting display %d size: %s\n", TEXTCOLOR_BOLD, i, SDL_GetError());
-				if (i == 0) {
-					free(Priv::displayBounds);
-					displayBounds = nullptr;
-				}
-				Priv::numberOfDisplays = i;
-				return;
+	for (int i = 0; i < Priv::numberOfDisplays; i++)
+	{
+		if (0 != SDL_GetDisplayBounds(i, &Priv::displayBounds[i]))
+		{
+			Printf("%sError getting display %d size: %s\n", TEXTCOLOR_BOLD, i, SDL_GetError());
+			if (i == 0)
+			{
+				free(Priv::displayBounds);
+				displayBounds = nullptr;
 			}
-		}
-	}
-
-	void CreateWindow(uint32_t extraFlags)
-	{
-		assert(Priv::window == nullptr);
-
-		// Get displays and default display size
-		updateDisplayInfo();
-
-		// TODO control better when updateDisplayInfo fails
-		SDL_Rect* bounds = &displayBounds[vid_adapter % numberOfDisplays];
-
-		if (win_w <= 0 || win_h <= 0)
-		{
-			win_w = bounds->w * 8 / 10;
-			win_h = bounds->h * 8 / 10;
-		}
-
-		int xWindowPos = (win_x <= 0) ? SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter) : win_x;
-		int yWindowPos = (win_y <= 0) ? SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter) : win_y;
-		Printf("Creating window [%dx%d] on adapter %d\n", (*win_w), (*win_h), (*vid_adapter));
-		
-		FString caption;
-		caption.Format(GAMENAME " %s (%s)", GetVersionString(), GetGitTime());
-
-		const uint32_t windowFlags = (win_maximized ? SDL_WINDOW_MAXIMIZED : 0) | SDL_WINDOW_RESIZABLE | extraFlags;
-		Priv::window = SDL_CreateWindow(caption.GetChars(), xWindowPos, yWindowPos, win_w, win_h, windowFlags);
-
-		if (Priv::window != nullptr)
-		{
-			SDL_version sdlver;
-			SDL_GetVersion(&sdlver);
-			// Enforce minimum size limit
-			SDL_SetWindowMinimumSize(Priv::window, VID_MIN_WIDTH, VID_MIN_HEIGHT);
-			// Tell SDL to start sending text input on Wayland if it's on affected versions.
-			if (strncasecmp(SDL_GetCurrentVideoDriver(), "wayland", 7) == 0 && sdlver.major == 2 && sdlver.minor == 0 && sdlver.patch < 18)
-				SDL_StartTextInput();
-		}
-	}
-
-	void DestroyWindow()
-	{
-		assert(Priv::window != nullptr);
-
-		SDL_DestroyWindow(Priv::window);
-		Priv::window = nullptr;
-
-		if (Priv::displayBounds != nullptr) {
-			free(Priv::displayBounds);
-			Priv::displayBounds = nullptr;
-		}
-	}
-
-	void SetupPixelFormat(int multisample, const int *glver)
-	{
-		SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-		SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-		if (multisample > 0) {
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-			SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, multisample);
-		}
-		if (gl_debug)
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-
-		if (gl_es)
-		{
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
-		}
-		else if (glver[0] > 2)
-		{
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glver[0]);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glver[1]);
-		}
-		else
-		{
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-			SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+			Priv::numberOfDisplays = i;
+			return;
 		}
 	}
 }
 
+void CreateWindow(uint32_t extraFlags)
+{
+	assert(Priv::window == nullptr);
+
+	// Get displays and default display size
+	updateDisplayInfo();
+
+	// TODO control better when updateDisplayInfo fails
+	SDL_Rect *bounds = &displayBounds[vid_adapter % numberOfDisplays];
+
+	if (win_w <= 0 || win_h <= 0)
+	{
+		win_w = bounds->w * 8 / 10;
+		win_h = bounds->h * 8 / 10;
+	}
+
+	int xWindowPos = (win_x <= 0) ? SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter) : win_x;
+	int yWindowPos = (win_y <= 0) ? SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter) : win_y;
+	Printf("Creating window [%dx%d] on adapter %d\n", (*win_w), (*win_h), (*vid_adapter));
+
+	FString caption;
+	caption.Format(GAMENAME " %s (%s)", GetVersionString(), GetGitTime());
+
+	const uint32_t windowFlags = (win_maximized ? SDL_WINDOW_MAXIMIZED : 0) | SDL_WINDOW_RESIZABLE | extraFlags;
+	Priv::window = SDL_CreateWindow(caption.GetChars(), xWindowPos, yWindowPos, win_w, win_h, windowFlags);
+
+	if (Priv::window != nullptr)
+	{
+		SDL_version sdlver;
+		SDL_GetVersion(&sdlver);
+		// Enforce minimum size limit
+		SDL_SetWindowMinimumSize(Priv::window, VID_MIN_WIDTH, VID_MIN_HEIGHT);
+		// Tell SDL to start sending text input on Wayland if it's on affected versions.
+		if (strncasecmp(SDL_GetCurrentVideoDriver(), "wayland", 7) == 0 && sdlver.major == 2 && sdlver.minor == 0 &&
+		    sdlver.patch < 18)
+			SDL_StartTextInput();
+	}
+}
+
+void DestroyWindow()
+{
+	assert(Priv::window != nullptr);
+
+	SDL_DestroyWindow(Priv::window);
+	Priv::window = nullptr;
+
+	if (Priv::displayBounds != nullptr)
+	{
+		free(Priv::displayBounds);
+		Priv::displayBounds = nullptr;
+	}
+}
+
+void SetupPixelFormat(int multisample, const int *glver)
+{
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	if (multisample > 0)
+	{
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, multisample);
+	}
+	if (gl_debug)
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+
+	if (gl_es)
+	{
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	}
+	else if (glver[0] > 2)
+	{
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, glver[0]);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, glver[1]);
+	}
+	else
+	{
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+	}
+}
+} // namespace Priv
+
 CUSTOM_CVAR(Int, vid_adapter, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITCALL)
 {
-  if (Priv::window != nullptr) {
+	if (Priv::window != nullptr)
+	{
 		// Get displays and default display size
 		Priv::updateDisplayInfo();
 
-    int display = (*self) % Priv::numberOfDisplays;
+		int display = (*self) % Priv::numberOfDisplays;
 
 		// TODO control better when updateDisplayInfo fails
-		SDL_Rect* bounds = &Priv::displayBounds[vid_adapter % Priv::numberOfDisplays];
+		SDL_Rect *bounds = &Priv::displayBounds[vid_adapter % Priv::numberOfDisplays];
 
 		if (win_w <= 0 || win_h <= 0)
 		{
 			win_w = bounds->w * 8 / 10;
 			win_h = bounds->h * 8 / 10;
 		}
-		// Forces to set to the ini this vars to -1, so +vid_adapter keeps working the next time that the game it's launched
+		// Forces to set to the ini this vars to -1, so +vid_adapter keeps working the next time that the game it's
+		// launched
 		win_x = -1;
 		win_y = -1;
 
-		if ((SDL_GetWindowFlags(Priv::window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0) {
+		if ((SDL_GetWindowFlags(Priv::window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0)
+		{
 
 			// TODO This not works. For some reason keeps stuck on the previus screen
 			/*
@@ -254,7 +261,7 @@ CUSTOM_CVAR(Int, vid_adapter, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITC
 			currentDisplayMode.w = win_w;
 			currentDisplayMode.h = win_h;
 			if ( 0 != SDL_SetWindowDisplayMode(Priv::window, &currentDisplayMode)) {
-				Printf("A problem occured trying to change of display %s\n", SDL_GetError());
+			    Printf("A problem occured trying to change of display %s\n", SDL_GetError());
 			}
 			*/
 
@@ -265,33 +272,39 @@ CUSTOM_CVAR(Int, vid_adapter, 0, CVAR_ARCHIVE | CVAR_GLOBALCONFIG | CVAR_NOINITC
 			SDL_SetWindowPosition(Priv::window, bounds->x , bounds->y);
 			SDL_SetWindowFullscreen(Priv::window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 			*/
-			Printf("Changing adapter on fullscreen, isn't full supported by SDL. Instead try to switch to windowed mode, change the adapter and then switch again to fullscreen.\n");
-
-		} else {
+			Printf("Changing adapter on fullscreen, isn't full supported by SDL. Instead try to switch to windowed "
+			       "mode, change the adapter and then switch again to fullscreen.\n");
+		}
+		else
+		{
 			SDL_SetWindowSize(Priv::window, win_w, win_h);
-			SDL_SetWindowPosition(Priv::window, SDL_WINDOWPOS_CENTERED_DISPLAY(display), SDL_WINDOWPOS_CENTERED_DISPLAY(display));
+			SDL_SetWindowPosition(Priv::window, SDL_WINDOWPOS_CENTERED_DISPLAY(display),
+			                      SDL_WINDOWPOS_CENTERED_DISPLAY(display));
 		}
 
-    display = SDL_GetWindowDisplayIndex(Priv::window);
-    if (display >= 0) {
-			Printf("New display is %d\n", display );
-		} else {
+		display = SDL_GetWindowDisplayIndex(Priv::window);
+		if (display >= 0)
+		{
+			Printf("New display is %d\n", display);
+		}
+		else
+		{
 			Printf("A problem occured trying to change of display %s\n", SDL_GetError());
 		}
-  }
+	}
 }
 
 class SDLVideo : public IVideo
 {
-public:
-	SDLVideo ();
-	~SDLVideo ();
+  public:
+	SDLVideo();
+	~SDLVideo();
 
 	void DumpAdapters();
-	
-	DFrameBuffer *CreateFrameBuffer ();
 
-private:
+	DFrameBuffer *CreateFrameBuffer();
+
+  private:
 #ifdef HAVE_VULKAN
 	std::shared_ptr<VulkanSurface> surface;
 #endif
@@ -322,8 +335,7 @@ bool I_CreateVulkanSurface(VkInstance instance, VkSurfaceKHR *surface)
 }
 #endif
 
-
-SDLVideo::SDLVideo ()
+SDLVideo::SDLVideo()
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
@@ -338,11 +350,12 @@ SDLVideo::SDLVideo ()
 	}
 
 #ifdef HAVE_VULKAN
-	Priv::vulkanEnabled = V_GetBackend() == 1;
+	Priv::vulkanEnabled = vid_preferbackend == BACKEND_VULKAN;
 
 	if (Priv::vulkanEnabled)
 	{
-		Priv::CreateWindow(SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN | (vid_fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
+		Priv::CreateWindow(SDL_WINDOW_VULKAN | SDL_WINDOW_HIDDEN |
+		                   (vid_fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
 
 		if (Priv::window == nullptr)
 		{
@@ -352,7 +365,7 @@ SDLVideo::SDLVideo ()
 #endif
 }
 
-SDLVideo::~SDLVideo ()
+SDLVideo::~SDLVideo()
 {
 #ifdef HAVE_VULKAN
 	surface.reset();
@@ -362,20 +375,14 @@ SDLVideo::~SDLVideo ()
 void SDLVideo::DumpAdapters()
 {
 	Priv::updateDisplayInfo();
-  for (int i=0; i < Priv::numberOfDisplays; i++) {
-    Printf("%s%d. [%dx%d @ (%d,%d)]\n",
-        vid_adapter == i ? TEXTCOLOR_BOLD : "",
-        i,
-        Priv::displayBounds[i].w,
-        Priv::displayBounds[i].h,
-        Priv::displayBounds[i].x,
-        Priv::displayBounds[i].y
-      );
-  }
+	for (int i = 0; i < Priv::numberOfDisplays; i++)
+	{
+		Printf("%s%d. [%dx%d @ (%d,%d)]\n", vid_adapter == i ? TEXTCOLOR_BOLD : "", i, Priv::displayBounds[i].w,
+		       Priv::displayBounds[i].h, Priv::displayBounds[i].x, Priv::displayBounds[i].y);
+	}
 }
 
-
-DFrameBuffer *SDLVideo::CreateFrameBuffer ()
+DFrameBuffer *SDLVideo::CreateFrameBuffer()
 {
 	SystemBaseFrameBuffer *fb = nullptr;
 
@@ -386,7 +393,7 @@ DFrameBuffer *SDLVideo::CreateFrameBuffer ()
 		try
 		{
 			unsigned int count = 64;
-			const char* names[64];
+			const char  *names[64];
 			if (!I_GetVulkanPlatformExtensions(&count, names))
 				VulkanError("I_GetVulkanPlatformExtensions failed");
 
@@ -420,7 +427,7 @@ DFrameBuffer *SDLVideo::CreateFrameBuffer ()
 	if (fb == nullptr)
 	{
 #ifdef HAVE_GLES2
-		if (V_GetBackend() != 0)
+		if (vid_preferbackend != BACKEND_OPENGL)
 			fb = new OpenGLESRenderer::OpenGLFrameBuffer(0, vid_fullscreen);
 		else
 #endif
@@ -430,24 +437,20 @@ DFrameBuffer *SDLVideo::CreateFrameBuffer ()
 	return fb;
 }
 
-
 IVideo *gl_CreateVideo()
 {
 	return new SDLVideo();
 }
 
-
 // FrameBuffer Implementation -----------------------------------------------
 
-SystemBaseFrameBuffer::SystemBaseFrameBuffer (void *, bool fullscreen)
-: DFrameBuffer (vid_defwidth, vid_defheight)
+SystemBaseFrameBuffer::SystemBaseFrameBuffer(void *, bool fullscreen) : DFrameBuffer(vid_defwidth, vid_defheight)
 {
 }
 
 int SystemBaseFrameBuffer::GetClientWidth()
 {
 	int width = 0;
-
 
 #ifdef HAVE_VULKAN
 	assert(Priv::vulkanEnabled);
@@ -469,7 +472,7 @@ int SystemBaseFrameBuffer::GetClientHeight()
 	return height;
 }
 
-bool SystemBaseFrameBuffer::IsFullscreen ()
+bool SystemBaseFrameBuffer::IsFullscreen()
 {
 	return (SDL_GetWindowFlags(Priv::window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
 }
@@ -478,12 +481,12 @@ void SystemBaseFrameBuffer::ToggleFullscreen(bool yes)
 {
 	SDL_ShowWindow(Priv::window);
 	SDL_SetWindowFullscreen(Priv::window, yes ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
-	if ( !yes )
+	if (!yes)
 	{
-		if ( !Priv::fullscreenSwitch )
+		if (!Priv::fullscreenSwitch)
 		{
 			Priv::fullscreenSwitch = true;
-			vid_fullscreen = false;
+			vid_fullscreen         = false;
 		}
 		else
 		{
@@ -510,27 +513,33 @@ void SystemBaseFrameBuffer::SetWindowSize(int w, int h)
 	{
 		win_maximized = false;
 		SDL_SetWindowSize(Priv::window, w, h);
-		SDL_SetWindowPosition(Priv::window, SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter), SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter));
+		SDL_SetWindowPosition(Priv::window, SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter),
+		                      SDL_WINDOWPOS_CENTERED_DISPLAY(vid_adapter));
 		SetSize(GetClientWidth(), GetClientHeight());
 		int x, y;
 		SDL_GetWindowPosition(Priv::window, &x, &y);
 		win_x = x;
 		win_y = y;
-		
 	}
 }
 
-
-SystemGLFrameBuffer::SystemGLFrameBuffer(void *hMonitor, bool fullscreen)
-: SystemBaseFrameBuffer(hMonitor, fullscreen)
+SystemGLFrameBuffer::SystemGLFrameBuffer(void *hMonitor, bool fullscreen) : SystemBaseFrameBuffer(hMonitor, fullscreen)
 {
 	// NOTE: Core profiles were added with GL 3.2, so there's no sense trying
 	// to set core 3.1 or 3.0. We could try a forward-compatible context
 	// instead, but that would be too restrictive (w.r.t. shaders).
 	static const int glvers[][2] = {
-		{ 4, 6 }, { 4, 5 }, { 4, 4 }, { 4, 3 }, { 4, 2 }, { 4, 1 }, { 4, 0 },
-		{ 3, 3 }, { 3, 2 }, { 2, 0 },
-		{ 0, 0 },
+		{4, 6},
+        {4, 5},
+        {4, 4},
+        {4, 3},
+        {4, 2},
+        {4, 1},
+        {4, 0},
+        {3, 3},
+        {3, 2},
+        {2, 0},
+        {0, 0},
 	};
 	int glveridx = 0;
 	int i;
@@ -539,11 +548,10 @@ SystemGLFrameBuffer::SystemGLFrameBuffer(void *hMonitor, bool fullscreen)
 	if (version != NULL)
 	{
 		double gl_version = strtod(version, NULL) + 0.01;
-		int vermaj = (int)gl_version;
-		int vermin = (int)(gl_version*10.0) % 10;
+		int    vermaj     = (int)gl_version;
+		int    vermin     = (int)(gl_version * 10.0) % 10;
 
-		while (glvers[glveridx][0] > vermaj || (glvers[glveridx][0] == vermaj &&
-		        glvers[glveridx][1] > vermin))
+		while (glvers[glveridx][0] > vermaj || (glvers[glveridx][0] == vermaj && glvers[glveridx][1] > vermin))
 		{
 			glveridx++;
 			if (glvers[glveridx][0] == 0)
@@ -554,7 +562,7 @@ SystemGLFrameBuffer::SystemGLFrameBuffer(void *hMonitor, bool fullscreen)
 		}
 	}
 
-	for ( ; glvers[glveridx][0] > 0; ++glveridx)
+	for (; glvers[glveridx][0] > 0; ++glveridx)
 	{
 		Priv::SetupPixelFormat(0, glvers[glveridx]);
 		Priv::CreateWindow(SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0));
@@ -576,11 +584,11 @@ SystemGLFrameBuffer::SystemGLFrameBuffer(void *hMonitor, bool fullscreen)
 	}
 	if (Priv::window == nullptr)
 	{
-		I_FatalError("Could not create OpenGL window:\n%s\n",SDL_GetError());
+		I_FatalError("Could not create OpenGL window:\n%s\n", SDL_GetError());
 	}
 }
 
-SystemGLFrameBuffer::~SystemGLFrameBuffer ()
+SystemGLFrameBuffer::~SystemGLFrameBuffer()
 {
 	if (Priv::window)
 	{
@@ -607,11 +615,11 @@ int SystemGLFrameBuffer::GetClientHeight()
 	return height;
 }
 
-void SystemGLFrameBuffer::SetVSync( bool vsync )
+void SystemGLFrameBuffer::SetVSync(bool vsync)
 {
-#if defined (__APPLE__)
+#if defined(__APPLE__)
 	const GLint value = vsync ? 1 : 0;
-	CGLSetParameter( CGLGetCurrentContext(), kCGLCPSwapInterval, &value );
+	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &value);
 #else
 	if (vsync)
 	{
@@ -630,12 +638,11 @@ void SystemGLFrameBuffer::SwapBuffers()
 	SDL_GL_SwapWindow(Priv::window);
 }
 
-
 void ProcessSDLWindowEvent(const SDL_WindowEvent &event)
 {
 	switch (event.event)
 	{
-	extern bool AppActive;
+		extern bool AppActive;
 
 	case SDL_WINDOWEVENT_FOCUS_GAINED:
 		S_SetSoundPaused(1);
@@ -652,8 +659,8 @@ void ProcessSDLWindowEvent(const SDL_WindowEvent &event)
 		{
 			int top = 0, left = 0;
 			SDL_GetWindowBordersSize(Priv::window, &top, &left, nullptr, nullptr);
-			win_x = event.data1-left;
-			win_y = event.data2-top;
+			win_x = event.data1 - left;
+			win_y = event.data2 - top;
 		}
 		break;
 
@@ -675,9 +682,8 @@ void ProcessSDLWindowEvent(const SDL_WindowEvent &event)
 	}
 }
 
-
 // each platform has its own specific version of this function.
-void I_SetWindowTitle(const char* caption)
+void I_SetWindowTitle(const char *caption)
 {
 	if (caption)
 	{
@@ -690,4 +696,3 @@ void I_SetWindowTitle(const char* caption)
 		SDL_SetWindowTitle(Priv::window, default_caption.GetChars());
 	}
 }
-

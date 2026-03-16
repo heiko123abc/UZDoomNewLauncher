@@ -35,7 +35,7 @@ class Profile
 	std::string pwadFilePath{};                 // Path to the main PWAD file for this profile
 
 	int      launchParameters{}; // Stores the mode. e.g Normal,mapstart etc
-	int      selectedLaunchMap{};
+	int      selectedLaunchMap = 1;
 	std::string selectedLaunchSave{};
 	std::string selectedLaunchDemoPlayback{};
 	std::string selectedLaunchDemoRecord{};
@@ -59,6 +59,9 @@ class Profile
 	std::string joinAddress{};
 	std::string joinPort   = "5029";
 	std::string joinTeamNo = "255";
+	int mpFragLimit      = 0;
+	float mpTimeLimit      = 0;
+	float teamDamageFactor = 0;
 
 	int  DMFlags{}, DMFlags2{}, DMFlags3{}; // flags used for deathmatch/mp
 	bool alwaysapplydmflags{};

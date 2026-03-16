@@ -60,13 +60,12 @@ void attributeFromFilename(Profile *p, std::string hash)
 	}
 }
 
-fileType getFiletype(const std::string filepath)
+fileType getFiletype(const std::filesystem::path &filepath)
 {
 	fileType status = TYPE_UNKNOWN;
 
-	// we fetch the extension
-	std::filesystem::path extPath(filepath);
-	std::string           ext = extPath.extension().string();
+	// fetch the extension
+	std::string           ext = filepath.extension().string();
 
 	std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c) { return std::tolower(c); });
 
@@ -117,7 +116,7 @@ fileType getFiletype(const std::string filepath)
 }
 
 // Extracts zip using build-in miniz.
-bool ExtractArchive(const std::string &archivePath, const std::string &targetDir)
+bool Loader::ExtractArchive(const std::filesystem::path &archivePath, const std::filesystem::path &targetDir)
 {
 	mz_zip_archive zip_archive;
 
@@ -213,11 +212,9 @@ bool ExtractArchive(const std::string &archivePath, const std::string &targetDir
 }
 
 // After file is selected and determined to be IWAD or PWAD, create a initial profile for it
-importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWAD, const bool wasArchive)
+importStatus CreateInitialProfile(const std::filesystem::path &filepath, const bool wasIWAD, const bool wasArchive)
 {
 	Profile     newProfile;
-	std::string path;
-
 	newProfile.isIWAD = wasIWAD ? 1 : 0;
 
 	// create a new profile container file using timestamps and create the respective folder for the profile
@@ -231,10 +228,8 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 
 	std::string profileFilename = "pf_" + std::filesystem::path(filepath).stem().string() + "_" + timestamp;
 
-	std::string baseProfileDir = std::string(PROFILE_DIR);
-
-	std::filesystem::create_directories(baseProfileDir + profileFilename);
-	path = baseProfileDir + profileFilename + "/";
+	std::filesystem::path path = std::filesystem::path(PROFILE_DIR) / profileFilename;
+	std::filesystem::create_directories(path);
 
 	// copy the file(s) to the respective folder
 	if (!wasArchive)
@@ -246,55 +241,69 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 	{
 		// copy the entire archive to the folder
 		std::string archiveName = std::filesystem::path(filepath).filename().string();
-		std::string targetZip   = path + archiveName;
+		std::filesystem::path targetZip   = path / archiveName;
 
 		std::filesystem::copy(filepath, path);
 
-		bool success = ExtractArchive(targetZip, path);
+		bool success = Loader::ExtractArchive(targetZip, path);
 
 		// Did user stop or extraction fail?
 		if (!success)
 		{
 			std::filesystem::remove_all(path); // Cleanup the remains
-			return IMPORT_FAIL;
+			return IMPORT_ARCHIVE_FAIL;
 		}
 
 		// delete the archive after extraction
 		std::filesystem::remove(targetZip);
 	}
 
-	std::string foundWadPath;
+	std::filesystem::path foundWadPath;
 
 	// link up the file BUT it depends on if it was an archive or not
 	if (!wasArchive)
 	{
 		// easy case, simply link
-		foundWadPath = path + std::filesystem::path(filepath).filename().string();
+		foundWadPath = path / filepath.filename();
 	}
 	else
 	{
 		// WAIT, the user might drop a arbitary archive here, we simply stop if there isnt even a .wad file
 		// was the archive nested once?
-		auto nestCheck = std::filesystem::directory_iterator(path);
-		if (nestCheck != std::filesystem::directory_iterator())
+		bool unnesting = true;
+		while (unnesting)
 		{
-			std::filesystem::path firstPath = nestCheck->path();
-			bool                  isDir     = nestCheck->is_directory();
-
 			int                   item_count = 0;
 			std::filesystem::path singleDir;
+
 			for (const auto &entry : std::filesystem::directory_iterator(path))
 			{
 				item_count++;
 				singleDir = entry.path();
 			}
+
+			// If there is exactly ONE item in the root and it's a directory, it's a "wrapper".
 			if (item_count == 1 && std::filesystem::is_directory(singleDir))
 			{
-				path = singleDir.string() + "/";
+				// Move all contents of the nested directory up to the profile directory
+				for (const auto &entry : std::filesystem::directory_iterator(singleDir))
+				{
+					std::filesystem::rename(entry.path(), std::filesystem::path(path) / entry.path().filename());
+				}
+				// Remove the now-empty "wrapper" directory
+				std::filesystem::remove(singleDir);
+			}
+			else
+			{
+				// We've reached the actual files (or multiple folders), stop un-nesting.
+				unnesting = false;
 			}
 		}
 
-		bool            wadFound = false;
+		bool                     wadFound    = false;
+		uintmax_t                largestSize = 0;
+		std::vector<std::string> collectedMods; // Track all critical files found in the zip
+
 		std::error_code ec;
 		auto            it  = std::filesystem::directory_iterator(path, ec);
 		const auto      end = std::filesystem::directory_iterator();
@@ -313,28 +322,38 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 					if (extension == ".wad" || extension == ".iwad" || extension == ".pwad" || extension == ".pwd" ||
 					    extension == ".ipk3" || extension == ".ipk7" || extension == ".pk3" || extension == ".pk7")
 					{
-						foundWadPath = entry.path().string();
-						wadFound     = true;
-						break;
+						collectedMods.push_back(entry.path().generic_string());
+						uintmax_t currentSize = std::filesystem::file_size(entry.path(), ec);
+
+						// The largest file is assumed to be the primary file
+						if (!ec && currentSize > largestSize)
+						{
+							largestSize  = currentSize;
+							foundWadPath = entry.path();
+							wadFound     = true;
+						}
 					}
 				}
 				it.increment(ec);
 				if (ec)
-				{
-					// Error moving to next file (permission denied, etc.)
 					break;
-				}
 			}
 		}
 
 		if (!wadFound)
 		{
-			// The zip file didn't actually contain a WAD! do not deal with this any further -> abort
-			if (!path.empty() && path.back() == '/')
-				path.pop_back(); // drop the / at the end
+			// The zip file didn't actually contain a WAD! do not deal with this any further
+			std::filesystem::remove_all(path);
+			return IMPORT_ARCHIVE_FAIL;
+		}
 
-			std::filesystem::remove_all(path); // delete dir since we aborted
-			return IMPORT_FAIL;
+		// Automatically add the smaller fragments of PK3s/WADs to the mod loading list
+		for (const auto &mod : collectedMods)
+		{
+			if (mod != foundWadPath)
+			{
+				newProfile.modFiles.push_back(mod);
+			}
 		}
 
 		// check again if its iwad
@@ -352,11 +371,11 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 
 	if (newProfile.isIWAD == 1)
 	{
-		newProfile.iwadFilePath = foundWadPath;
+		newProfile.iwadFilePath = foundWadPath.generic_string();
 	}
 	else
 	{
-		newProfile.pwadFilePath = foundWadPath;
+		newProfile.pwadFilePath = foundWadPath.generic_string();
 	}
 
 	newProfile.title = std::filesystem::path(filepath).stem().string(); // put in the file/archive name as Profile name
@@ -416,20 +435,20 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 	}
 
 	// create the required folders
-	std::filesystem::create_directories(path + "saves");
-	std::filesystem::create_directories(path + "screenshots");
-	std::filesystem::create_directories(path + "demos");
-	std::filesystem::create_directories(path + "mods");
+	std::filesystem::create_directories(path / "saves");
+	std::filesystem::create_directories(path / "screenshots");
+	std::filesystem::create_directories(path / "demos");
+	std::filesystem::create_directories(path / "mods");
 
 	// bind the paths + config
-	newProfile.configFilePath    = path + "config.ini";
-	newProfile.saveDirPath       = path + "saves";
-	newProfile.screenshotDirPath = path + "screenshots";
-	newProfile.demoDirPath       = path + "demos";
-	newProfile.modsDirPath       = path + "mods";
+	newProfile.configFilePath    = (path / "config.ini").generic_string();
+	newProfile.saveDirPath       = (path / "saves").generic_string();
+	newProfile.screenshotDirPath = (path / "screenshots").generic_string();
+	newProfile.demoDirPath       = (path / "demos").generic_string();
+	newProfile.modsDirPath       = (path / "mods").generic_string();
 
 	// save the profile in the respective folder
-	newProfile.saveToFile(path + profileFilename + ".json");
+	newProfile.saveToFile((path / (profileFilename + ".json")).generic_string());
 
 	// add the final product to the list of profiles by adding the config file path to the launcher.cfg file
 	json          j;
@@ -451,7 +470,7 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 		inFile.close();
 	}
 
-	j["profiles"].push_back(path + profileFilename + ".json");
+	j["profiles"].push_back((path / (profileFilename + ".json")).generic_string());
 
 	std::ofstream outFile(configFileStr);
 	if (outFile.is_open())
@@ -472,9 +491,9 @@ importStatus CreateInitialProfile(const std::string &filepath, const bool wasIWA
 }
 
 // Process Archive
-importStatus Loader::ProcessArchive(const std::string &filePath)
+importStatus Loader::ProcessArchive(const std::filesystem::path &filePath)
 {
-	std::string ext = std::filesystem::path(filePath).extension().string();
+	std::string ext = filePath.extension().string();
 	std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
 	// Is User trying to cheat and add something that isn't even an archive?
@@ -485,12 +504,12 @@ importStatus Loader::ProcessArchive(const std::string &filePath)
 	}
 	else
 	{
-		return IMPORT_FAIL;
+		return IMPORT_ARCHIVE_FAIL;
 	}
 }
 
 // Process WAD
-importStatus Loader::ProcessWad(const std::string &filePath)
+importStatus Loader::ProcessWad(const std::filesystem::path &filePath)
 {
 	// At this point we have a path, check if it's an IWAD or PWAD
 	fileType type = getFiletype(filePath);

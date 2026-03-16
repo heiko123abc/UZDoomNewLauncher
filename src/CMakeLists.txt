@@ -24,7 +24,7 @@ if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 endif()
 
 if( APPLE )
-    option( OSX_COCOA_BACKEND "Use native Cocoa backend instead of SDL" OFF )
+    option( OSX_COCOA_BACKEND "Use native Cocoa backend instead of SDL" ON )
 endif()
 
 option( ZDOOM_ENABLE_SWR "Enable software renderer" ON )
@@ -140,10 +140,15 @@ endif()
 
 # SDL2 and OpenGL is always needed for launcher
 find_package( SDL2 REQUIRED )
+if ( MSVC )
 include_directories( SYSTEM 
-    "${SDL2_INCLUDE_DIR}" 
+    "${SDL2_INCLUDE_DIR}"
+)
+else()
+include_directories( SYSTEM 
     "${SDL2_INCLUDE_DIR}/SDL2"
 )
+endif()
 link_directories(${SDL2_LINK_DIR})
 set( PROJECT_LIBRARIES ${PROJECT_LIBRARIES} "${SDL2_LIBRARY}" )
 find_package(OpenGL REQUIRED)
@@ -274,7 +279,7 @@ if( DEM_CMAKE_COMPILER_IS_GNUCXX_COMPATIBLE )
 		set( CMAKE_CXX_FLAGS "-Wno-unknown-pragmas -Wno-comment -Wno-format ${CMAKE_CXX_FLAGS}" )
 		set( CMAKE_CXX_FLAGS "-D_UNICODE -DUNICODE ${CMAKE_CXX_FLAGS}" )
 		set( CMAKE_CXX_FLAGS "-D_WIN32_WINNT=0x0600 ${CMAKE_CXX_FLAGS}" )
-		set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -municode -static")
+		set( CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -municode")
 	endif()
 
 	# Detect FreeBSD and add flags
@@ -982,7 +987,6 @@ set (PCH_SOURCES
 	launcher/errorwindow.cpp
 	launcher/netstartwindow.cpp
 	launcher/launcherMainWindow.cpp
-	launcher/tinyfiledialogs.cpp
 	widgets/themedata.cpp
 	widgets/widgetresourcedata.cpp
 	
@@ -1346,7 +1350,7 @@ if( UNIX )
 	endif()
 endif()
 
-target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash OpenGL::GL)
+target_link_libraries( zdoom ${PROJECT_LIBRARIES} lzma ${ZMUSIC_LIBRARIES} absl::base absl::flat_hash_map absl::strings absl::hash OpenGL::GL nfd)
 include_directories(
 	BEFORE
 	.
@@ -1449,7 +1453,13 @@ if( MSVC )
 
 endif()
 
-if( NOT WIN32 AND NOT APPLE )
+if (WIN32)
+	# nothing
+elseif (APPLE)
+	IF ("${INSTALL_RPATH}" STREQUAL "")
+		set_target_properties(zdoom PROPERTIES MACOSX_RPATH TRUE)
+	endif()
+else()
 	FILE( WRITE ${CMAKE_CURRENT_BINARY_DIR}/link-make "if [ ! -e ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME} ]; then ln -sf ${CMAKE_CURRENT_BINARY_DIR}/${ZDOOM_EXE_NAME} ${ZDOOM_OUTPUT_DIR}/${ZDOOM_EXE_NAME}; fi" )
 	add_custom_command( TARGET zdoom POST_BUILD
 		COMMAND chmod +x ${CMAKE_CURRENT_BINARY_DIR}/link-make
@@ -1464,12 +1474,22 @@ if( NOT WIN32 AND NOT APPLE )
 endif()
 
 add_custom_command(TARGET zdoom POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E make_directory "${ZDOOM_RESOURCE_DIR}/soundfonts"
+	COMMAND ${CMAKE_COMMAND} -E make_directory "${ZDOOM_RESOURCE_DIR}/fm_banks"
+
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-	${CMAKE_SOURCE_DIR}/soundfont/uzdoom.sf2 $<TARGET_FILE_DIR:zdoom>/soundfonts/uzdoom.sf2
+		"${CMAKE_SOURCE_DIR}/soundfont/uzdoom.sf2"
+		"${ZDOOM_RESOURCE_DIR}/soundfonts/uzdoom.sf2"
+
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-	${CMAKE_SOURCE_DIR}/fm_banks/GENMIDI.GS.wopl $<TARGET_FILE_DIR:zdoom>/fm_banks/GENMIDI.GS.wopl
+		"${CMAKE_SOURCE_DIR}/fm_banks/GENMIDI.GS.wopl"
+		"${ZDOOM_RESOURCE_DIR}/fm_banks/GENMIDI.GS.wopl"
+
 	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-	${CMAKE_SOURCE_DIR}/fm_banks/gs-by-papiezak-and-sneakernets.wopn $<TARGET_FILE_DIR:zdoom>/fm_banks/gs-by-papiezak-and-sneakernets.wopn
+		"${CMAKE_SOURCE_DIR}/fm_banks/gs-by-papiezak-and-sneakernets.wopn"
+		"${ZDOOM_RESOURCE_DIR}/fm_banks/gs-by-papiezak-and-sneakernets.wopn"
+
+	VERBATIM
 )
 
 if ( NOT ZMUSIC_SYSTEM_INSTALL AND (NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS))

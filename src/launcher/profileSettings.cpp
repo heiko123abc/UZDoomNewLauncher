@@ -156,7 +156,8 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 	// Match colors of the popup
 	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
 
-	bool isModalOpen = ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_NoSavedSettings);
+	bool isModalOpen =
+		ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 	ImGui::PopStyleColor(1);
 
 	if (isModalOpen)
@@ -245,7 +246,8 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 		}
 
 		// TODO add translation here
-		if (ImGui::BeginPopupModal("Delete Confirmation", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ImGui::BeginPopupModal("Delete Confirmation", NULL,
+		                           ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove))
 		{
 			ImGui::Text("%s", GStrings.GetString("PROFSET_DELMSG"));
 			ImGui::Spacing();

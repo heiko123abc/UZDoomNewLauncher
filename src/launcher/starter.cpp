@@ -110,7 +110,7 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 		state.scale = 1.0f;
 
 	SDL_WindowFlags window_flags =
-		(SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+		(SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 	state.window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, window_flags);
 	if (!state.window)
 	{

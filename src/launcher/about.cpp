@@ -211,8 +211,7 @@ void About::DrawReleaseNotesDialog(bool *p_open, const std::string &lang)
 
 	GStrings.UpdateLanguage(lang.c_str());
 
-	// Increased window size to reduce scrolling on open
-	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 30.0f, ImGui::GetFontSize() * 25.0f),
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 25.0f, ImGui::GetFontSize() * 20.0f),
 	                         ImGuiCond_FirstUseEver);
 
 	// ImGuiWindowFlags_NoCollapse prevents the window from minimizing
@@ -269,8 +268,7 @@ void About::DrawCreditsDialog(bool *p_open, const std::string &lang)
 
 	GStrings.UpdateLanguage(lang.c_str());
 
-	// Increased window size
-	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 30.0f, ImGui::GetFontSize() * 25.0f),
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 25.0f, ImGui::GetFontSize() * 20.0f),
 	                         ImGuiCond_FirstUseEver);
 
 	std::string title = std::string(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS")) + popupId;

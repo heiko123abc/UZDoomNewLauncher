@@ -190,7 +190,7 @@ void LauncherMainWindow::ApplyTheme()
 		// Classic: Retro Windows 95 / Win32 vibe
 		{"classic", LauncherTheme(0xc0c0c0, // bg
 	                              0x000000, // text
-	                              0xffffff, // inputs
+	                              0xcccccc, // inputs
 	                              0xa0a0a0, // interact
 	                              0x002b80, // hover
 	                              0x0000ff, // click

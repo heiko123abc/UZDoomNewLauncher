@@ -121,7 +121,7 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 		                         ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
 		                         ImGuiWindowFlags_NoScrollWithMouse;
 
-		ImGui::Begin("Fatal Error :(", nullptr, flags);
+		ImGui::Begin("[X] Fatal Error - Execution aborted!", nullptr, flags);
 
 		ImGuiStyle &style = ImGui::GetStyle();
 
@@ -148,16 +148,22 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 			minidump.empty() ? GStrings.GetString("CRASHREPORT_NOSAVE") : GStrings.GetString("CRASHREPORT_SAVE");
 		const char *saveBtnTxt = saveBtnTxtStr.c_str();
 		const char *quitBtnTxt = GStrings.GetString("CRASHREPORT_QUIT");
+		float       copyBtnWidth = ImGui::CalcTextSize(copyBtnTxt).x + (style.FramePadding.x * 2.0f);
+		float       saveBtnWidth = ImGui::CalcTextSize(saveBtnTxt).x + (style.FramePadding.x * 2.0f);
+		float       quitBtnWidth = ImGui::CalcTextSize(quitBtnTxt).x + (style.FramePadding.x * 2.0f);
 
-		float saveBtnWidth = ImGui::CalcTextSize(saveBtnTxt).x + (style.FramePadding.x * 2.0f);
-		float quitBtnWidth = ImGui::CalcTextSize(quitBtnTxt).x + (style.FramePadding.x * 2.0f);
+		// calc distance between the 3 buttons
+		float contentWidth   = ImGui::GetWindowWidth() - (style.WindowPadding.x * 2.0f);
+		float availableSpace = contentWidth - (copyBtnWidth + saveBtnWidth + quitBtnWidth);
+		float gap            = availableSpace / 2.0f;
+
 
 		if (ImGui::Button(copyBtnTxt))
 		{
 			ImGui::SetClipboardText(fullClipboardText.c_str());
 		}
 
-		ImGui::SameLine((windowWidth / 2.0f) - (saveBtnWidth / 2.0f));
+		ImGui::SameLine(0.0f, gap);
 
 		ImGui::BeginDisabled(minidump.empty());
 		if (ImGui::Button(saveBtnTxt))
@@ -166,7 +172,7 @@ bool ErrorWindow::ExecModal(const std::string &text, const std::string &log, std
 		}
 		ImGui::EndDisabled();
 
-		ImGui::SameLine(windowWidth - quitBtnWidth - style.WindowPadding.x);
+		ImGui::SameLine(0.0f, gap);
 		if (ImGui::Button(quitBtnTxt))
 		{
 			done = true; // Setting this exits the loop gracefully

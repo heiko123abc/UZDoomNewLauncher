@@ -319,10 +319,11 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("IWAD:");
 		ImGui::TableNextColumn();
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
+		float iwadBtnWidth = ImGui::GetFrameHeight();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - iwadBtnWidth - ImGui::GetStyle().ItemSpacing.x);
 		ImGui::InputText("##IWADPath", &currEdit->iwadFilePath);
 		ImGui::SameLine();
-		if (ImGui::Button("...##iwadbtn", ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
+		if (ImGui::Button("...##iwadbtn", ImVec2(iwadBtnWidth, 0)))
 		{
 			std::filesystem::path startPath = currEdit->iwadFilePath.empty()
 			                                      ? std::filesystem::path(PROFILE_DIR)
@@ -343,10 +344,11 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("PWAD:");
 			ImGui::TableNextColumn();
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
+			float pwadBtnWidth = ImGui::GetFrameHeight();
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - pwadBtnWidth - ImGui::GetStyle().ItemSpacing.x);
 			ImGui::InputText("##PWADPath", &currEdit->pwadFilePath);
 			ImGui::SameLine();
-			if (ImGui::Button("...##pwadbtn", ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
+			if (ImGui::Button("...##pwadbtn", ImVec2(pwadBtnWidth, 0)))
 			{
 				std::filesystem::path startPath = currEdit->iwadFilePath.empty()
 				                                      ? std::filesystem::path(PROFILE_DIR)
@@ -435,11 +437,15 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("%s", label);
 			ImGui::TableNextColumn();
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
+
+			float buttonWidth = ImGui::GetFrameHeight();
+
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - buttonWidth - ImGui::GetStyle().ItemSpacing.x);
 			ImGui::InputText(std::string("##txt" + std::string(label)).c_str(), targetVar);
+
 			ImGui::SameLine();
-			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(),
-			                  ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
+
+			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(), ImVec2(buttonWidth, 0)))
 			{
 				std::filesystem::path startPath =
 					targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
@@ -600,11 +606,12 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 				ImGui::TableNextColumn();
 				ImGui::RadioButton(label, &currEdit->launchParameters, modeVal);
 				ImGui::TableNextColumn();
-				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
+				float buttonWidth = ImGui::GetFrameHeight();
+				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - buttonWidth -
+				                        ImGui::GetStyle().ItemSpacing.x);
 				ImGui::InputText(std::string("##T" + std::to_string(modeVal)).c_str(), targetVar);
 				ImGui::SameLine();
-				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(),
-				                  ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
+				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(), ImVec2(buttonWidth, 0)))
 				{
 					std::filesystem::path startPath =
 						targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
@@ -939,13 +946,13 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 {
 	// Need a unified ID string to open and check
-	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 40.0f, ImGui::GetFontSize() * 20.0f),
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 30.0f, ImGui::GetFontSize() * 20.0f),
 	                         ImGuiCond_FirstUseEver);
 
 	if (ImGui::BeginPopupModal("Flag Editor", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar))
 	{
 
-		// 1. List of checkboxes inside a scrolling region
+		// List of checkboxes inside a scrolling region
 		float reservedBottomSpace = ImGui::GetFrameHeightWithSpacing() * (tempFlagsCount + 2.5f);
 		ImGui::BeginChild("FlagScrollRegion", ImVec2(0, -reservedBottomSpace), true);
 
@@ -988,7 +995,7 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 		}
 		ImGui::EndChild();
 
-		// 2. Options below the list
+		// Options below the list
 		if (isGameplayFlags)
 		{
 			const char *forceText = GStrings.GetString("PROFSET_GAMEPLAY_FORCE");
@@ -1023,7 +1030,7 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 
 		ImGui::Spacing();
 
-		// 3.Raw Integer Textboxes updating the bits bidirectionally
+		// Raw Integer Textboxes updating the bits bidirectionally
 
 		float btnWidth = ImGui::GetFontSize() * 8.0f;
 

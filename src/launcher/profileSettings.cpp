@@ -153,7 +153,7 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 	std::string title = GStrings.GetString("PROFSET_TITLE");
 	title += popupId;
 
-	if (ImGui::BeginPopupModal(title.c_str(), p_open, ImGuiWindowFlags_NoSavedSettings))
+	if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_NoSavedSettings))
 	{
 
 		float bottomSpace = ImGui::GetFrameHeightWithSpacing() * 1.5f;

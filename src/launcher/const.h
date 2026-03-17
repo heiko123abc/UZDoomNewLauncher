@@ -23,6 +23,7 @@
 #include <vector>
 
 // defined directories
+inline std::string EXEC_DIR;
 inline std::string ROOT_DIR;
 inline std::string PROFILE_DIR;
 

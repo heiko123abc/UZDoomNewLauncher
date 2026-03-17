@@ -203,10 +203,10 @@ bool Starter::Init()
 	if (!LauncherContext.window)
 		return false;
 
-	std::filesystem::path exePath = std::filesystem::current_path(); // Get the current absolute directory
-	ROOT_DIR                      = (exePath / "launcher").string();
-	PROFILE_DIR                   = (exePath / "launcher" / "profiles").string();
-	CONFIG_FILE                   = (exePath / "launcher" / "config.json").string();
+	EXEC_DIR                      = std::filesystem::current_path().string(); // Get the current absolute directory
+	ROOT_DIR                      = (std::filesystem::path(EXEC_DIR) / "launcher").string();
+	PROFILE_DIR                   = (std::filesystem::path(EXEC_DIR) / "launcher" / "profiles").string();
+	CONFIG_FILE                   = (std::filesystem::path(EXEC_DIR) / "launcher" / "config.json").string();
 
 	// hang on, lets see if folder for launchers profiles exists
 	// if not, create them

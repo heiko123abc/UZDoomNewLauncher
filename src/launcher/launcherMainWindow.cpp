@@ -405,9 +405,9 @@ void LauncherMainWindow::DrawMenuBar()
 			ImGui::Separator();
 			ImGui::Spacing();
 
-			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_PROFFOLDER")))
+			if (ImGui::MenuItem(GStrings.GetString("LAUNCHER_TOPBAR_INSTFOLDER")))
 			{
-				OpenProfileDirectory();
+				OpenInstallDirectory();
 			}
 
 			ImGui::Spacing();
@@ -893,17 +893,17 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 	}).detach();
 }
 
-void LauncherMainWindow::OpenProfileDirectory()
+void LauncherMainWindow::OpenInstallDirectory()
 {
 #ifdef _WIN32
 	// Windows Explorer
-	ShellExecuteA(NULL, "open", PROFILE_DIR.c_str(), NULL, NULL, SW_SHOWNORMAL);
+	ShellExecuteA(NULL, "open", EXEC_DIR.c_str(), NULL, NULL, SW_SHOWNORMAL);
 #else
 	// macOS and Linux
 #ifdef __APPLE__
-	std::string cmd = "open \"" + PROFILE_DIR + "\"";
+	std::string cmd = "open \"" + EXEC_DIR + "\"";
 #else
-	std::string cmd = "xdg-open \"" + PROFILE_DIR + "\"";
+	std::string cmd = "xdg-open \"" + EXEC_DIR + "\"";
 #endif
 	std::thread([cmd]() { std::system(cmd.c_str()); }).detach();
 #endif

@@ -222,8 +222,8 @@ void About::DrawReleaseNotesDialog(bool *p_open, const std::string &lang)
 		static std::string patchNotes      = GetReleaseNotes().GetChars();
 		static bool        showOnUpdateReq = true;
 
-		// Reserve space for the checkbox AND the close button at the bottom
-		float reservedBottomSpace = (ImGui::GetFrameHeightWithSpacing() * 2.0f) + 10.0f;
+		// Reserve space for the checkbox
+		float reservedBottomSpace = ImGui::GetFrameHeightWithSpacing() + 10.0f;
 
 		// scrollable child region for the text
 		ImGui::BeginChild("NotesScrollRegion", ImVec2(0, -reservedBottomSpace), true);
@@ -238,17 +238,6 @@ void About::DrawReleaseNotesDialog(bool *p_open, const std::string &lang)
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - checkboxWidth) * 0.5f);
 		ImGui::Checkbox(checkboxLabel, &showOnUpdateReq);
 
-		// Center and draw the close button
-		float buttonWidth = 120.0f;
-		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - buttonWidth) * 0.5f);
-
-		const char *btnLabel = GStrings.GetString("LAUNCHER_BUTTON_CLOSE");
-
-		if (ImGui::Button(btnLabel, ImVec2(buttonWidth + ImGui::CalcTextSize(btnLabel).x, 0)))
-		{
-			*p_open = false;
-			ImGui::CloseCurrentPopup();
-		}
 		ImGui::EndPopup();
 	}
 }
@@ -278,18 +267,10 @@ void About::DrawCreditsDialog(bool *p_open, const std::string &lang)
 		static std::string creditsText = GetAboutText().GetChars();
 
 		// another scrollable child region for the text
-		ImGui::BeginChild("CreditsScrollRegion", ImVec2(0, -ImGui::GetFrameHeightWithSpacing() - 10), true);
+		ImGui::BeginChild("CreditsScrollRegion", ImVec2(0, -ImGui::GetFrameHeightWithSpacing()), true);
 		ImGui::TextWrapped("%s", creditsText.c_str());
 		ImGui::EndChild();
 
-		float buttonWidth = 120.0f;
-		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - buttonWidth) * 0.5f);
-
-		if (ImGui::Button(GStrings.GetString("LAUNCHER_BUTTON_CLOSE"), ImVec2(buttonWidth, 0)))
-		{
-			*p_open = false;
-			ImGui::CloseCurrentPopup();
-		}
 		ImGui::EndPopup();
 	}
 }

@@ -55,6 +55,23 @@ static std::string getTimeString(std::time_t totalSeconds)
 	return ss.str();
 }
 
+// Applies a path transformation lambda to every path in a Profile
+void ApplyProfilePathMapping(Profile &profile, const std::function<void(std::string &)> &mappingFunc)
+{
+	mappingFunc(profile.configFilePath);
+	mappingFunc(profile.saveDirPath);
+	mappingFunc(profile.screenshotDirPath);
+	mappingFunc(profile.demoDirPath);
+	mappingFunc(profile.modsDirPath);
+	mappingFunc(profile.iwadFilePath);
+	mappingFunc(profile.pwadFilePath);
+
+	for (std::string &modPath : profile.modFiles)
+	{
+		mappingFunc(modPath);
+	}
+}
+
 LauncherMainWindow::LauncherMainWindow()
 {
 	// Load config on startup
@@ -208,23 +225,23 @@ void LauncherMainWindow::DrawPopUp()
 		{
 		case IMPORT_IWAD_SUCCESS:
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
-			                   GStrings.GetString("LAUNCHER_DETECT_IWAD")); // Green text
+			                   GStrings.GetString("LAUNCHER_DETECT_IWAD")); // Green text -> OK
 			break;
 		case IMPORT_PWAD_SUCCESS:
 			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f),
-			                   GStrings.GetString("LAUNCHER_DETECT_PWAD")); // Green text
+			                   GStrings.GetString("LAUNCHER_DETECT_PWAD")); // Green text -> OK
 			break;
 		case IMPORT_FAIL:
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
-			                   GStrings.GetString("LAUNCHER_DETECT_NOWAD")); // Red text
+			                   GStrings.GetString("LAUNCHER_DETECT_NOWAD")); // Red text -> ERROR
 			break;
 		case IMPORT_ARCHIVE_FAIL:
 			ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f),
-			                   GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")); // Red text
+			                   GStrings.GetString("LAUNCHER_ERROR_NOWADARCH")); // Red text -> ERROR
 			break;
 		case IMPORT_DUPLICATE:
 			ImGui::TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f),
-			                   GStrings.GetString("LAUNCHER_ERROR_DUPLICATE")); // Yellow text for warning
+			                   GStrings.GetString("LAUNCHER_ERROR_DUPLICATE")); // Yellow text -> WARNING
 			break;
 		case IMPORT_CANCELLED:
 			ImGui::Text("Import Cancelled.");
@@ -235,8 +252,9 @@ void LauncherMainWindow::DrawPopUp()
 		ImGui::Spacing();
 
 		// Center the OK button
-		ImGui::SetCursorPosX(ImGui::GetWindowSize().x / 2.0f - 60.0f);
-		if (ImGui::Button("OK", ImVec2(120, 0)))
+		float btnWidth = ImGui::GetFontSize() * 8.0f;
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - btnWidth) * 0.5f);
+		if (ImGui::Button("OK", ImVec2(btnWidth, 0)))
 		{
 			ImGui::CloseCurrentPopup();
 		}
@@ -266,12 +284,13 @@ void LauncherMainWindow::Draw()
 	{
 		DrawMenuBar();
 
-		// Main Layout Split: Left (List) | Right (Buttons)
+		// Split the layout in 2 (profile list + description on the left, buttons on the right)
 		ImGui::Columns(2, "MainColumns", false);
-		ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() - 180.0f); // Reserve 180px for buttons to look flush
+		ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() - (ImGui::GetFontSize() * 10.0f));
 
 		// Top-Left: Profile List
-		ImGui::BeginChild("ProfileListChild", ImVec2(0, -250.0f), true); // Increased Description Box Reserve to 250px
+		float reserveHeight = ImGui::GetTextLineHeightWithSpacing() * 10.0f;
+		ImGui::BeginChild("ProfileListChild", ImVec2(0, -reserveHeight), true);
 		DrawProfileList();
 		ImGui::EndChild();
 
@@ -291,7 +310,7 @@ void LauncherMainWindow::Draw()
 	}
 	ImGui::End();
 
-	// Render the linked ImGui Modals
+	// Render the linked ImGui Modals now
 	About::DrawReleaseNotesDialog(&showAboutNotes, langVar);
 	About::DrawCreditsDialog(&showAboutCredits, langVar);
 
@@ -501,15 +520,25 @@ void LauncherMainWindow::DrawProfileList()
 
 	if (ImGui::BeginTable("Profiles", 6, flags))
 	{
-		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_TYPE"), ImGuiTableColumnFlags_WidthFixed, 60.0f);
+
+		// some columns have fixed width based on their content (e.g dates are always same format), others stretch to
+		// fill remaining space
+		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_TYPE"), ImGuiTableColumnFlags_WidthFixed,
+		                        ImGui::CalcTextSize("XXXX_").x);
+
 		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_TITLE"), ImGuiTableColumnFlags_WidthStretch);
+
 		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_AUTHORS"), ImGuiTableColumnFlags_WidthStretch);
+
 		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_RELEASEDATE"), ImGuiTableColumnFlags_WidthFixed,
-		                        100.0f);
+		                        ImGui::CalcTextSize("YYYY-MM-DD").x);
+
 		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_LASTPLAYED"), ImGuiTableColumnFlags_WidthFixed,
-		                        100.0f);
+		                        ImGui::CalcTextSize("YYYY-MM-DD").x);
+
 		ImGui::TableSetupColumn(GStrings.GetString("LAUNCHER_PROFLIST_PLAYTIME"), ImGuiTableColumnFlags_WidthFixed,
-		                        80.0f);
+		                        ImGui::CalcTextSize("XXXXhXXm_").x);
+
 		ImGui::TableHeadersRow();
 
 		for (int i = 0; i < cachedProfiles.size(); i++)
@@ -559,7 +588,7 @@ void LauncherMainWindow::DrawDescriptionBox()
 
 void LauncherMainWindow::DrawButtons()
 {
-	ImVec2 btnSize(-FLT_MIN, 30.0f); // Stretch to column width
+	ImVec2 btnSize(-FLT_MIN, ImGui::GetFrameHeight() * 1.2f);
 	bool   hasSelection = (selectedProfileIdx != -1);
 
 	// when launched, disable all buttons
@@ -628,7 +657,6 @@ void LauncherMainWindow::MoveSelectedEntry(int offset)
 	}
 }
 
-// clone the selected profile
 void LauncherMainWindow::CloneSelectedProfile()
 {
 	if (selectedProfileIdx < 0 || selectedProfileIdx >= profilePaths.size())
@@ -637,96 +665,64 @@ void LauncherMainWindow::CloneSelectedProfile()
 	std::string           originalJsonPath = profilePaths[selectedProfileIdx];
 	std::filesystem::path origDir          = std::filesystem::path(originalJsonPath).parent_path();
 
-	// Generate new directory name with correct timestamp
-	auto               now  = std::chrono::system_clock::now();
-	auto               time = std::chrono::system_clock::to_time_t(now);
-	std::tm            tm   = *std::localtime(&time);
-	std::ostringstream oss;
-	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
-
-	std::string           newFolderName = "clone_ " + oss.str();
+	std::string           newFolderName = "clone_" + Loader::GenerateTimestampString();
 	std::filesystem::path newDir        = origDir.parent_path() / newFolderName;
 
-	// copy the directory and its contents (WADs, mods, configs etc.)
+	// Copy the directory and its contents
 	std::filesystem::copy(origDir, newDir, std::filesystem::copy_options::recursive);
 
-	// in the copied JSON profile and update its internal paths
 	std::filesystem::path copiedJsonPath = newDir / std::filesystem::path(originalJsonPath).filename();
 	std::filesystem::path newJsonPath    = newDir / (newFolderName + ".json");
 
 	// Rename the JSON file to match the new folder name
 	std::filesystem::rename(copiedJsonPath, newJsonPath);
 
-	// Update the Profile data
 	Profile clonedProfile;
 	clonedProfile.loadFromFile(newJsonPath.string());
-
 	clonedProfile.title += " (Clone)";
 
-	// Lambda to safely swap the original base directory with the new one
+	// path remap lambda
 	auto remapPath = [&](std::string &pathRef) {
 		if (pathRef.empty())
 			return;
 
-		std::string normalizedPath = pathRef;
+		std::string normalizedPath = std::filesystem::path(pathRef).generic_string();
 		std::string normalizedOrig = origDir.generic_string();
 
-		// Normalize slashes for safe string comparison
-		std::replace(normalizedPath.begin(), normalizedPath.end(), '\\', '/');
-		std::replace(normalizedOrig.begin(), normalizedOrig.end(), '\\', '/');
-
-		size_t pos = normalizedPath.find(normalizedOrig);
-		if (pos != std::string::npos)
+		// Ensure the path strictly STARTS WITH the original directory path
+		if (normalizedPath.find(normalizedOrig) == 0)
 		{
-			// Extract whatever comes AFTER the original directory path
-			std::string subPath = normalizedPath.substr(pos + normalizedOrig.length());
+			std::string subPath = normalizedPath.substr(normalizedOrig.length());
 
-			// Strip leading slash if present so std::filesystem path append works properly
 			if (!subPath.empty() && subPath.front() == '/')
-			{
 				subPath.erase(0, 1);
-			}
 
-			// Rebuild the path with the new directory + original custom subpath/filename
 			pathRef = (newDir / subPath).generic_string();
 		}
 	};
 
-	// Apply the remap to all profile directories and files etc.
-	remapPath(clonedProfile.configFilePath);
-	remapPath(clonedProfile.saveDirPath);
-	remapPath(clonedProfile.screenshotDirPath);
-	remapPath(clonedProfile.demoDirPath);
-	remapPath(clonedProfile.modsDirPath);
-
-	// Remap IWAD and PWAD paths
-	remapPath(clonedProfile.iwadFilePath);
-	remapPath(clonedProfile.pwadFilePath);
-
-	for (std::string &modPath : clonedProfile.modFiles)
-	{
-		remapPath(modPath);
-	}
-
-	// Save the updated JSON
+	ApplyProfilePathMapping(clonedProfile, remapPath);
 	clonedProfile.saveToFile(newJsonPath.string());
 
-	// add to Launcher
-	profilePaths.push_back(newJsonPath.string());
-	SaveConfig();
-	RefreshList();
+	FinalizeProfileAddition(newJsonPath.string(), true);
 }
 
+// Finalizes the addition of a new profile
+void LauncherMainWindow::FinalizeProfileAddition(const std::string &jsonPath, bool immediateRefresh)
+{
+	profilePaths.push_back(jsonPath);
+	SaveConfig();
+
+	if (immediateRefresh)
+		RefreshList();
+	else
+		needsRefresh = true;
+}
+
+// import a file from a .uzdp file (technically a zip)
 void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 {
-	// temporary folder name with timestamp to avoid conflicts
-	auto               now  = std::chrono::system_clock::now();
-	auto               time = std::chrono::system_clock::to_time_t(now);
-	std::tm            tm   = *std::localtime(&time);
-	std::ostringstream oss;
-	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
-
-	std::string tempFolderName = "temp_import_" + oss.str();
+	std::string tempFolderName = "temp_import_" + Loader::GenerateTimestampString();
 	std::string tempDir        = (std::filesystem::path(PROFILE_DIR) / tempFolderName).string();
 
 	std::filesystem::create_directories(tempDir);
@@ -751,9 +747,7 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 			std::string targetDir     = targetDirPath.string();
 			std::string finalJsonPath = (targetDirPath / jsonFilename).generic_string();
 
-			// Check if it already exists
 			bool isDuplicate = std::filesystem::exists(targetDir);
-
 			if (!isDuplicate)
 			{
 				for (const std::string &existingPath : profilePaths)
@@ -766,7 +760,6 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 				}
 			}
 
-			// it's a duplicate -> trigger the popup and abort!
 			if (isDuplicate)
 			{
 				std::filesystem::remove_all(tempDir);
@@ -775,47 +768,31 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 				return;
 			}
 
-			// Move the temporary directory to the correct original folder name
 			std::filesystem::rename(tempDir, targetDir);
 
 			Profile importedProfile;
 			importedProfile.loadFromFile(finalJsonPath);
 
+			// path rewrite lambda
 			auto rewritePath = [&](std::string &pathRef) {
 				if (pathRef.empty())
 					return;
 
-				std::replace(pathRef.begin(), pathRef.end(), '\\', '/');
+				std::string                normalizedPath = std::filesystem::path(pathRef).generic_string();
+				constexpr std::string_view marker         = "/launcher/";
 
-				size_t pos = pathRef.rfind("/launcher/");
+				size_t pos = normalizedPath.rfind(marker);
 				if (pos != std::string::npos)
 				{
-					// Extract the sub-path and prepend ROOT_DIR
-					std::string subPath = pathRef.substr(pos + 10);
+					std::string subPath = normalizedPath.substr(pos + marker.length());
 					pathRef             = (std::filesystem::path(ROOT_DIR) / subPath).generic_string();
 				}
 			};
 
-			// Apply to all paths
-			rewritePath(importedProfile.configFilePath);
-			rewritePath(importedProfile.saveDirPath);
-			rewritePath(importedProfile.screenshotDirPath);
-			rewritePath(importedProfile.demoDirPath);
-			rewritePath(importedProfile.modsDirPath);
-
-			rewritePath(importedProfile.iwadFilePath);
-			rewritePath(importedProfile.pwadFilePath);
-
-			for (std::string &modPath : importedProfile.modFiles)
-			{
-				rewritePath(modPath);
-			}
-
+			ApplyProfilePathMapping(importedProfile, rewritePath);
 			importedProfile.saveToFile(finalJsonPath);
 
-			profilePaths.push_back(finalJsonPath);
-			SaveConfig();
-			needsRefresh = true;
+			FinalizeProfileAddition(finalJsonPath, false);
 		}
 		else
 		{
@@ -824,7 +801,6 @@ void LauncherMainWindow::ImportProfileFromZip(const std::string &zipPath)
 	}
 	else
 	{
-		// Clean up if extraction fails entirely
 		std::filesystem::remove_all(tempDir);
 	}
 }
@@ -844,7 +820,7 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 	if (dispatchedCmd == GStrings.GetString("LAUNCHER_PROF_EMPTYWAD"))
 		return;
 
-	// get executable path and prepend to command
+	// get executable path and prepend to command (according to plattform)
 	std::string exePath = "";
 #ifdef _WIN32
 	wchar_t path[MAX_PATH] = {0};
@@ -874,7 +850,6 @@ void LauncherMainWindow::LaunchGame(const std::string &mode)
 	// Detach a thread to run the process so it doesnt freeze the ImGui Main Loop
 	std::thread([this, dispatchedCmd, selectedRowPath, startingPoint]() {
 
-	// Blocking call to run the game
 	// Execute the game based on the operating system
 #ifdef _WIN32
 		// Windows: Launch the game natively

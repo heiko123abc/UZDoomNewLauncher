@@ -257,9 +257,10 @@ bool NetStartWindow::NetLoop(bool (*timer_callback)(void *), void *userdata)
 		ImGui::Spacing();
 
 		// Player List
+		float reserveHeight = ImGui::GetTextLineHeightWithSpacing() * 10.0f;
 		if (ImGui::BeginTable("PlayerList", 4,
 		                      ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY,
-		                      ImVec2(0, -50)))
+		                      ImVec2(0, -reserveHeight)))
 		{
 			ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 40.0f);
 			ImGui::TableSetupColumn(GStrings.GetString("NETMENU_LIST_INFO"), ImGuiTableColumnFlags_WidthFixed, 40.0f);

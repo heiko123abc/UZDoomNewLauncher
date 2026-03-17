@@ -330,7 +330,6 @@ std::string Profile::giveLaunchCommand(const std::string &filepath, const std::s
 	cmd << "-config \"" << this->configFilePath << "\" ";
 	cmd << "-savedir \"" << this->saveDirPath << "\" ";
 	cmd << "-shotdir \"" << this->screenshotDirPath << "\" ";
-	// demo does nothing right now
 
 	// append mod files (e.g more wads/pk3)
 	if (!this->modFiles.empty())

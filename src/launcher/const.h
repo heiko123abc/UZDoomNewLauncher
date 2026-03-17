@@ -37,6 +37,9 @@ inline std::string_view DEFAULT_THEME = "dark";
 
 inline std::string VERSION = "5.0.0";
 
+// this scales all UI elements too
+inline float FONT_SIZE = 22.0f;
+
 // helper to better sort the data
 struct WadInfo
 {

@@ -42,6 +42,18 @@ enum fileType
 	TYPE_UNKNOWN
 };
 
+// Generates a standard timestamp string for folder names
+std::string Loader::GenerateTimestampString()
+{
+	auto               now  = std::chrono::system_clock::now();
+	auto               time = std::chrono::system_clock::to_time_t(now);
+	std::tm            tm   = *std::localtime(&time);
+	std::ostringstream oss;
+	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
+	return oss.str();
+}
+
+
 // Adds the attributes to the profile based on hash (not good but 90% good enough)
 void attributeFromFilename(Profile *p, std::string hash)
 {
@@ -218,15 +230,8 @@ importStatus CreateInitialProfile(const std::filesystem::path &filepath, const b
 	newProfile.isIWAD = wasIWAD ? 1 : 0;
 
 	// create a new profile container file using timestamps and create the respective folder for the profile
-
-	auto               now  = std::chrono::system_clock::now();
-	auto               time = std::chrono::system_clock::to_time_t(now);
-	std::tm            tm   = *std::localtime(&time);
-	std::ostringstream oss;
-	oss << std::put_time(&tm, "%Y%m%d-%H%M%S");
-	std::string timestamp = oss.str();
-
-	std::string profileFilename = "pf_" + std::filesystem::path(filepath).stem().string() + "_" + timestamp;
+	std::string profileFilename =
+		"pf_" + std::filesystem::path(filepath).stem().string() + "_" + Loader::GenerateTimestampString();
 
 	std::filesystem::path path = std::filesystem::path(PROFILE_DIR) / profileFilename;
 	std::filesystem::create_directories(path);

@@ -212,7 +212,8 @@ void About::DrawReleaseNotesDialog(bool *p_open, const std::string &lang)
 	GStrings.UpdateLanguage(lang.c_str());
 
 	// Increased window size to reduce scrolling on open
-	ImGui::SetNextWindowSize(ImVec2(1000, 750), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 30.0f, ImGui::GetFontSize() * 25.0f),
+	                         ImGuiCond_FirstUseEver);
 
 	// ImGuiWindowFlags_NoCollapse prevents the window from minimizing
 	std::string title = std::string(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTNOTES")) + popupId;
@@ -230,20 +231,21 @@ void About::DrawReleaseNotesDialog(bool *p_open, const std::string &lang)
 		ImGui::TextWrapped("%s", patchNotes.c_str());
 		ImGui::EndChild();
 
-		// 1. Center and draw the checkbox
+		// Center and draw the checkbox
 		const char *checkboxLabel = GStrings.GetString("LAUNCHER_SHOW_ONUPDATED");
-		// Calculate total width of the checkbox (square box + spacing + text width)
-		float checkboxWidth =
+ 		float checkboxWidth =
 			ImGui::GetFrameHeight() + ImGui::GetStyle().ItemInnerSpacing.x + ImGui::CalcTextSize(checkboxLabel).x;
 
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - checkboxWidth) * 0.5f);
 		ImGui::Checkbox(checkboxLabel, &showOnUpdateReq);
 
-		// 2. Center and draw the close button
+		// Center and draw the close button
 		float buttonWidth = 120.0f;
 		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - buttonWidth) * 0.5f);
 
-		if (ImGui::Button(GStrings.GetString("LAUNCHER_BUTTON_CLOSE"), ImVec2(buttonWidth, 0)))
+		const char *btnLabel = GStrings.GetString("LAUNCHER_BUTTON_CLOSE");
+
+		if (ImGui::Button(btnLabel, ImVec2(buttonWidth + ImGui::CalcTextSize(btnLabel).x, 0)))
 		{
 			*p_open = false;
 			ImGui::CloseCurrentPopup();
@@ -268,7 +270,8 @@ void About::DrawCreditsDialog(bool *p_open, const std::string &lang)
 	GStrings.UpdateLanguage(lang.c_str());
 
 	// Increased window size
-	ImGui::SetNextWindowSize(ImVec2(1000, 750), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 30.0f, ImGui::GetFontSize() * 25.0f),
+	                         ImGuiCond_FirstUseEver);
 
 	std::string title = std::string(GStrings.GetString("LAUNCHER_TOPBAR_ABOUTCREDITS")) + popupId;
 	if (ImGui::BeginPopupModal(title.c_str(), p_open, ImGuiWindowFlags_NoCollapse))

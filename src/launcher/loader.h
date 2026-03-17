@@ -40,4 +40,6 @@ class Loader
 	// Extracts zip using build-in miniz.
 	static bool ExtractArchive(const std::filesystem::path &archivePath, const std::filesystem::path &targetDir);
 
+	// Generates a standard timestamp string for folder names
+	static std::string GenerateTimestampString();
 };

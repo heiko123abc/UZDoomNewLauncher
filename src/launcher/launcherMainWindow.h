@@ -25,6 +25,8 @@
 
 #include <cstdint>
 
+
+// define the theme class to store the style for the launcher
 class LauncherTheme
 {
   public:
@@ -230,4 +232,5 @@ class LauncherMainWindow
 	void CloneSelectedProfile();
 	void ImportProfileFromZip(const std::string &zipPath);
 	void OpenProfileDirectory();
+	void FinalizeProfileAddition(const std::string &jsonPath, bool immediateRefresh);
 };

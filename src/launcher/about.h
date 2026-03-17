@@ -18,6 +18,7 @@
 class About
 {
   public:
+	// draw respective dialogs
 	static void DrawReleaseNotesDialog(bool *p_open, const std::string &lang);
 	static void DrawCreditsDialog(bool *p_open, const std::string &lang);
 };

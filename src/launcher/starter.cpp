@@ -15,6 +15,7 @@
 */
 
 #include "starter.h"
+#include "const.h"
 #include "i_interface.h"
 #include "launcherMainWindow.h"
 
@@ -135,7 +136,7 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 	ImGui::CreateContext();
 	ImGuiIO &io = ImGui::GetIO();
 
-	io.IniFilename = nullptr; //do not generate imgui ini file
+	io.IniFilename = nullptr; // do not generate imgui ini file
 
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
@@ -143,22 +144,28 @@ Starter::ImGuiContextState Starter::SetupContext(const char *title, int width, i
 	// Setup scaling options automatically
 	ImGuiStyle &style = ImGui::GetStyle();
 	style.ScaleAllSizes(state.scale);
-	style.FontScaleDpi = state.scale;
 
 	// Setup UTF-8 font using noto
 	ImFontConfig config;
 	config.FontDataOwnedByAtlas = false;
 
-	io.Fonts->AddFontFromMemoryCompressedTTF(notosans_compressed_data, notosans_compressed_size, 0.0f, &config);
+	// Scale the base font size accordingly
+	float baseFontSize   = FONT_SIZE;
+	float scaledFontSize = baseFontSize * state.scale;
+
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosans_compressed_data, notosans_compressed_size, scaledFontSize,
+	                                         &config);
 	config.MergeMode = true;
 
 	// Add additional fonts for CJK and more characters, merging them with the default font
-	io.Fonts->AddFontFromMemoryCompressedTTF(notosanskr_compressed_data, notosanskr_compressed_size, 0.0f, &config);
-	io.Fonts->AddFontFromMemoryCompressedTTF(notosansarmenian_compressed_data, notosansarmenian_compressed_size, 0.0f,
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosanskr_compressed_data, notosanskr_compressed_size, scaledFontSize,
 	                                         &config);
-	io.Fonts->AddFontFromMemoryCompressedTTF(notosansgeorgian_compressed_data, notosansgeorgian_compressed_size, 0.0f,
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansarmenian_compressed_data, notosansarmenian_compressed_size,
+	                                         scaledFontSize, &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansgeorgian_compressed_data, notosansgeorgian_compressed_size,
+	                                         scaledFontSize, &config);
+	io.Fonts->AddFontFromMemoryCompressedTTF(notosansjp_compressed_data, notosansjp_compressed_size, scaledFontSize,
 	                                         &config);
-	io.Fonts->AddFontFromMemoryCompressedTTF(notosansjp_compressed_data, notosansjp_compressed_size, 0.0f, &config);
 
 	ImGui::StyleColorsDark();
 
@@ -193,7 +200,7 @@ void Starter::TeardownContext(ImGuiContextState &state)
 bool Starter::Init()
 {
 	LauncherContext =
-		SetupContext("UZDoom Launcher", 1280, 800, SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER);
+		SetupContext("UZDoom Launcher", 1280, 720, SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER);
 	if (!LauncherContext.window)
 		return false;
 
@@ -234,10 +241,10 @@ void Starter::RunLoop()
 {
 	// The lambda provides the specific rendering logic for the main window
 	Starter::RunImGuiLoop(LauncherContext, [&](bool &done) {
-		// --- DRAW UZDOOM LAUNCHER UI ---
+
 		if (MainWindow)
 		{
-			MainWindow->Draw();
+			MainWindow->Draw(); // <--- DRAW UZDOOM LAUNCHER UI
 		}
 	});
 }

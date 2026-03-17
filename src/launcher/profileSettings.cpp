@@ -84,48 +84,53 @@ static void ExportProfileToZip(const std::string &profileJsonPath, const std::st
 }
 
 // Helper Function with NFD-EX (path given must be absolute and preferred, otherwise give empty string)
-std::string ProfileSettings::OpenPathPicker(std::filesystem::path &defaultPath, bool isFolder,
+std::string ProfileSettings::OpenPathPicker(std::filesystem::path defaultPath, bool isFolder,
                                             const std::vector<nfdu8filteritem_t> &filters = {})
 {
-	if (std::filesystem::exists(defaultPath) && std::filesystem::is_regular_file(defaultPath))
-	defaultPath = defaultPath.parent_path(); // NFD expects a directory for the default path
+	// NFD expects a directory. std::filesystem::is_regular_file checks if parent exists.
+	if (std::filesystem::is_regular_file(defaultPath))
+	{
+		defaultPath = defaultPath.parent_path();
+	}
 
-	std::string nfdDefaultPathStr = defaultPath.empty() ? "" : defaultPath.string();
-
+	std::string        nfdDefaultPathStr;
 	const nfdu8char_t *nfdDefaultPath = nullptr;
-	if (!nfdDefaultPathStr.empty() && std::filesystem::exists(nfdDefaultPathStr))
-		nfdDefaultPath = nfdDefaultPathStr.c_str();
 
-	nfdu8char_t *outPath;
-	nfdresult_t result;
+	if (!defaultPath.empty() && std::filesystem::exists(defaultPath))
+	{
+		nfdDefaultPathStr = defaultPath.string();
+		nfdDefaultPath    = nfdDefaultPathStr.c_str();
+	}
+
+	// Open the Dialog depending on whats asked
+	nfdu8char_t *outPath = nullptr;
+	nfdresult_t  result;
 
 	if (isFolder)
 	{
-		// Folder selection
 		result = NFD_PickFolderU8(&outPath, nfdDefaultPath);
 	}
 	else
 	{
-		// File selection
-		const nfdu8filteritem_t *filterData  = filters.empty() ? nullptr : filters.data();
-		nfdfiltersize_t filterCount = static_cast<nfdfiltersize_t>(filters.size());
-
-		result = NFD_OpenDialogU8(&outPath, filterData, filterCount, nfdDefaultPath);
+		result = NFD_OpenDialogU8(&outPath, filters.empty() ? nullptr : filters.data(),
+		                          static_cast<nfdfiltersize_t>(filters.size()), nfdDefaultPath);
 	}
 
-	std::string selectedPath = ""; // Default to empty string (if user cancels)
-
+	// Handle correct Result
 	if (result == NFD_OKAY)
 	{
-		selectedPath = outPath;
-		NFD_FreePathU8(outPath); // free path allocated by NFD
-	}
-	else if (result == NFD_ERROR)
-	{
-		std::cerr << "NFD Error: " << NFD_GetError() << std::endl;
+		std::string selectedPath(outPath);
+		NFD_FreePathU8(outPath);
+		return selectedPath;
 	}
 
-	return selectedPath;
+	if (result == NFD_ERROR)
+	{
+		std::cerr << "NFD Error: " << NFD_GetError() << '\n';
+	}
+
+	// Return empty string on NFD_CANCEL or NFD_ERROR
+	return {};
 }
 
 // Main Window Rendering
@@ -142,8 +147,7 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 	if (!*p_open && !ImGui::IsPopupOpen(popupId))
 		return;
 
-	// Make the window larger by default to prevent vertical scrolling
-	ImGui::SetNextWindowSize(ImVec2(950, 750), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize, ImGuiCond_FirstUseEver);
 
 	// Begin main settings window
 	std::string title = GStrings.GetString("PROFSET_TITLE");
@@ -229,19 +233,12 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 
 		if (ImGui::Button(GStrings.GetString("PROFSET_SV_RT")))
 		{
-			try
-			{
-				currEdit->saveToFile(profilePath);
-				*p_open = false;            // Tell the Launcher to stop drawing
-				ImGui::CloseCurrentPopup(); // Tell ImGui to close the modal stack
-			}
-			catch (const std::exception &e)
-			{
-				// TODO: Error handling here (e.g popup with error message)
-			}
+			currEdit->saveToFile(profilePath);
+			*p_open = false;            // Tell the Launcher to stop drawing
+			ImGui::CloseCurrentPopup(); // Tell ImGui to close the modal stack
 		}
 
-		// --- Delete Confirmation Modal ---
+		// TODO add translation here
 		if (ImGui::BeginPopupModal("Delete Confirmation", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::Text("%s", GStrings.GetString("PROFSET_DELMSG"));
@@ -325,7 +322,7 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 		ImGui::InputText("##IWADPath", &currEdit->iwadFilePath);
 		ImGui::SameLine();
-		if (ImGui::Button("...##iwadbtn", ImVec2(35, 0)))
+		if (ImGui::Button("...##iwadbtn", ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
 		{
 			std::filesystem::path startPath = currEdit->iwadFilePath.empty()
 			                                      ? std::filesystem::path(PROFILE_DIR)
@@ -349,7 +346,7 @@ void ProfileSettings::DrawGeneralTab(Profile *currEdit)
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 			ImGui::InputText("##PWADPath", &currEdit->pwadFilePath);
 			ImGui::SameLine();
-			if (ImGui::Button("...##pwadbtn", ImVec2(35, 0)))
+			if (ImGui::Button("...##pwadbtn", ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
 			{
 				std::filesystem::path startPath = currEdit->iwadFilePath.empty()
 				                                      ? std::filesystem::path(PROFILE_DIR)
@@ -441,7 +438,8 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 			ImGui::InputText(std::string("##txt" + std::string(label)).c_str(), targetVar);
 			ImGui::SameLine();
-			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(), ImVec2(35, 0)))
+			if (ImGui::Button(std::string("...##btn" + std::string(label)).c_str(),
+			                  ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
 			{
 				std::filesystem::path startPath =
 					targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
@@ -517,7 +515,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Up Arrow
 		ImGui::BeginDisabled(i == 0);
-		if (ImGui::Button("▲", ImVec2(25, 25)))
+		if (ImGui::Button("▲", ImVec2(35, 35)))
 		{
 			std::swap(currEdit->modFiles[i], currEdit->modFiles[i - 1]);
 		}
@@ -527,7 +525,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Down Arrow
 		ImGui::BeginDisabled(i == currEdit->modFiles.size() - 1);
-		if (ImGui::Button("▼", ImVec2(25, 25)))
+		if (ImGui::Button("▼", ImVec2(35, 35)))
 		{
 			std::swap(currEdit->modFiles[i], currEdit->modFiles[i + 1]);
 		}
@@ -537,7 +535,7 @@ void ProfileSettings::DrawFilesTab(Profile *currEdit)
 
 		// Delete (X)
 		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.2f, 0.2f, 1.0f));
-		if (ImGui::Button("X", ImVec2(25, 25)))
+		if (ImGui::Button("X", ImVec2(35, 35)))
 		{
 			std::filesystem::remove(currEdit->modFiles[i]);
 			currEdit->modFiles.erase(currEdit->modFiles.begin() + i);
@@ -605,7 +603,8 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - 45);
 				ImGui::InputText(std::string("##T" + std::to_string(modeVal)).c_str(), targetVar);
 				ImGui::SameLine();
-				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(), ImVec2(35, 0)))
+				if (ImGui::Button(std::string("...##B" + std::to_string(modeVal)).c_str(),
+				                  ImVec2(ImGui::CalcTextSize("XXX").x, 0)))
 				{
 					std::filesystem::path startPath =
 						targetVar->empty() ? std::filesystem::path(PROFILE_DIR) : std::filesystem::path(*targetVar);
@@ -940,7 +939,8 @@ void ProfileSettings::DrawLaunchTab(Profile *currEdit)
 void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 {
 	// Need a unified ID string to open and check
-	ImGui::SetNextWindowSize(ImVec2(500, 600), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(ImGui::GetFontSize() * 40.0f, ImGui::GetFontSize() * 20.0f),
+	                         ImGuiCond_FirstUseEver);
 
 	if (ImGui::BeginPopupModal("Flag Editor", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar))
 	{
@@ -1023,7 +1023,10 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 
 		ImGui::Spacing();
 
-		// 3. Raw Integer Textboxes updating the bits bidirectionally
+		// 3.Raw Integer Textboxes updating the bits bidirectionally
+
+		float btnWidth = ImGui::GetFontSize() * 8.0f;
+
 		const char *const compatLabels[] = {"compatflags:", "compatflags2:", ""};
 		const char *const dmLabels[]     = {"dmflags:", "dmflags2:", "dmflags3:"};
 
@@ -1032,15 +1035,15 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 		for (int i = 0; i < tempFlagsCount; ++i)
 		{
 			ImGui::Text("%s", labels[i]);
-			ImGui::SameLine(250);
+			ImGui::SameLine(ImGui::GetFontSize() * 15.0f);
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 250.0f - ImGui::GetStyle().WindowPadding.x);
 			ImGui::InputInt(std::string("##TFlags" + std::to_string(i)).c_str(), &tempFlags[i], 0, 0);
 		}
 
 		ImGui::Separator();
 
-		// 4. Save/Close Buttons
-		if (ImGui::Button("OK", ImVec2(120, 0)))
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - btnWidth) * 0.5f);
+		if (ImGui::Button("OK", ImVec2(btnWidth, 0)))
 		{
 			// Apply temp array back to profile
 			if (isGameplayFlags)
@@ -1063,7 +1066,8 @@ void ProfileSettings::DrawFlagEditorModal(Profile *currEdit)
 		float rightAlignX = ImGui::GetWindowWidth() - 120.0f - ImGui::GetStyle().WindowPadding.x;
 		ImGui::SetCursorPosX(rightAlignX);
 
-		if (ImGui::Button("Cancel", ImVec2(120, 0)))
+		ImGui::SetCursorPosX((ImGui::GetWindowSize().x - btnWidth) * 0.5f);
+		if (ImGui::Button("Cancel", ImVec2(btnWidth, 0)))
 		{
 			ImGui::CloseCurrentPopup();
 		}

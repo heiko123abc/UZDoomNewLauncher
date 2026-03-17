@@ -153,7 +153,13 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 	std::string title = GStrings.GetString("PROFSET_TITLE");
 	title += popupId;
 
-	if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_NoSavedSettings))
+	// Match colors of the popup
+	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg));
+
+	bool isModalOpen = ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::PopStyleColor(1);
+
+	if (isModalOpen)
 	{
 
 		float bottomSpace = ImGui::GetFrameHeightWithSpacing() * 1.5f;

@@ -295,7 +295,7 @@ void LauncherMainWindow::Draw()
 		ImGui::EndChild();
 
 		// Bottom-Left: Description Box
-		ImGui::BeginChild("DescriptionBoxChild", ImVec2(0, 0), true);
+		ImGui::BeginChild("DescriptionBoxChild", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 		DrawDescriptionBox();
 		ImGui::EndChild();
 
@@ -578,7 +578,8 @@ void LauncherMainWindow::DrawDescriptionBox()
 {
 	if (selectedProfileIdx >= 0 && selectedProfileIdx < cachedProfiles.size())
 	{
-		ImGui::TextWrapped("%s", cachedProfiles[selectedProfileIdx].description.c_str());
+		const std::string &desc = cachedProfiles[selectedProfileIdx].description;
+		ImGui::TextUnformatted(desc.data(), desc.data() + desc.size());
 	}
 	else
 	{

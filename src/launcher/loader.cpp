@@ -409,14 +409,17 @@ importStatus CreateInitialProfile(const std::filesystem::path &filepath, const b
 
 	attributeFromFilename(&newProfile, readableDigest.str());
 
-	// pull remaining data for PWAD (only for idgames archived wads that contain a txt file)
+	// pull remaining data for PWAD (only for wads that contain a "proper" txt file)
 	if (wasArchive)
 	{
 		std::error_code ec;
+		int                   highest_priority = 0;
+		std::filesystem::path best_txt_path;
+
 		for (const auto &entry : std::filesystem::directory_iterator(path, ec))
 		{
 			if (ec)
-				break; // Error with files
+				break; // some error with files
 
 			if (entry.is_regular_file(ec) && !ec)
 			{
@@ -426,16 +429,55 @@ importStatus CreateInitialProfile(const std::filesystem::path &filepath, const b
 
 				if (extension == ".txt")
 				{
-					long        fsize = std::filesystem::file_size(txt_path);
-					std::string content(fsize, '\0');
+					int current_priority = 1; // Base priority for ANY .txt file
 
-					std::ifstream txtFile(txt_path, std::ios::binary);
-					txtFile.read(content.data(), fsize);
+					// Check the filename
+					std::string filename = txt_path.stem().string();
+					std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
 
-					newProfile.description = content;
-					break;
+					if (filename == "readme" || filename == "info")
+					{
+						current_priority = 2; // Better priority for generic informative names
+					}
+
+					std::ifstream checkFile(txt_path);
+					if (checkFile.is_open())
+					{
+						std::string firstLine;
+						std::getline(checkFile, firstLine);
+						checkFile.close();
+
+						if (!firstLine.empty() && firstLine.find("===") == 0)
+						{
+							current_priority = 3; // Highest priority: "Standard" idgames format
+						}
+					}
+
+					// Keep the best file we've found so far
+					if (current_priority > highest_priority)
+					{
+						highest_priority = current_priority;
+						best_txt_path    = txt_path;
+
+						if (highest_priority == 3) // exit at once if best file found
+						{
+							break;
+						}
+					}
 				}
 			}
+		}
+
+		// After scanning the whole folder, read the best file we found
+		if (highest_priority > 0 && !best_txt_path.empty())
+		{
+			long        fsize = std::filesystem::file_size(best_txt_path);
+			std::string content(fsize, '\0');
+
+			std::ifstream txtFile(best_txt_path, std::ios::binary);
+			txtFile.read(content.data(), fsize);
+
+			newProfile.description = content;
 		}
 	}
 

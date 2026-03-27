@@ -234,9 +234,11 @@ void ProfileSettings::Draw(bool *p_open, Profile *currEdit, const std::string &p
 			}
 		}
 		ImGui::PopStyleColor(2);
-
 		ImGui::SameLine();
-		ImGui::SetCursorPosX(ImGui::GetWindowWidth() - ImGui::CalcTextSize(GStrings.GetString("PROFSET_SV_RT")).x - 30);
+
+		float buttonWidth =
+			ImGui::CalcTextSize(GStrings.GetString("PROFSET_SV_RT")).x + (ImGui::GetStyle().FramePadding.x * 2.0f);
+		ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - buttonWidth);
 
 		if (ImGui::Button(GStrings.GetString("PROFSET_SV_RT")))
 		{

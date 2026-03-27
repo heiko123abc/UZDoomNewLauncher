@@ -640,9 +640,18 @@ void LauncherMainWindow::DrawButtons()
 	if (disableButtons)
 		ImGui::EndDisabled();
 
-	// Available Status
-	ImGui::SetCursorPosY(ImGui::GetWindowHeight() - ImGui::GetTextLineHeightWithSpacing() - 5.0f);
-	ImGui::TextDisabled(GStrings.GetString("LAUNCHER_AVAIL_STATUS"), cachedProfiles.size());
+	// Available Status and center the calculated text
+	ImGui::SetCursorPosY(ImGui::GetWindowHeight() - ImGui::GetTextLineHeightWithSpacing());
+	std::string baseStr = GStrings.GetString("LAUNCHER_AVAIL_STATUS");
+
+	//because dynamic number
+	char buffer[256];
+	snprintf(buffer, sizeof(buffer), baseStr.c_str(), cachedProfiles.size());
+
+	std::string statusText = buffer;
+	float textWidth  = ImGui::CalcTextSize(statusText.c_str()).x;
+	ImGui::SetCursorPosX((ImGui::GetWindowWidth() - textWidth) * 0.5f);
+	ImGui::TextDisabled(statusText.c_str());
 }
 
 // when user presses UP or DOWN button, adjust selected entry in table

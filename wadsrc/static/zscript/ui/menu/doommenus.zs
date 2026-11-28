@@ -38,16 +38,27 @@ class CompatibilityMenu : OptionMenu
 	{
 		Super.Drawer();
 
-		String s;
-		if (gamestate == GS_LEVEL && (level.compatflags != compatflags || level.compatflags2 != compatflags2))
+		String s1, s2;
+		if (gamestate == GS_LEVEL)
 		{
-			s = String.Format("compatflags = %d (WAD: %d)  compatflags2 = %d (WAD: %d)",
-				compatflags, level.compatflags, compatflags2, level.compatflags2);
+			int mask1 = level.info != null ? level.info.compatmask : 0;
+			int mask2 = level.info != null ? level.info.compatmask2 : 0;
+			bool pureWad1 = (level.compatflags != compatflags) && ((compatflags & ~mask1) == 0);
+			bool pureWad2 = (level.compatflags2 != compatflags2) && ((compatflags2 & ~mask2) == 0);
+
+			s1 = pureWad1
+				? String.Format("compatflags = (WAD: %d)", level.compatflags)
+				: String.Format("compatflags = %d", level.compatflags);
+			s2 = pureWad2
+				? String.Format("compatflags2 = (WAD: %d)", level.compatflags2)
+				: String.Format("compatflags2 = %d", level.compatflags2);
 		}
 		else
 		{
-			s = String.Format("compatflags = %d  compatflags2 = %d", compatflags, compatflags2);
+			s1 = String.Format("compatflags = %d", compatflags);
+			s2 = String.Format("compatflags2 = %d", compatflags2);
 		}
+		String s = String.Format("%s  %s", s1, s2);
 		screen.DrawText (OptionFont(), OptionMenuSettings.mFontColorValue,
 			(screen.GetWidth() - OptionWidth (s) * CleanXfac_1) / 2, 35 * CleanXfac_1, s,
 			DTA_CleanNoMove_1, true);
